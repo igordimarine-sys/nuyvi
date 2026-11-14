@@ -10,4 +10,4 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 - **Pendente:** fotos reais do cliente em alta resolução (1600 e 2400 px + corte vertical), notícias reais, links das lojas.
 - **Versão anterior (antes da abertura em palco parado):** `site/versao-anterior.html`, online em https://nuyvi.vercel.app/versao-anterior.html
 - **Versão 2 (abertura em palco, antes do palco entre todas as seções e dos carrosséis de Explore/Novidades):** `site/versao-2.html`, online em https://nuyvi.vercel.app/versao-2.html
-- **Código no GitHub:** https://github.com/igordimarine-sys/nuyvi (privado, ramo `main`; a pasta do repositório é `projetos/nuyvi/`). O GitHub não publica sozinho: a Vercel continua sendo atualizada com `vercel deploy --prod` dentro de `site/`.
+- **Código no GitHub:** https://github.com/igordimarine-sys/nuyvi (público, ramo `main`; a pasta do repositório é `projetos/nuyvi/`). O GitHub não publica sozinho: a Vercel continua sendo atualizada com `vercel deploy --prod` dentro de `site/`.
