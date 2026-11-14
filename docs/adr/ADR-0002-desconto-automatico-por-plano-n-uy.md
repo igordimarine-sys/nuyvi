@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceito (decisão de negócio); forma de integrar pendente |
+| Status | Aceito como objetivo; **suspenso no MVP** por [ADR-0003](ADR-0003-login-proprio-e-desconto-suspenso-no-mvp.md) (2026-11-14) |
 | Data | 2026-11-14 |
 | Decisores | Desenvolvedor, pela N.UY |
 | Projeto / spec | [docs/specs/loja.md](../specs/loja.md) · RN-LOJ-04 a 08, CA-LOJ-07 a 12, CA-LOJ-19 |
