@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { check, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { variacoes } from "./catalogo";
 import { atualizadoEm, criadoEm, emLista } from "./comum";
 
@@ -30,7 +31,7 @@ export const pedidos = pgTable(
 
     // Id do usuário do Better Auth (text). Nulo = visitante. SEM FK por enquanto: o schema de auth é do
     // dev-auth. Quando existir, adicionar FK ON DELETE SET NULL (conta apagada não apaga pedido).
-    usuarioId: text("usuario_id"),
+    usuarioId: text("usuario_id").references(() => user.id, { onDelete: "set null" }), // conta apagada não apaga o pedido
 
     status: text("status").notNull().default("aguardando_pagamento"),
 

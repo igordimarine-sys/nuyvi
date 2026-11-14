@@ -58,7 +58,7 @@ Marcados com `[LGPD][PII]` no código: `pedidos.comprador_email|nome|cpf|telefon
 
 ## Dependências e decisões em aberto
 
-- **Contas:** `usuario_id` (text) referencia o `user.id` do Better Auth, **sem FK** até o dev-auth gerar o schema dele; depois adicionar FK `ON DELETE SET NULL` em `pedidos.usuario_id` (conta apagada não apaga pedido). Papéis `cliente`/`operador`/`admin` são do dev-auth.
+- **Contas:** `usuario_id` (text) referencia o `user.id` do Better Auth (tabelas em `schema/auth.ts`, migration `0001_autenticacao`). `pedidos.usuario_id` tem FK `ON DELETE SET NULL` (conta apagada não apaga pedido); `estoque_movimentos.usuario_id` e `pedido_historico.ator_usuario_id` seguem sem FK (pendente). Papéis e fluxos: [autenticacao.md](autenticacao.md).
 - Troca/devolução: no MVP é registrada pelo histórico + movimentos de estoque + estorno; não há tabela própria (`troca_devolucao` da spec fica para quando P-10 definir a política).
 - Faturamento: `nota_fiscal_numero|chave` e `rastreio_codigo` ficam no pedido (sem tabelas `envio`/`nota_fiscal_registro` no MVP).
 - Frete grátis (`gratis_acima_centavos`): depende de P-06.

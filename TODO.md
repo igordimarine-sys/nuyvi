@@ -23,16 +23,19 @@
 - Loja: frete e área de entrega (Correios/transportadora/motoboy, onde entrega, frete grátis) (P-06).
 - Loja: gateway de pagamento (conta existente, parcelamento) (P-07) e ADR de gateway (dev-integrations).
 - Loja: N.UY criar (ou dar acesso a) contas Vercel Pro, Neon e gateway em nome dela; definir o subdomínio da loja.
-- Loja (fundação 3): login próprio com Better Auth (indicação); depois do schema dele, FK `pedidos.usuario_id -> user.id ON DELETE SET NULL`; papéis `cliente`/`operador`/`admin`, checagem de papel na camada de módulo e acesso de visitante ao pedido por link (dev-auth, revisão do dev-security).
+- Loja (auth): revisão do dev-security (cookies, rate limit/IP real na Vercel, validade de 90 dias do token de visitante, `exigirPapel`, script do admin). Ver `docs/tecnico/autenticacao.md`.
+- Loja (auth): dev-notifications: provedor e templates dos e-mails de conta (`enviarEmailConta` só grava em `.dev-outbox/` no dev); conta existente tentando cadastro; sem logar token/link.
+- Loja (auth): login social (fase seguinte), MFA para operador/admin, checagem de senha vazada (HIBP), bloqueio por conta (hoje só por IP), troca de e-mail/senha logado, listar/revogar sessões, exclusão de conta (LGPD), telas de design (dev-uiux).
+- Loja (auth): FK de `estoque_movimentos.usuario_id` e `pedido_historico.ator_usuario_id` para `user.id` (dev-database); rota de UI do link de acompanhamento (`pedidoIdPorToken`) e envio do token no e-mail do pedido (dev-integrations); testes automatizados de auth (dev-tests).
 - Loja (fundação 4): projeto Neon (Launch, `aws-sa-east-1`, PITR para RPO de 1 h), projeto Vercel da loja no Pro com região das funções perto do banco (conferir `gru1`), Vercel Blob para fotos e subdomínio (dev-infra).
 - Loja (fundação 5): escolher o gateway entre os candidatos (Mercado Pago, Pagar.me, Asaas; Stripe se tiver Pix para conta BR), desenhar o webhook idempotente, o cron de expiração com conferência no gateway e o envio de e-mail fora da requisição (dev-integrations).
-- Loja: login próprio (comprador e equipe), compra como visitante e link de acompanhamento do pedido (dev-auth + dev-security).
 - Loja: nada de segredos, dados de clientes ou exportações no Git (repositório público), RNF-13.
 - Loja: revisão de privacidade (dados de visitante, vínculo de pedidos à conta, menores, retenção) com lgpd-specialist.
 - Loja: se for proposta ao cliente, orçamento do MVP com orcamentos-propostas (D-03).
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora de `site/conteudo/loja.json`.
 
 ## Feito
+- 2026-11-14: Loja (fundação 3): login próprio com Better Auth 1.7.25 (e-mail e senha, confirmação obrigatória, recuperação), papéis e `exigirPapel`, script `admin:criar`, token de acompanhamento do visitante, vínculo de pedidos (CA-LOJ-47), FK `pedidos.usuario_id`, migration `0001_autenticacao`; `docs/tecnico/autenticacao.md`.
 - 2026-11-14: Loja (fundação 1, ambiente): Postgres 17 em Docker em `127.0.0.1:5436`, scripts `db:*` lendo `.env.local`, CI `.github/workflows/loja-ci.yml`.
 - 2026-11-14: Loja (fundação 2): modelo de dados Drizzle, 15 tabelas, migration `loja/drizzle/0000_modelo_inicial.sql` aplicada no local; decisões em `docs/tecnico/banco.md`.
 - 2026-11-14: Loja (fundação 1, código): esqueleto em `loja/` (Next.js 16.4.6, TypeScript estrito, Drizzle + `pg`, validação de `DATABASE_URL`, `.env.example`, ponto de extensão `obterPlanoVigente`).
