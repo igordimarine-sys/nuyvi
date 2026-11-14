@@ -1,0 +1,21 @@
+# Somente desenvolvimento local. Credenciais abaixo são de exemplo: não reutilize em lugar nenhum.
+services:
+  db:
+    image: postgres:17 # Neon suporta 14 a 18; mantenha a mesma major do projeto no Neon
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LOCAL_DB_USER:-loja}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-loja_dev_local}
+      POSTGRES_DB: ${LOCAL_DB_NAME:-loja}
+    ports:
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - loja_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  loja_pgdata:

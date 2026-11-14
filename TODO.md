@@ -3,6 +3,13 @@
 ## Em andamento
 
 ## Pendente
+- Loja: projeto Vercel da loja (Root Directory `loja/`, sem afetar o de `site/`) e Neon com `main` para produção e branch por preview; definir como as migrations rodam em produção (etapa controlada, não no build); roles separadas no Neon `app_rw`/`app_migrate` (dev-devops + dev-infra, quando as contas da N.UY existirem).
+- Loja: proteção da branch `main` com o check `loja-ci / check` obrigatório (aguarda confirmação do desenvolvedor). Considerar fixar actions por SHA e ligar o Dependabot.
+- Loja: testes de integração contra o Postgres real: reserva concorrente, baixa, expiração, webhook duplicado, reconciliação `fisico = SUM(movimentos)`, transições de pedido, desconto do pedido = soma dos itens (dev-tests).
+- Loja: pagamento que chega depois de `expira_em` (reserva pode ter ido para outro pedido), formato do `evento_id` por gateway, cron de expiração e e-mail (dev-integrations).
+- Loja: retenção e anonimização de pedidos e de `gateway_eventos.payload` (lgpd-specialist).
+- Loja: tabela de troca/devolução depende de P-10; frete grátis de P-06; estorno pelo operador de P-08.
+- Loja: conferir o primeiro run do CI no GitHub (`actionlint` não estava instalado; só o YAML foi validado).
 - Loja: `npm audit` acusa 8 vulnerabilidades moderadas nas dependências do create-next-app; avaliar (dev-security).
 - Ligar o projeto `nuyvi` da Vercel ao repositório do GitHub (Root Directory `site`) para cada edição do painel publicar sozinha. Na primeira publicação, conferir se a Vercel roda o `node build.mjs` e serve a pasta `site` (`buildCommand` em `site/vercel.json`, saída padrão do preset "Other").
 - Testar o painel em produção: entrar com token, editar um produto, salvar, conferir o commit e o site atualizado.
@@ -16,9 +23,7 @@
 - Loja: frete e área de entrega (Correios/transportadora/motoboy, onde entrega, frete grátis) (P-06).
 - Loja: gateway de pagamento (conta existente, parcelamento) (P-07) e ADR de gateway (dev-integrations).
 - Loja: N.UY criar (ou dar acesso a) contas Vercel Pro, Neon e gateway em nome dela; definir o subdomínio da loja.
-- Loja (fundação 1, restante): Docker Compose com Postgres local, CI (lint, typecheck, build), projeto Vercel com Root Directory `loja/`, ambientes local/preview/produção com branch do Neon (dev-devops). Ver `docs/tecnico/arquitetura.md` §7.
-- Loja (fundação 2): modelo de dados em Drizzle (catálogo, variações, movimentos e reservas de estoque com `expira_em`, pedidos com valores congelados e desconto por item, histórico, pagamentos, eventos do gateway com chave única, fila de e-mail), locking da reserva e migrations (dev-database). Ver `arquitetura.md` §3 e §5.
-- Loja (fundação 3): login próprio com Better Auth (indicação), papéis `cliente`/`operador`/`admin`, checagem de papel na camada de módulo e acesso de visitante ao pedido por link (dev-auth, revisão do dev-security).
+- Loja (fundação 3): login próprio com Better Auth (indicação); depois do schema dele, FK `pedidos.usuario_id -> user.id ON DELETE SET NULL`; papéis `cliente`/`operador`/`admin`, checagem de papel na camada de módulo e acesso de visitante ao pedido por link (dev-auth, revisão do dev-security).
 - Loja (fundação 4): projeto Neon (Launch, `aws-sa-east-1`, PITR para RPO de 1 h), projeto Vercel da loja no Pro com região das funções perto do banco (conferir `gru1`), Vercel Blob para fotos e subdomínio (dev-infra).
 - Loja (fundação 5): escolher o gateway entre os candidatos (Mercado Pago, Pagar.me, Asaas; Stripe se tiver Pix para conta BR), desenhar o webhook idempotente, o cron de expiração com conferência no gateway e o envio de e-mail fora da requisição (dev-integrations).
 - Loja: login próprio (comprador e equipe), compra como visitante e link de acompanhamento do pedido (dev-auth + dev-security).
@@ -28,6 +33,8 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora de `site/conteudo/loja.json`.
 
 ## Feito
+- 2026-11-14: Loja (fundação 1, ambiente): Postgres 17 em Docker em `127.0.0.1:5436`, scripts `db:*` lendo `.env.local`, CI `.github/workflows/loja-ci.yml`.
+- 2026-11-14: Loja (fundação 2): modelo de dados Drizzle, 15 tabelas, migration `loja/drizzle/0000_modelo_inicial.sql` aplicada no local; decisões em `docs/tecnico/banco.md`.
 - 2026-11-14: Loja (fundação 1, código): esqueleto em `loja/` (Next.js 16.4.6, TypeScript estrito, Drizzle + `pg`, validação de `DATABASE_URL`, `.env.example`, ponto de extensão `obterPlanoVigente`).
 - 2026-11-14: Loja: ADR-0004 aprovado; contas da loja ficam em nome da N.UY.
 - 2026-11-14: Loja: stack e arquitetura macro propostas (`docs/adr/ADR-0004-stack-loja.md`, `docs/tecnico/arquitetura.md`): Next.js + TypeScript + Drizzle + Neon Postgres na Vercel Pro, monolito modular em `loja/`.
