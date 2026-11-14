@@ -34,34 +34,41 @@ async function lerSenha() {
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 try {
-  const existente = (await pool.query('select id from "user" where email = $1', [email])).rows[0];
-  if (existente) {
-    await pool.query(`update "user" set role = 'admin', email_verified = true, updated_at = now() where id = $1`, [existente.id]);
-    console.log("Usuário já existia: papel alterado para admin (senha mantida).");
-  } else {
-    const senha = await lerSenha();
-    if (senha.length < 10 || senha.length > 128) throw new Error("A senha deve ter de 10 a 128 caracteres.");
-    const id = randomUUID();
-    const client = await pool.connect();
-    try {
-      await client.query("begin");
-      await client.query(
-        `insert into "user" (id, name, email, email_verified, role) values ($1, $2, $3, true, 'admin')`,
-        [id, nome, email],
-      );
-      await client.query(
-        `insert into account (id, account_id, provider_id, user_id, password) values ($1, $2, 'credential', $2, $3)`,
-        [randomUUID(), id, await hashPassword(senha)],
-      );
-      await client.query("commit");
-    } catch (e) {
-      await client.query("rollback");
-      throw e;
-    } finally {
-      client.release();
-    }
-    console.log("Administrador criado.");
+  const existente = (await pool.query('select id, email_verified from "user" where email = $1', [email])).rows[0];
+  // Conta existente e NÃO verificada pode ter sido cadastrada por outra pessoa (pré-sequestro): recusa, nunca a verifica.
+  if (existente && !existente.email_verified) {
+    throw new Error("Já existe uma conta com este e-mail e ela não foi verificada. Recusado: peça ao dono para confirmar o e-mail (ou apague a conta no banco) e rode de novo.");
   }
+  const senha = await lerSenha();
+  if (senha.length < 10 || senha.length > 128) throw new Error("A senha deve ter de 10 a 128 caracteres.");
+  const hash = await hashPassword(senha);
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    if (existente) {
+      // Conta verificada: promove, DEFINE nova senha (a atual pode ser de quem a cadastrou antes) e derruba as sessões.
+      await client.query(`update "user" set role = 'admin', atualizado_em = now() where id = $1`, [existente.id]);
+      const r = await client.query(`update account set password = $2, atualizado_em = now() where user_id = $1 and provider_id = 'credential'`, [existente.id, hash]);
+      if (r.rowCount === 0) {
+        await client.query(`insert into account (id, account_id, provider_id, user_id, password) values ($1, $2, 'credential', $2, $3)`, [randomUUID(), existente.id, hash]);
+      }
+      await client.query("delete from session where user_id = $1", [existente.id]);
+    } else {
+      const id = randomUUID();
+      await client.query(`insert into "user" (id, name, email, email_verified, role) values ($1, $2, $3, true, 'admin')`, [id, nome, email]);
+      await client.query(`insert into account (id, account_id, provider_id, user_id, password) values ($1, $2, 'credential', $2, $3)`, [randomUUID(), id, hash]);
+    }
+    await client.query("commit");
+  } catch (e) {
+    await client.query("rollback");
+    throw e;
+  } finally {
+    client.release();
+  }
+  console.log(existente ? "Conta verificada promovida a admin; senha redefinida e sessões revogadas." : "Administrador criado.");
+} catch (e) {
+  console.error(e.message);
+  process.exitCode = 1;
 } finally {
   await pool.end();
 }

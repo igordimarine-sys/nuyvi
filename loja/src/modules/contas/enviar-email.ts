@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export type EmailConta = {
-  tipo: "confirmar_email" | "redefinir_senha" | "tentativa_cadastro_existente";
+  tipo: "confirmar_email" | "redefinir_senha" | "tentativa_cadastro_existente" | "vincular_pedidos";
   para: string;
   link?: string; // contém o token: nunca vai para log
 };

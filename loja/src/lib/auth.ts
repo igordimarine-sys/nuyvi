@@ -2,11 +2,11 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { haveIBeenPwned } from "better-auth/plugins";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { env } from "@/lib/env";
 import { enviarEmailConta } from "@/modules/contas/enviar-email";
-import { vincularPedidosDeVisitante } from "@/modules/contas/vincular-pedidos";
 
 const MIN = 60;
 const regra = (max: number) => ({ window: MIN, max }); // por IP e rota, janela de 1 minuto
@@ -50,10 +50,8 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       enviarEmailConta({ tipo: "confirmar_email", para: user.email, link: url });
     },
-    // CA-LOJ-47: só depois do e-mail confirmado os pedidos de visitante com esse e-mail entram na conta.
-    afterEmailVerification: async (user) => {
-      await vincularPedidosDeVisitante(user.id, user.email);
-    },
+    // Sem vínculo automático de pedidos aqui (A-01 da auditoria): e-mail confirmado não prova que quem conhece
+    // a senha é o dono da caixa postal. O vínculo é ação explícita (modules/contas/vincular-pedidos.ts).
   },
   verification: { storeIdentifier: "hashed" }, // tokens de redefinição guardados com hash
   session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
@@ -73,6 +71,11 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
     defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
+    // IP para rate limit e sessão. Produção (Vercel): só o header que a plataforma define; o cliente não o controla.
+    // Local não tem esse header: usa x-forwarded-for (sem proxy, a lib cai em 127.0.0.1 fora de produção).
+    ipAddress: { ipAddressHeaders: [process.env.NODE_ENV === "production" ? "x-vercel-forwarded-for" : "x-forwarded-for"] },
   },
-  plugins: [nextCookies()], // por último
+  // haveIBeenPwned: rejeita senha vazada no cadastro/redefinição/troca; envia só os 5 primeiros caracteres do SHA-1
+  // (k-anonimato) a api.pwnedpasswords.com; se o serviço cair, o cadastro falha (500) em vez de aceitar sem checar.
+  plugins: [haveIBeenPwned(), nextCookies()], // nextCookies por último
 });

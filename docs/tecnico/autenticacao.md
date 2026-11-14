@@ -4,14 +4,15 @@ Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme
 
 ## Fluxos (só e-mail e senha; login social fica para fase seguinte, a spec não pede)
 
-- **Cadastro:** `/cadastrar`. Senha de 10 a 128 caracteres (hash scrypt, padrão da lib). Resposta idêntica para e-mail novo e já existente; o dono de um e-mail já cadastrado recebe um aviso. Sem e-mail confirmado não existe sessão.
-- **Confirmação:** link por e-mail (token assinado, 1 hora); `/confirmar-email` reenvia. Ao confirmar, os pedidos de visitante com o mesmo e-mail passam para a conta (CA-LOJ-47, `vincular-pedidos.ts`, só no hook de e-mail confirmado).
+- **Cadastro:** `/cadastrar`. Senha de 10 a 128 caracteres (hash scrypt, padrão da lib), recusada se constar de vazamento: plugin `haveIBeenPwned` envia só os 5 primeiros caracteres do SHA-1 (k-anonimato) a `api.pwnedpasswords.com`; se esse serviço estiver fora, o cadastro/redefinição falha em vez de aceitar sem checar. Resposta idêntica para e-mail novo e já existente; o dono de um e-mail já cadastrado recebe um aviso. Sem e-mail confirmado não existe sessão.
+- **Confirmação:** link por e-mail (token assinado, 1 hora); `/confirmar-email` reenvia. Confirmar o e-mail **não** vincula pedidos de visitante (auditoria A-01: quem cadastra conhece a senha mas pode não ser o dono da caixa postal).
+- **Vínculo de pedidos de visitante (CA-LOJ-47, premissa revisada):** ação explícita em `/vincular-pedidos` (`vincular-pedidos.ts`). Logado e com e-mail confirmado, o usuário pede o vínculo; o link vai ao e-mail da conta, assinado (HMAC com o segredo da lib), preso a usuário + sessão + e-mail, válido por 30 minutos e só funciona na mesma sessão que pediu; a confirmação é um POST (Server Action). Sem estado no banco (repetir é idempotente). Falta limite próprio de envio (o link só vai ao e-mail da própria conta). O CA-LOJ-47 da spec ainda diz "aparecem após criar conta e confirmar o e-mail": precisa de atualização pelo arquiteto-specs.
 - **Login / sair:** `/entrar`; mensagem única para credencial errada ou e-mail não confirmado. Sessão de 7 dias, cookie `HttpOnly`, `SameSite=Lax`, `Secure` (e prefixo `__Secure-`) em produção.
 - **Recuperação:** `/esqueci-senha` (resposta sempre igual) e `/redefinir-senha?token=`. Token de uso único, 30 minutos, guardado com hash no banco; ao redefinir, todas as sessões da conta são revogadas.
 
 ## Papéis
 
-`cliente` < `operador` < `admin` (coluna `user.role`, com CHECK). O cadastro e o perfil não aceitam `role` (`input: false`; testado enviando `role: admin` no cadastro: ignorado). O **primeiro admin** (e qualquer promoção) só pelo script: `npm run admin:criar -- email "Nome"` (senha lida do terminal ou do stdin; nunca em argumento, código ou Git).
+`cliente` < `operador` < `admin` (coluna `user.role`, com CHECK). O cadastro e o perfil não aceitam `role` (`input: false`; testado enviando `role: admin` no cadastro: ignorado). O **primeiro admin** (e qualquer promoção) só pelo script: `npm run admin:criar -- email "Nome"` (senha lida do terminal ou do stdin; nunca em argumento, código ou Git). Conta existente **não verificada**: o script recusa (pré-sequestro, A-02). Conta existente verificada: promove, define a senha nova informada (a atual pode ser de quem cadastrou antes) e apaga as sessões dela.
 
 ## Onde a checagem acontece
 
@@ -19,7 +20,7 @@ Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme
 
 ## Rate limit
 
-Do próprio Better Auth, contador no Postgres (tabela `rate_limit`, vale em serverless, custa uma consulta por chamada). Por IP e rota, janela de 60 s: login 5, cadastro 5, pedir recuperação 3, redefinir 5, reenviar confirmação 3. Limites: não há bloqueio por conta (só por IP); chamadas via `auth.api` no servidor não passam pelo limitador (por isso as telas usam o cliente HTTP); o IP vem de `X-Forwarded-For`, que na Vercel é definido pela plataforma, mas deve ser conferido em produção (sem IP, todos caem no mesmo contador).
+Do próprio Better Auth, contador no Postgres (tabela `rate_limit`, vale em serverless, custa uma consulta por chamada). Por IP e rota, janela de 60 s: login 5, cadastro 5, pedir recuperação 3, redefinir 5, reenviar confirmação 3. Limites: não há bloqueio por conta (só por IP); chamadas via `auth.api` no servidor não passam pelo limitador (por isso as telas usam o cliente HTTP); o IP vem de `advanced.ipAddress.ipAddressHeaders`: em produção só `x-vercel-forwarded-for` (definido pela Vercel; conferir no preview, dev-infra); fora de produção `x-forwarded-for`, e sem proxy a lib usa 127.0.0.1 (testado: 5 tentativas, a 6ª dá 429). Se o IP de produção não chegar, todos caem no mesmo contador (bloqueio geral): por isso a conferência.
 
 ## Link de acompanhamento do visitante
 

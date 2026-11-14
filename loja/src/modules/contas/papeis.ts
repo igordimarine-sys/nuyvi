@@ -9,7 +9,7 @@ import { auth } from "@/lib/auth";
 const NIVEL: Record<Papel, number> = { cliente: 0, operador: 1, admin: 2 };
 const papelSchema = z.enum(PAPEIS);
 
-export type UsuarioAutenticado = { id: string; nome: string; email: string; papel: Papel };
+export type UsuarioAutenticado = { id: string; nome: string; email: string; papel: Papel; sessaoId: string };
 
 /** Usuário da sessão atual (lida no banco a cada chamada, então mudança de papel vale na hora) ou null. */
 export async function obterUsuario(): Promise<UsuarioAutenticado | null> {
@@ -17,7 +17,7 @@ export async function obterUsuario(): Promise<UsuarioAutenticado | null> {
   if (!sessao || !sessao.user.emailVerified) return null;
   const papel = papelSchema.safeParse(sessao.user.role);
   if (!papel.success) return null; // papel desconhecido: trata como sem acesso
-  return { id: sessao.user.id, nome: sessao.user.name, email: sessao.user.email, papel: papel.data };
+  return { id: sessao.user.id, nome: sessao.user.name, email: sessao.user.email, papel: papel.data, sessaoId: sessao.session.id };
 }
 
 /**
