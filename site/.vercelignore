@@ -1,0 +1,6 @@
+img/imagensesportes.jpg
+video/videosesportes.mp4
+_*.html
+.env*
+.gitignore
+.vercel

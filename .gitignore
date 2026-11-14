@@ -1,0 +1,12 @@
+# segredos e configuração local
+.env
+.env.*
+.vercel/
+
+# arquivos de teste temporários
+_*.html
+_t_inject*.js
+
+# sistema
+Thumbs.db
+.DS_Store
