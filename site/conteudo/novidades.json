@@ -1,0 +1,7 @@
+{
+  "noticias": [
+    { "data": "Em breve", "titulo": "Título da notícia 1", "imagem": "img/esportes/centro.webp" },
+    { "data": "Em breve", "titulo": "Título da notícia 2", "imagem": "img/esportes/orientacao.webp" },
+    { "data": "Em breve", "titulo": "Título da notícia 3", "imagem": "img/esportes/nutricao.webp" }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "rotulo": "Loja N.UY",
+  "titulo1": "Equipado",
+  "titulo2": "sem sair do app",
+  "produtos": [
+    {
+      "nome": "Calçados",
+      "descricao": "Tênis de corrida, treino e quadra, com ajuda para escolher o seu.",
+      "foto": "img/esportes/venda.webp",
+      "alt": "Vendedor mostra um tênis de corrida a uma cliente na loja",
+      "botao": "Comprar no app"
+    },
+    {
+      "nome": "Roupas e acessórios",
+      "descricao": "Camisetas, garrafas, bolas e mais. Assinante paga até 15% menos.",
+      "foto": "img/esportes/variedade.webp",
+      "alt": "Prateleiras com camisetas, tênis, garrafas e bolas",
+      "botao": "Comprar no app"
+    }
+  ]
+}

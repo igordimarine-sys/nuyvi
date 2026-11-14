@@ -1,0 +1,34 @@
+{
+  "hero": {
+    "frase": "Treine junto. Evolua conectado.",
+    "plataformas": "Disponível para iOS e Android"
+  },
+  "rede": {
+    "titulo1": "Uma rede inteira",
+    "titulo2": "de parceiros.",
+    "texto": "Corrida, pedal, quadra, campo. Quem treina perto de você está a um toque."
+  },
+  "bonus": {
+    "rotulo": "Bônus do plano anual",
+    "titulo1": "Pague por ano,",
+    "titulo2": "ganhe mais",
+    "texto": "Assinando qualquer plano no anual, você leva vantagem desde o primeiro treino.",
+    "itens": [
+      "20% de desconto em relação ao mensal",
+      "Até 15% de desconto em todos os produtos da loja",
+      "Prioridade na reserva de quadras e arenas (Gold e Premium)"
+    ]
+  },
+  "historia": {
+    "rotulo": "Sua cidade, sua rede",
+    "titulo1": "Treine junto.",
+    "titulo2": "Evolua conectado.",
+    "texto": "O app esportivo que reúne parceiros de treino, quadras, eventos, especialistas e inteligência artificial num só lugar. Abra o mapa e veja quem corre no seu bairro, onde tem quadra livre hoje à noite e qual evento começa no fim de semana."
+  },
+  "baixar": {
+    "rotulo": "Já disponível",
+    "titulo1": "Baixe",
+    "titulo2": "agora",
+    "texto": "Grátis para começar. Parceiros, quadras, eventos e a sua evolução num só app."
+  }
+}

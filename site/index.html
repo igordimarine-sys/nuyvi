@@ -403,17 +403,17 @@
     <div class="rede-fundo" aria-hidden="true" data-rede-fundo><video data-deriva="23s" style="--deriva:23s" src="video/esportes/ciclismo.mp4" poster="img/esportes/ciclismo-poster.webp" muted loop playsinline preload="none" disablepictureinpicture data-video-abertura="ciclismo"></video></div>
     <div class="hero-texto">
       <h1 id="hero-titulo"><span class="sr-only">N.UY</span><img class="hero-logo" src="img/logo-hero.webp" alt="" width="800" height="328" data-hero-logo></h1>
-      <p class="data" data-hero-item>Treine junto. Evolua conectado.</p>
+      <p class="data" data-hero-item><!--cms:textos.hero.frase-->Treine junto. Evolua conectado.<!--/cms:textos.hero.frase--></p>
       <div class="botoes" data-hero-item>
         <a class="bt bt-claro" href="#" data-login><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2.5h5.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6M2.5 8h7M7 5l3 3-3 3"/></svg> Entrar na NUY</a>
         <a class="bt bt-linha" href="#baixar">Baixar o app</a>
       </div>
-      <p class="plataformas" data-hero-item>Disponível para iOS e Android</p>
+      <p class="plataformas" data-hero-item><!--cms:textos.hero.plataformas-->Disponível para iOS e Android<!--/cms:textos.hero.plataformas--></p>
       <a class="rolar" href="#videos" data-hero-item>Role para ver mais <i aria-hidden="true"></i></a>
     </div>
     <div class="rede-frase" data-rede-frase>
-      <h2 id="rede-titulo"><span class="sol">Uma rede inteira</span><br>de parceiros.</h2>
-      <p>Corrida, pedal, quadra, campo. Quem treina perto de você está a um toque.</p>
+      <h2 id="rede-titulo"><span class="sol"><!--cms:textos.rede.titulo1-->Uma rede inteira<!--/cms:textos.rede.titulo1--></span><br><!--cms:textos.rede.titulo2-->de parceiros.<!--/cms:textos.rede.titulo2--></h2>
+      <p><!--cms:textos.rede.texto-->Corrida, pedal, quadra, campo. Quem treina perto de você está a um toque.<!--/cms:textos.rede.texto--></p>
     </div>
    </div>
   </section>
@@ -458,7 +458,7 @@
       <div class="planos-controles">
         <div class="periodo" role="group" aria-label="Forma de pagamento">
           <button type="button" aria-pressed="true" data-periodo="mensal">Mensal</button>
-          <button type="button" aria-pressed="false" data-periodo="anual">Anual <span class="economia">-20%</span></button>
+          <button type="button" aria-pressed="false" data-periodo="anual">Anual <span class="economia"><!--cms:planos.economia-->-20%<!--/cms:planos.economia--></span></button>
         </div>
         <div class="setas">
           <button type="button" class="seta" data-car-ant aria-controls="planos-trilho"><span class="sr-only">Plano anterior</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg></button>
@@ -470,7 +470,8 @@
       <ul class="planos-trilho" id="planos-trilho" data-planos data-car-trilho></ul>
     </div>
     <div class="planos-pontos" data-car-pontos aria-hidden="true"></div>
-    <p class="planos-nota">Preços provisórios, em reais. Cancele quando quiser.</p>
+    <p class="planos-nota"><!--cms:planos.nota-->Preços provisórios, em reais. Cancele quando quiser.<!--/cms:planos.nota--></p>
+    <!--cms:planos.dados--><script type="application/json" id="dados-planos">{"desconto":0.2,"planos":[{"id":"p1","nome":"Gratuito","mensal":0,"texto":"Para começar a treinar com a comunidade.","cta":"Começar grátis","capa":"img/esportes/ciclismo.webp","destaque":"","itens":["Feed, stories e chat","Descobrir parceiros: 5 por dia","Eventos e corridas","Reserva de quadras","Especialista por vídeo: avulso"]},{"id":"p2","nome":"Silver","mensal":19.9,"texto":"Mais conexões e o Personal IA no dia a dia.","cta":"Assinar Silver","capa":"img/esportes/academia.webp","destaque":"","itens":["Feed, stories e chat","Descobrir parceiros: ilimitado","Eventos e corridas","Criar seus próprios eventos","Reserva de quadras","Personal IA: básico","Especialista por vídeo: avulso","Desconto na loja: 5%"]},{"id":"p3","nome":"Gold","mensal":39.9,"texto":"IA completa, avatar 3D e prioridade nas quadras.","cta":"Assinar Gold","capa":"img/esportes/natacao.webp","destaque":"Recomendado","itens":["Feed, stories e chat","Descobrir parceiros: ilimitado","Eventos e corridas","Criar seus próprios eventos","Reserva de quadras: com prioridade","Personal IA: completo","Nutricionista IA","Avatar 3D e evolução corporal","Especialista por vídeo: avulso","Desconto na loja: 10%"]},{"id":"p4","nome":"Premium","mensal":69.9,"texto":"Tudo do Gold, com especialistas incluídos.","cta":"Assinar Premium","capa":"img/esportes/orientacao.webp","destaque":"","itens":["Feed, stories e chat","Descobrir parceiros: ilimitado","Eventos e corridas","Criar seus próprios eventos","Reserva de quadras: com prioridade","Personal IA: completo","Nutricionista IA","Avatar 3D e evolução corporal","Especialista por vídeo: 1 consulta/mês","Desconto na loja: 15%"]}]}</script><!--/cms:planos.dados-->
   </section>
 
   <!-- 6. Bônus do plano anual -->
@@ -478,14 +479,12 @@
     <div class="destaque inverte">
       <div class="moldura" data-revela-img><video data-deriva="31s" style="object-position:60% 50%;--deriva:31s" src="video/esportes/natacao.mp4" poster="img/esportes/natacao-poster.webp" muted loop playsinline preload="none" disablepictureinpicture data-fundo-video data-zoom aria-hidden="true"></video></div>
       <div>
-        <span class="rotulo">Bônus do plano anual</span>
-        <h2 id="bonus-titulo" class="t-medio" data-titulo><span class="t-linha"><span>Pague por ano,</span></span><span class="t-linha"><span class="vazado">ganhe mais</span></span></h2>
-        <p class="texto" style="margin-top:1.25rem">Assinando qualquer plano no anual, você leva vantagem desde o primeiro treino.</p>
+        <span class="rotulo"><!--cms:textos.bonus.rotulo-->Bônus do plano anual<!--/cms:textos.bonus.rotulo--></span>
+        <h2 id="bonus-titulo" class="t-medio" data-titulo><span class="t-linha"><span><!--cms:textos.bonus.titulo1-->Pague por ano,<!--/cms:textos.bonus.titulo1--></span></span><span class="t-linha"><span class="vazado"><!--cms:textos.bonus.titulo2-->ganhe mais<!--/cms:textos.bonus.titulo2--></span></span></h2>
+        <p class="texto" style="margin-top:1.25rem"><!--cms:textos.bonus.texto-->Assinando qualquer plano no anual, você leva vantagem desde o primeiro treino.<!--/cms:textos.bonus.texto--></p>
         <ul class="texto">
-          <li>20% de desconto em relação ao mensal</li>
-          <li>Até 15% de desconto em todos os produtos da loja</li>
-          <li>Prioridade na reserva de quadras e arenas (Gold e Premium)</li>
-        </ul>
+      <!--cms:textos.bonus.itens--><li>20% de desconto em relação ao mensal</li><li>Até 15% de desconto em todos os produtos da loja</li><li>Prioridade na reserva de quadras e arenas (Gold e Premium)</li><!--/cms:textos.bonus.itens-->
+    </ul>
       </div>
     </div>
   </section>
@@ -495,9 +494,9 @@
     <div class="palco">
       <div class="hist-img" aria-hidden="true"><video data-deriva="27s" style="--deriva:27s" src="video/esportes/volei.mp4" poster="img/esportes/volei-poster.webp" muted loop playsinline preload="none" disablepictureinpicture data-fundo-video data-hist-img></video></div>
       <div class="conteudo" data-hist-texto>
-        <span class="rotulo">Sua cidade, sua rede</span>
-        <h2 id="historia-titulo" class="t-grande"><span class="t-linha"><span>Treine junto.</span></span><span class="t-linha"><span class="sol">Evolua conectado.</span></span></h2>
-        <p class="texto">O app esportivo que reúne parceiros de treino, quadras, eventos, especialistas e inteligência artificial num só lugar. Abra o mapa e veja quem corre no seu bairro, onde tem quadra livre hoje à noite e qual evento começa no fim de semana.</p>
+        <span class="rotulo"><!--cms:textos.historia.rotulo-->Sua cidade, sua rede<!--/cms:textos.historia.rotulo--></span>
+        <h2 id="historia-titulo" class="t-grande"><span class="t-linha"><span><!--cms:textos.historia.titulo1-->Treine junto.<!--/cms:textos.historia.titulo1--></span></span><span class="t-linha"><span class="sol"><!--cms:textos.historia.titulo2-->Evolua conectado.<!--/cms:textos.historia.titulo2--></span></span></h2>
+        <p class="texto"><!--cms:textos.historia.texto-->O app esportivo que reúne parceiros de treino, quadras, eventos, especialistas e inteligência artificial num só lugar. Abra o mapa e veja quem corre no seu bairro, onde tem quadra livre hoje à noite e qual evento começa no fim de semana.<!--/cms:textos.historia.texto--></p>
       </div>
     </div>
   </section>
@@ -516,40 +515,22 @@
     </div>
     <div class="car" role="region" aria-roledescription="carrossel" aria-label="Recursos do app">
       <ul class="car-trilho cartoes" id="explore-trilho" data-car-trilho>
-        <li role="group" aria-roledescription="slide" aria-label="1 de 4"><a class="cartao" href="#historia" data-revela-card>
-        <img src="img/esportes/volei.webp" alt="" loading="lazy" width="935" height="530" style="object-position:62% 50%">
-        <span class="info"><h3>Comunidade</h3><p>Feed, stories e chat com quem treina com você.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
-      </a></li>
-        <li role="group" aria-roledescription="slide" aria-label="2 de 4"><a class="cartao" href="#videos" data-revela-card>
-        <img src="img/esportes/relogio.webp" alt="" loading="lazy" width="930" height="527" style="object-position:58% 50%">
-        <span class="info"><h3>Performance e IA</h3><p>Foto do prato, Personal IA e evolução no avatar 3D.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
-      </a></li>
-        <li role="group" aria-roledescription="slide" aria-label="3 de 4"><a class="cartao" href="#premium" data-revela-card>
-        <img src="img/esportes/corrida.webp" alt="" loading="lazy" width="902" height="530" style="object-position:60% 50%">
-        <span class="info"><h3>Gamificação</h3><p>Missões, sequência de dias e ranking entre amigos.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
-      </a></li>
-        <li role="group" aria-roledescription="slide" aria-label="4 de 4"><a class="cartao" href="#loja" data-revela-card>
-        <img class="contida" src="img/loja/tenis.webp" alt="" loading="lazy" width="480" height="384">
-        <span class="info"><h3>Loja</h3><p>Equipamento com desconto de assinante.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
-      </a></li>
-      </ul>
+      <!--cms:explore.cartoes--><li role="group" aria-roledescription="slide" aria-label="1 de 4"><a class="cartao" href="#historia" data-revela-card><img src="img/esportes/volei.webp" alt="" loading="lazy" style="object-position:62% 50%"><span class="info"><h3>Comunidade</h3><p>Feed, stories e chat com quem treina com você.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span></a></li>
+        <li role="group" aria-roledescription="slide" aria-label="2 de 4"><a class="cartao" href="#videos" data-revela-card><img src="img/esportes/relogio.webp" alt="" loading="lazy" style="object-position:58% 50%"><span class="info"><h3>Performance e IA</h3><p>Foto do prato, Personal IA e evolução no avatar 3D.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span></a></li>
+        <li role="group" aria-roledescription="slide" aria-label="3 de 4"><a class="cartao" href="#premium" data-revela-card><img src="img/esportes/corrida.webp" alt="" loading="lazy" style="object-position:60% 50%"><span class="info"><h3>Gamificação</h3><p>Missões, sequência de dias e ranking entre amigos.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span></a></li>
+        <li role="group" aria-roledescription="slide" aria-label="4 de 4"><a class="cartao" href="#loja" data-revela-card><img class="contida" src="img/loja/tenis.webp" alt="" loading="lazy"><span class="info"><h3>Loja</h3><p>Equipamento com desconto de assinante.</p><span class="ir">Ver mais <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span></a></li><!--/cms:explore.cartoes-->
+    </ul>
     </div>
     <div class="planos-pontos" data-car-pontos aria-hidden="true"></div>
   </section>
 
   <!-- 9. Loja -->
   <section class="secao" id="loja" aria-labelledby="loja-titulo" data-cor="#140a0e">
-    <span class="rotulo">Loja N.UY</span>
-    <h2 id="loja-titulo" class="t-medio" data-titulo><span class="t-linha"><span>Equipado</span></span><span class="t-linha"><span class="vazado">sem sair do app</span></span></h2>
+    <span class="rotulo"><!--cms:loja.rotulo-->Loja N.UY<!--/cms:loja.rotulo--></span>
+    <h2 id="loja-titulo" class="t-medio" data-titulo><span class="t-linha"><span><!--cms:loja.titulo1-->Equipado<!--/cms:loja.titulo1--></span></span><span class="t-linha"><span class="vazado"><!--cms:loja.titulo2-->sem sair do app<!--/cms:loja.titulo2--></span></span></h2>
     <div class="loja">
-      <a class="produto" href="#baixar" data-revela-card>
-        <span class="foto"><img src="img/esportes/venda.webp" alt="Vendedor mostra um tênis de corrida a uma cliente na loja" loading="lazy" width="905" height="542"></span>
-        <span class="info"><h3>Calçados</h3><p>Tênis de corrida, treino e quadra, com ajuda para escolher o seu.</p><span class="ir">Comprar no app</span></span>
-      </a>
-      <a class="produto" href="#baixar" data-revela-card>
-        <span class="foto"><img src="img/esportes/variedade.webp" alt="Prateleiras com camisetas, tênis, garrafas e bolas" loading="lazy" width="832" height="542"></span>
-        <span class="info"><h3>Roupas e acessórios</h3><p>Camisetas, garrafas, bolas e mais. Assinante paga até 15% menos.</p><span class="ir">Comprar no app</span></span>
-      </a>
+      <!--cms:loja.produtos--><a class="produto" href="#baixar" data-revela-card><span class="foto"><img src="img/esportes/venda.webp" alt="Vendedor mostra um tênis de corrida a uma cliente na loja" loading="lazy"></span><span class="info"><h3>Calçados</h3><p>Tênis de corrida, treino e quadra, com ajuda para escolher o seu.</p><span class="ir">Comprar no app</span></span></a>
+      <a class="produto" href="#baixar" data-revela-card><span class="foto"><img src="img/esportes/variedade.webp" alt="Prateleiras com camisetas, tênis, garrafas e bolas" loading="lazy"></span><span class="info"><h3>Roupas e acessórios</h3><p>Camisetas, garrafas, bolas e mais. Assinante paga até 15% menos.</p><span class="ir">Comprar no app</span></span></a><!--/cms:loja.produtos-->
     </div>
   </section>
 
@@ -557,9 +538,9 @@
   <section class="faixa" id="baixar" aria-labelledby="baixar-titulo" data-cor="#07090A">
     <div class="faixa-img" aria-hidden="true"><video data-deriva="29s" style="--deriva:29s" src="video/esportes/corrida.mp4" poster="img/esportes/corrida-poster.webp" muted loop playsinline preload="none" disablepictureinpicture data-fundo-video data-paralaxe></video></div>
     <div>
-      <span class="rotulo">Já disponível</span>
-      <h2 id="baixar-titulo" class="t-grande" data-titulo><span class="t-linha"><span>Baixe</span></span><span class="t-linha"><span class="sol">agora</span></span></h2>
-      <p class="texto" style="margin-top:1.25rem">Grátis para começar. Parceiros, quadras, eventos e a sua evolução num só app.</p>
+      <span class="rotulo"><!--cms:textos.baixar.rotulo-->Já disponível<!--/cms:textos.baixar.rotulo--></span>
+      <h2 id="baixar-titulo" class="t-grande" data-titulo><span class="t-linha"><span><!--cms:textos.baixar.titulo1-->Baixe<!--/cms:textos.baixar.titulo1--></span></span><span class="t-linha"><span class="sol"><!--cms:textos.baixar.titulo2-->agora<!--/cms:textos.baixar.titulo2--></span></span></h2>
+      <p class="texto" style="margin-top:1.25rem"><!--cms:textos.baixar.texto-->Grátis para começar. Parceiros, quadras, eventos e a sua evolução num só app.<!--/cms:textos.baixar.texto--></p>
       <div style="display:flex;flex-wrap:wrap;gap:.75rem">
         <a class="bt bt-claro" href="#" data-loja="ios">App Store</a>
         <a class="bt bt-linha" href="#" data-loja="android">Google Play</a>
@@ -581,10 +562,10 @@
     </div>
     <div class="car" role="region" aria-roledescription="carrossel" aria-label="Últimas notícias">
       <ul class="car-trilho noticias" id="novidades-trilho" data-car-trilho tabindex="0">
-        <li role="group" aria-roledescription="slide" aria-label="1 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/centro.webp" alt="" loading="lazy" width="947" height="530"></div><div class="info"><time>Em breve</time><h3>Título da notícia 1</h3></div></article></li>
-        <li role="group" aria-roledescription="slide" aria-label="2 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/orientacao.webp" alt="" loading="lazy" width="947" height="527"></div><div class="info"><time>Em breve</time><h3>Título da notícia 2</h3></div></article></li>
-        <li role="group" aria-roledescription="slide" aria-label="3 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/nutricao.webp" alt="" loading="lazy" width="900" height="542"></div><div class="info"><time>Em breve</time><h3>Título da notícia 3</h3></div></article></li>
-      </ul>
+      <!--cms:novidades.noticias--><li role="group" aria-roledescription="slide" aria-label="1 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/centro.webp" alt="" loading="lazy"></div><div class="info"><time>Em breve</time><h3>Título da notícia 1</h3></div></article></li>
+        <li role="group" aria-roledescription="slide" aria-label="2 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/orientacao.webp" alt="" loading="lazy"></div><div class="info"><time>Em breve</time><h3>Título da notícia 2</h3></div></article></li>
+        <li role="group" aria-roledescription="slide" aria-label="3 de 3"><article class="noticia" data-revela-card><div class="foto"><img src="img/esportes/nutricao.webp" alt="" loading="lazy"></div><div class="info"><time>Em breve</time><h3>Título da notícia 3</h3></div></article></li><!--/cms:novidades.noticias-->
+    </ul>
     </div>
     <div class="planos-pontos" data-car-pontos aria-hidden="true"></div>
   </section>
@@ -703,32 +684,13 @@
   btPausa.addEventListener('click', () => { parado = !parado; try { localStorage.setItem('nuyvi-parado', parado ? '1' : '0'); } catch (e) {} aplicarPausa(); });
   aplicarPausa();
 
-  // Planos em carrossel (preços provisórios, os mesmos do site original)
-  const DESCONTO_ANUAL = 0.20;
-  const PLANOS = [
-    { id: 'gratuito', nome: 'Gratuito', mensal: 0,     texto: 'Para começar a treinar com a comunidade.',        cta: 'Começar grátis', capa: 'img/esportes/ciclismo.webp' },
-    { id: 'silver',   nome: 'Silver',   mensal: 19.90, texto: 'Mais conexões e o Personal IA no dia a dia.',     cta: 'Assinar Silver', capa: 'img/esportes/academia.webp' },
-    { id: 'gold',     nome: 'Gold',     mensal: 39.90, texto: 'IA completa, avatar 3D e prioridade nas quadras.', cta: 'Assinar Gold', capa: 'img/esportes/natacao.webp', destaque: 'Recomendado' },
-    { id: 'premium',  nome: 'Premium',  mensal: 69.90, texto: 'Tudo do Gold, com especialistas incluídos.',      cta: 'Assinar Premium', capa: 'img/esportes/orientacao.webp' },
-  ];
-  // [recurso, Gratuito, Silver, Gold, Premium]: true = incluído, false = não, texto = detalhe
-  const RECURSOS = [
-    ['Feed, stories e chat',            true,        true,        true,             true],
-    ['Descobrir parceiros',             '5 por dia', 'ilimitado', 'ilimitado',      'ilimitado'],
-    ['Eventos e corridas',              true,        true,        true,             true],
-    ['Criar seus próprios eventos',     false,       true,        true,             true],
-    ['Reserva de quadras',              true,        true,        'com prioridade', 'com prioridade'],
-    ['Personal IA',                     false,       'básico',    'completo',       'completo'],
-    ['Nutricionista IA',                false,       false,       true,             true],
-    ['Avatar 3D e evolução corporal',   false,       false,       true,             true],
-    ['Especialista por vídeo',          'avulso',    'avulso',    'avulso',         '1 consulta/mês'],
-    ['Desconto na loja',                false,       '5%',        '10%',            '15%'],
-  ];
+  // Planos em carrossel: dados vêm de conteudo/planos.json (gerados no HTML por build.mjs)
+  const { desconto: DESCONTO_ANUAL, planos: PLANOS } = JSON.parse(document.getElementById('dados-planos').textContent);
   const brl = v => v === 0 ? 'R$ 0' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const trilho = document.querySelector('[data-planos]');
   let anual = false;
   trilho.innerHTML = PLANOS.map((p, i) => {
-    const itens = RECURSOS.filter(r => r[i + 1] !== false).map(r => `<li>${r[i + 1] === true ? r[0] : `${r[0]}: ${r[i + 1]}`}</li>`).join('');
+    const itens = p.itens.map(t => `<li>${t}</li>`).join('');
     return `<li class="plano${p.destaque ? ' destaque-plano' : ''}" role="group" aria-roledescription="slide" aria-label="${i + 1} de ${PLANOS.length}: ${p.nome}">
       <div class="capa">${p.destaque ? `<span class="selo-plano">${p.destaque}</span>` : ''}<img src="${p.capa}" alt="" loading="lazy" width="930" height="530"></div>
       <div class="corpo"><h3>${p.nome}</h3><p class="resumo">${p.texto}</p>

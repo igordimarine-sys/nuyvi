@@ -1,0 +1,8 @@
+{
+  "cartoes": [
+    { "titulo": "Comunidade", "texto": "Feed, stories e chat com quem treina com você.", "imagem": "img/esportes/volei.webp", "posicao": "62% 50%", "inteira": false, "link": "#historia" },
+    { "titulo": "Performance e IA", "texto": "Foto do prato, Personal IA e evolução no avatar 3D.", "imagem": "img/esportes/relogio.webp", "posicao": "58% 50%", "inteira": false, "link": "#videos" },
+    { "titulo": "Gamificação", "texto": "Missões, sequência de dias e ranking entre amigos.", "imagem": "img/esportes/corrida.webp", "posicao": "60% 50%", "inteira": false, "link": "#premium" },
+    { "titulo": "Loja", "texto": "Equipamento com desconto de assinante.", "imagem": "img/loja/tenis.webp", "posicao": "", "inteira": true, "link": "#loja" }
+  ]
+}

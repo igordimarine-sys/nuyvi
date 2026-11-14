@@ -1,0 +1,22 @@
+{
+  "desconto_anual": 20,
+  "nota": "Preços provisórios, em reais. Cancele quando quiser.",
+  "planos": [
+    {
+      "nome": "Gratuito", "mensal": 0, "texto": "Para começar a treinar com a comunidade.", "botao": "Começar grátis", "capa": "img/esportes/ciclismo.webp", "selo": "",
+      "itens": ["Feed, stories e chat", "Descobrir parceiros: 5 por dia", "Eventos e corridas", "Reserva de quadras", "Especialista por vídeo: avulso"]
+    },
+    {
+      "nome": "Silver", "mensal": 19.9, "texto": "Mais conexões e o Personal IA no dia a dia.", "botao": "Assinar Silver", "capa": "img/esportes/academia.webp", "selo": "",
+      "itens": ["Feed, stories e chat", "Descobrir parceiros: ilimitado", "Eventos e corridas", "Criar seus próprios eventos", "Reserva de quadras", "Personal IA: básico", "Especialista por vídeo: avulso", "Desconto na loja: 5%"]
+    },
+    {
+      "nome": "Gold", "mensal": 39.9, "texto": "IA completa, avatar 3D e prioridade nas quadras.", "botao": "Assinar Gold", "capa": "img/esportes/natacao.webp", "selo": "Recomendado",
+      "itens": ["Feed, stories e chat", "Descobrir parceiros: ilimitado", "Eventos e corridas", "Criar seus próprios eventos", "Reserva de quadras: com prioridade", "Personal IA: completo", "Nutricionista IA", "Avatar 3D e evolução corporal", "Especialista por vídeo: avulso", "Desconto na loja: 10%"]
+    },
+    {
+      "nome": "Premium", "mensal": 69.9, "texto": "Tudo do Gold, com especialistas incluídos.", "botao": "Assinar Premium", "capa": "img/esportes/orientacao.webp", "selo": "",
+      "itens": ["Feed, stories e chat", "Descobrir parceiros: ilimitado", "Eventos e corridas", "Criar seus próprios eventos", "Reserva de quadras: com prioridade", "Personal IA: completo", "Nutricionista IA", "Avatar 3D e evolução corporal", "Especialista por vídeo: 1 consulta/mês", "Desconto na loja: 15%"]
+    }
+  ]
+}
