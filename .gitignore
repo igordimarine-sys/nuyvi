@@ -1,6 +1,7 @@
 # segredos e configuração local
 .env
 .env.*
+!.env.example
 .vercel/
 
 # arquivos de teste temporários

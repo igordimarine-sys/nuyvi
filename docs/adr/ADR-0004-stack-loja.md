@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aprovação do desenvolvedor) |
+| Status | Aprovado em 2026-11-14. Contas (Vercel, Neon, gateway) em nome da N.UY |
 | Data | 2026-11-14 |
 | Decisores | Desenvolvedor; proposta do dev-arquitetura |
 | Tipo | Técnico |

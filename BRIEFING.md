@@ -19,3 +19,7 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 - **Editar à mão:** mude o JSON e rode `node build.mjs` dentro de `site/` (pode rodar quantas vezes quiser). O build para com uma mensagem clara se faltar texto ou se a imagem não estiver em `img/`.
 - **Entrar no painel:** abra `https://nuyvi.vercel.app/admin/`, clique em "Entrar usando token de acesso" e cole um token do GitHub (fine-grained, só este repositório, permissão **Contents: Read and write**). Quem edita precisa ter acesso de escrita ao repositório. O botão "Entrar com GitHub" não funciona sem um servidor de OAuth, que não foi configurado.
 - **Para publicar sozinho a cada edição:** ligar o projeto `nuyvi` da Vercel ao repositório no GitHub, com Root Directory `site`. Sem isso, o commit do painel fica no GitHub e o site só muda no próximo `vercel deploy --prod`.
+
+## Loja (`loja/`)
+
+- Aplicação Next.js (TypeScript, Drizzle, PostgreSQL) separada de `site/`; em construção, só o esqueleto. Stack em `docs/adr/ADR-0004-stack-loja.md`, estrutura em `docs/tecnico/arquitetura.md`, como rodar em `loja/README.md`.
