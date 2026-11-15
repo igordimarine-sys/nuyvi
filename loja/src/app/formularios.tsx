@@ -43,8 +43,14 @@ export function FormEntrar() {
   const router = useRouter();
   return (
     <Form rotulo="Entrar" onEnviar={async (d) => {
-      const { error } = await authClient.signIn.email({ email: campo(d, "email"), password: campo(d, "senha") });
-      if (!error) { router.push("/"); router.refresh(); return { ok: true, msg: "Entrando..." }; }
+      const { data, error } = await authClient.signIn.email({ email: campo(d, "email"), password: campo(d, "senha") });
+      if (!error) {
+        // Equipe vai para o painel; o papel aqui só escolhe o destino, /admin confere no servidor.
+        const equipe = data?.user.role === "operador" || data?.user.role === "admin";
+        router.push(equipe ? "/admin" : "/");
+        router.refresh();
+        return { ok: true, msg: "Entrando..." };
+      }
       return { ok: false, msg: error.status === 429 ? MUITAS : "E-mail ou senha incorretos, ou e-mail ainda não confirmado." };
     }}>
       <Email /><Senha />
