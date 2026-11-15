@@ -9,7 +9,6 @@
 - Loja: pagamento que chega depois de `expira_em` (reserva pode ter ido para outro pedido), formato do `evento_id` por gateway, cron de expiração e e-mail (dev-integrations).
 - Loja: retenção e anonimização de pedidos e de `gateway_eventos.payload` (lgpd-specialist).
 - Loja: tabela de troca/devolução depende de P-10; frete grátis de P-06; estorno pelo operador de P-08.
-- Loja: conferir o primeiro run do CI no GitHub após o push da branch `loja` (`actionlint` não rodou localmente).
 - Loja: `npm audit` acusa 8 vulnerabilidades moderadas nas dependências do create-next-app; avaliar (dev-security).
 - Ligar o projeto `nuyvi` da Vercel ao repositório do GitHub (Root Directory `site`) para cada edição do painel publicar sozinha. Na primeira publicação, conferir se a Vercel roda o `node build.mjs` e serve a pasta `site` (`buildCommand` em `site/vercel.json`, saída padrão do preset "Other").
 - Testar o painel em produção: entrar com token, editar um produto, salvar, conferir o commit e o site atualizado.
@@ -38,7 +37,7 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora de `site/conteudo/loja.json`.
 
 ## Feito
-- 2026-11-14: Loja: CI corrigido antes do primeiro run (simulado em clone limpo): `typecheck` passa a rodar `next typegen` antes do `tsc` (`LayoutProps` vinha de `.next/`) e o job define variáveis fictícias para o `build` validar `env.ts`.
+- 2026-11-14: Loja: CI corrigido antes do primeiro run (simulado em clone limpo): `typecheck` passa a rodar `next typegen` antes do `tsc` (`LayoutProps` vinha de `.next/`) e o job define variáveis fictícias para o `build` validar `env.ts`. Branch `loja` no GitHub; primeiro run `loja-ci` verde.
 - 2026-11-14: Loja (fundação 3): login próprio com Better Auth 1.7.25 (e-mail e senha, confirmação obrigatória, recuperação), papéis e `exigirPapel`, script `admin:criar`, token de acompanhamento do visitante, vínculo de pedidos (CA-LOJ-47), FK `pedidos.usuario_id`, migration `0001_autenticacao`; `docs/tecnico/autenticacao.md`.
 - 2026-11-14: Loja (fundação 1, ambiente): Postgres 17 em Docker em `127.0.0.1:5436`, scripts `db:*` lendo `.env.local`, CI `.github/workflows/loja-ci.yml`.
 - 2026-11-14: Loja (fundação 2): modelo de dados Drizzle, 15 tabelas, migration `loja/drizzle/0000_modelo_inicial.sql` aplicada no local; decisões em `docs/tecnico/banco.md`.
