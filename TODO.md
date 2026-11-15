@@ -11,11 +11,20 @@
 - Loja: retenção e anonimização de pedidos e de `gateway_eventos.payload` (lgpd-specialist).
 - Loja: tabela de troca/devolução depende de P-10; frete grátis de P-06; estorno pelo operador de P-08.
 - Loja: `npm audit` acusa 8 vulnerabilidades moderadas nas dependências do create-next-app; avaliar (dev-security).
-- Ligar o projeto `nuyvi` da Vercel ao repositório do GitHub (Root Directory `site`) para cada edição do painel publicar sozinha. Na primeira publicação, conferir se a Vercel roda o `node build.mjs` e serve a pasta `site` (`buildCommand` em `site/vercel.json`, saída padrão do preset "Other").
-- Testar o painel em produção: entrar com token, editar um produto, salvar, conferir o commit e o site atualizado.
-- Teste do painel com token na branch `painel` (já no GitHub). `https://nuyvi.vercel.app/admin/` ainda dá 404: o painel não foi publicado. Ao juntar na `main`, trocar `branch: painel` para `branch: main` em `site/admin/config.yml`.
+- Painel único, fase 1a (edição do conteúdo do site, primeiro módulo do painel, pode começar já; plano na seção 15 de `docs/specs/loja.md` 0.4, tarefas 9 a 15). Até lá, o conteúdo do site é editado pelo desenvolvedor como hoje.
+- Painel único (ADR-0006 aceito): tabela de versões do conteúdo, `jsonb` completo, autor, blocos alterados, estado do disparo (dev-database).
+- Painel único (ADR-0006 aceito): módulo `loja/src/modules/conteudo-site/`, endpoint público de leitura, upload para o Blob, chamada do hook só em Production, script de migração (versão 1 a partir de `site/conteudo/*.json`, imagens `img/...` sem copiar) e mudanças no `site/build.mjs` (`fetch` em `CONTEUDO_URL`, host do Blob em `imagem()`, `destino` nos cartões da Loja) (dev-react; revisão da falha do hook: dev-integrations).
+- Painel único: ligar o projeto `nuyvi` ao GitHub (Root Directory `site`, produção `main`), Ignored Build Step dos dois projetos sem barrar o deploy hook (testar), criar o deploy hook, variáveis `CONTEUDO_URL` (site) e `SITE_DEPLOY_HOOK_URL` (loja, só Production); sequência de corte (dev-devops).
+- Painel único: projeto `nuyvi` no time Pro da N.UY, store Blob público ligado à loja (Preview separado de Production), domínio da loja (dev-infra; depende das contas da N.UY).
+- Painel único: antes do corte, levar para a `main` o `site/build.mjs` e o `index.html` com marcadores (hoje só nas branches `painel`/`loja`), **sem** `site/admin/`; depois do corte, remover `site/conteudo/` e `site/img/conteudo/.gitkeep` (dev-devops + desenvolvedor).
+- Painel único: revisão do upload (sem SVG, tipo conferido pelo conteúdo), do endpoint público (token de leitura ou não), da URL do hook e das URLs aceitas no `build.mjs` (dev-security).
+- Painel único: teste de contrato `build.mjs` × `obterPublicado()`, concorrência por `versaoBase`, hook falhando (versão não servida), permissão CA-LOJ-56 (dev-tests).
+- Spec: com o ADR-0006, tirar `[PREMISSA: a confirmar pelo dev-arquitetura]` de RNF-14, CA-LOJ-59 e PREM-12 e fechar PEND-CONT (arquiteto-specs).
+- Painel único: P-15 (quem edita o conteúdo do site; papel só de conteúdo se for outra pessoa: dev-auth), P-16 a P-18 (tempo de publicação, prévia, desfazer) para o cliente.
+- Painel único: a seção "Painel de conteúdo" do `BRIEFING.md` descreve o Sveltia, que foi descartado: corrigir já (conteúdo editado pelo desenvolvedor até a fase 1a) e, depois da implementação, descrever o painel único (docs-handoff).
+- Branch `painel` fica só como referência: não juntar `site/admin/` na `main`. Ligar a Vercel do site ao GitHub: sim, é pré-requisito do deploy hook (ADR-0006).
 - Fotos reais do cliente em alta resolução, notícias reais, links das lojas (vindos do BRIEFING).
-- Loja: enviar ao cliente as perguntas ainda abertas da seção 13 de `docs/specs/loja.md` (C-01, P-03, P-05 a P-14) e atualizar a spec para 1.0 com as respostas (arquiteto-specs).
+- Loja: enviar ao cliente as perguntas ainda abertas da seção 13 de `docs/specs/loja.md` (C-01, P-03, P-05 a P-18) e atualizar a spec para 1.0 com as respostas (arquiteto-specs).
 - Loja: verificar a integração com o Base44 para o desconto de assinante (PEND-B44: API/funções de backend do Base44, vínculo de contas por e-mail verificado ou alternativa) na documentação oficial e testando no app; registrar ADR da fase 1b (desenvolvedor + dev-integrations + dev-auth). Confirmar acesso de edição ao app no Base44 (D-02).
 - Loja: C-01, o desconto da loja vale no plano mensal ou só no anual? (cartões dos planos × seção Bônus do site).
 - Loja: P-14, decidir com o cliente se os textos do site que prometem desconto de assinante mudam enquanto o MVP vende sem desconto (copywriter).
@@ -35,9 +44,14 @@
 - Loja: nada de segredos, dados de clientes ou exportações no Git (repositório público), RNF-13.
 - Loja: revisão de privacidade (dados de visitante, vínculo de pedidos à conta, menores, retenção) com lgpd-specialist.
 - Loja: se for proposta ao cliente, orçamento do MVP com orcamentos-propostas (D-03).
-- Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora de `site/conteudo/loja.json`.
+- Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: Origem do deploy atual de `nuyvi.vercel.app`: igual ao `site/index.html` da `main` (só difere em CRLF), sem marcadores `cms:`. O corte do ADR-0006 parte da `main`.
+- 2026-11-15: ADR-0006 aceito pelo desenvolvedor (status do ADR-0006, do ADR-0004 e de `arquitetura.md` atualizados).
+- 2026-11-15: PEND-CONT (tarefa 9): ADR-0006 proposto (conteúdo do site no banco da loja com rebuild do site estático); `docs/tecnico/arquitetura.md` sem o Sveltia, com painel único e fluxo de publicação; status do ADR-0004 aponta a substituição das linhas "Painel" e "Ligação com o site".
+- 2026-11-15: Descartado por D-04 (`/admin` Sveltia não será publicado): ligar a Vercel do `nuyvi` ao GitHub para o painel publicar sozinho, testar o painel Sveltia em produção e testar o painel com token na branch `painel` / trocar `branch: painel` por `main`. Spec 0.4: edição de conteúdo vira fase 1a, antes do resto do painel.
+- 2026-11-15: Spec da loja 0.3 com painel único para conteúdo do site e loja (ADR-0005; HU-12/13, CA-LOJ-50 a 59, RN-LOJ-24 a 26, RNF-14/15); ADR-0001 marcado como substituído no item 4 (D5).
 - 2026-11-14: Loja: `npm test` no `loja-ci` com service container Postgres 17.
 - 2026-11-14: Loja: primeira suíte de testes (Vitest 5.1.0, `npm test`, 51 testes, Postgres real `loja_test`): garantias do schema (CHECK de estoque e de estados, `gateway_eventos` único, 1 pagamento aprovado por pedido, `emails_saida` único, FK `pedidos.usuario_id`), token de acompanhamento (90 dias), vínculo de pedidos (CA-LOJ-47/A-01) e `exigirPapel`.
 - 2026-11-14: Loja: CI corrigido antes do primeiro run (simulado em clone limpo): `typecheck` passa a rodar `next typegen` antes do `tsc` (`LayoutProps` vinha de `.next/`) e o job define variáveis fictícias para o `build` validar `env.ts`. Branch `loja` no GitHub; primeiro run `loja-ci` verde.

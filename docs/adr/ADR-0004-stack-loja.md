@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aprovado em 2026-11-14. Contas (Vercel, Neon, gateway) em nome da N.UY |
+| Status | Aprovado em 2026-11-14. Contas (Vercel, Neon, gateway) em nome da N.UY. Linhas "Painel" e "Ligação com o site" a serem **substituídas por [ADR-0006](ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md)** (aceito em 2026-11-15) |
 | Data | 2026-11-14 |
 | Decisores | Desenvolvedor; proposta do dev-arquitetura |
 | Tipo | Técnico |

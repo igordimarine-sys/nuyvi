@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceito (decisão de negócio) |
+| Status | Aceito (decisão de negócio). Item 4 (D5), no ponto dos dois painéis, **substituído por [ADR-0005](ADR-0005-painel-unico-conteudo-do-site-e-loja.md)** em 2026-11-15 |
 | Data | 2026-11-14 |
 | Decisores | Desenvolvedor, pela N.UY |
 | Projeto / spec | [docs/specs/loja.md](../specs/loja.md) · RN-LOJ-01, RN-LOJ-02, RN-LOJ-18 |

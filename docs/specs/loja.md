@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Cliente | N.UY, app esportivo (parceiros de treino, quadras, eventos, especialistas, IA) |
-| Versão | 0.2 |
-| Status | Rascunho, com perguntas abertas ao cliente (seção 13) |
-| Autor | arquiteto-specs · Data: 2026-11-14 |
+| Versão | 0.4 |
+| Status | Rascunho, com perguntas abertas ao cliente e ao desenvolvedor (seção 13) |
+| Autor | arquiteto-specs · Data: 2026-11-15 |
 | Aprovada por / em | (pendente) |
-| Fontes | Decisões do desenvolvedor repassadas em 2026-11-14 (D1 a D5, ver ADR-0001 e ADR-0002); respostas do desenvolvedor em 2026-11-14 (P-01, P-02, P-04, D-01; ver ADR-0003); `BRIEFING.md`; `site/index.html` (seções Planos, Bônus, Loja); `site/conteudo/loja.json` e `planos.json` |
+| Fontes | Decisões do desenvolvedor repassadas em 2026-11-14 (D1 a D5, ver ADR-0001 e ADR-0002); respostas do desenvolvedor em 2026-11-14 (P-01, P-02, P-04, D-01; ver ADR-0003); decisão do desenvolvedor em 2026-11-15: painel único (ADR-0005, substitui a D5 no ponto dos dois painéis); `BRIEFING.md`; `site/index.html` (seções Planos, Bônus, Loja); `site/admin/config.yml` e `site/conteudo/*.json` (branch `painel`) |
 
 > Convenções: `CA-LOJ-xx` critério de aceite · `RN-LOJ-xx` regra de negócio · `RNF-xx` · `[PENDENTE: ...]` falta resposta · `[PREMISSA: ...]` assumido por nós, a confirmar.
 > Esta spec define **o quê e o porquê**. Stack, banco, forma de integrar e telas são decisões de `dev-arquitetura` e dos especialistas (seção 15).
@@ -38,6 +38,7 @@ Vender produtos esportivos (calçados, roupas, acessórios) com pagamento online
 4. Informa endereço, vê o frete, paga com Pix ou cartão. No MVP, todos pagam o preço cheio; o desconto de assinante entra quando for possível ler o plano no app (ADR-0003).
 5. A N.UY separa, emite a nota, envia e informa o rastreio; o comprador acompanha em "Meus pedidos".
 6. Cancelamentos, estornos e trocas são tratados pelo operador da N.UY no painel da loja.
+7. A equipe da N.UY usa **um único painel**, com o mesmo login, para gerir a loja e editar o conteúdo do site (textos, planos, Explore, Novidades, cartões da Loja, fotos), sem token do GitHub (ADR-0005).
 
 **Pedido × necessidade × desejo futuro**
 
@@ -46,6 +47,8 @@ Vender produtos esportivos (calçados, roupas, acessórios) com pagamento online
 | Loja única para site e app, sistema próprio, N.UY vendedora | Pedido (decidido, ADR-0001) |
 | Desconto automático pelo plano da conta N.UY | Pedido (decidido, ADR-0002); **suspenso no MVP** até confirmar como ler o plano no Base44 (ADR-0003) |
 | Login próprio da loja, compra como visitante, loja web aberta pelo app | Pedido (respostas P-01, P-02, P-04) |
+| Painel único, com o login da equipe, para conteúdo do site e loja | Pedido (desenvolvedor, 2026-11-15, ADR-0005) |
+| Editar o site sem token do GitHub e com um só controle de acesso | Necessidade (inferida da decisão) |
 | Vender com pagamento online e estoque confiável | Necessidade |
 | Desconto como alavanca de assinatura | Necessidade (inferida do site: "Assinante paga até 15% menos") |
 | Telas nativas da loja dentro do app, cupons, frete por transportadora automático, NF-e automática | Desejo futuro (fases seguintes) |
@@ -72,6 +75,9 @@ Vender produtos esportivos (calçados, roupas, acessórios) com pagamento online
 | Troca | Devolução de um item com envio de outro (outro tamanho, outro produto) | Política: `[PENDENTE: P-10]` |
 | Devolução / arrependimento | Devolução com reembolso | Regras legais com advogado (seção 12) |
 | Estorno | Devolução do dinheiro pelo mesmo meio de pagamento | |
+| Painel | O painel administrativo **único** da N.UY: gestão da loja e edição do conteúdo do site, com o login da equipe | ADR-0005. Não confundir com o `/admin` Sveltia (descartado, D-04) |
+| Conteúdo do site (vitrine) | Textos, planos (cartões), cartões do Explore, Novidades, cartões da seção Loja e fotos que aparecem na página pública do site | Inventário na seção 5.9. Nunca contém preço de produto, estoque, frete, percentuais ou pedidos (RN-LOJ-18) |
+| Publicar | Tornar visível no site, para quem visita, o conteúdo editado no painel | Prévia/rascunho antes de publicar: `[PENDENTE: P-17]` |
 
 ---
 
@@ -82,10 +88,12 @@ Vender produtos esportivos (calçados, roupas, acessórios) com pagamento online
 | Comprador visitante | Qualquer pessoa, sem conta da loja | Ver catálogo, montar carrinho, comprar pelo preço cheio, acompanhar o pedido pelo link do e-mail | Receber desconto de assinante; ver pedidos de outros |
 | Comprador com conta | Pessoa com conta da loja | Tudo do visitante + "Meus pedidos" com todos os pedidos dela + endereços salvos `[PREMISSA]` | Ver pedidos de outros; alterar preço ou desconto |
 | Comprador assinante (fase dependente) | Comprador com conta e plano N.UY verificado | Tudo do comprador com conta + desconto do plano vigente | Idem |
-| Operador de pedidos | Funcionário da N.UY | Ver e atualizar pedidos (separação, nota, envio, rastreio), registrar cancelamento, estorno e troca, dar entrada de estoque por devolução | Alterar preços, produtos, percentuais de desconto, frete; gerenciar usuários |
-| Admin da loja | Responsável da N.UY | Tudo do operador + produtos, variações, fotos, preços, estoque (entrada e ajuste), frete, percentuais de desconto, usuários da equipe | Ver dados completos de cartão (nunca ficam na loja) |
+| Operador de pedidos | Funcionário da N.UY | Ver e atualizar pedidos (separação, nota, envio, rastreio), registrar cancelamento, estorno e troca, dar entrada de estoque por devolução | Alterar preços, produtos, percentuais de desconto, frete; gerenciar usuários; editar o conteúdo do site `[PREMISSA: P-15]` |
+| Admin da loja | Responsável da N.UY | Tudo do operador + produtos, variações, fotos, preços, estoque (entrada e ajuste), frete, percentuais de desconto, usuários da equipe + **conteúdo do site** (seção 5.9) | Ver dados completos de cartão (nunca ficam na loja) |
 
 `[PENDENTE: P-08]` Quantas pessoas operam e se operador pode estornar sozinho ou só com o admin. `[PREMISSA: estorno pode ser feito por operador e admin, com registro de quem fez]`.
+
+`[PENDENTE: P-15]` Quem edita o conteúdo do site no painel único (ADR-0005). `[PREMISSA: só o admin, pelo princípio do menor acesso: o operador não mexe em nada que o público vê]`. Se a N.UY tiver alguém que **só** cuida do conteúdo (ex.: marketing) e não deve ver pedidos nem dados de clientes, será preciso um papel novo ("editor de conteúdo"), definido pelo `dev-auth`; não usar operador nem admin para essa pessoa.
 
 **Matriz de permissões (resumo)**
 
@@ -99,6 +107,7 @@ Vender produtos esportivos (calçados, roupas, acessórios) com pagamento online
 | Cancelar/estornar pedido | pedir (ver RN) | pedir (ver RN) | ✔ | ✔ |
 | Produtos, preços, estoque, frete, % de desconto | ✘ | ✘ | ✘ | ✔ |
 | Usuários da equipe | ✘ | ✘ | ✘ | ✔ |
+| Conteúdo do site (editar, fotos, publicar) | ✘ | ✘ | ✘ `[PREMISSA: P-15]` | ✔ |
 
 ---
 
@@ -113,7 +122,7 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 4. Frete por tabela configurada pela N.UY (faixas de CEP/estado e valor), com área de entrega definida.
 5. Estoque por variação, reserva durante o pagamento e baixa no pagamento confirmado.
 6. "Meus pedidos" para o comprador e e-mails de pedido (recebido, pago, enviado com rastreio, cancelado).
-7. Painel da loja: produtos, estoque, frete, % de desconto, pedidos (estados, número da nota, rastreio, cancelamento/estorno, troca registrada manualmente), usuários admin/operador.
+7. Painel único (ADR-0005): produtos, estoque, frete, % de desconto, pedidos (estados, número da nota, rastreio, cancelamento/estorno, troca registrada manualmente), usuários admin/operador e **edição do conteúdo do site** (seção 5.9). A edição de conteúdo é o **primeiro módulo do painel**, entregue antes do resto (fase 1a, 4.2; D-04 respondida).
 8. Acesso pelo app: o app abre a loja como página web (sem telas nativas, P-02 respondida). O comprador entra com a conta da loja ou compra como visitante; não há login automático vindo do app.
 9. Nota fiscal emitida **fora** do sistema, no emissor que a N.UY usar; o operador registra número/chave no pedido.
 10. Ajuste do site: a seção Loja passa a levar à loja real (seção 5.8).
@@ -122,10 +131,12 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 
 | Fase | Conteúdo | Depende de |
 |---|---|---|
+| 1a (antes do resto do MVP) | Primeiro módulo do painel único: edição do conteúdo do site (HU-12, HU-13, CA-LOJ-50 a 59), usando o login e os papéis da equipe que já existem. Não depende de gateway, frete nem NF-e. Até ela entrar, o conteúdo do site continua sendo editado pelo desenvolvedor, como hoje | PEND-CONT (dev-arquitetura), P-15, MFA da equipe antes de liberar contas de equipe em produção |
 | 1b | Desconto de assinante: vínculo da conta da loja com a conta N.UY, leitura do plano vigente, percentuais no painel, HU-03 e CA-LOJ-04, 09 a 12, 42 | Confirmar como ler o plano no Base44 (PEND-B44, ADR-0003); P-03; C-01; revisão dos textos do site |
 | 2 | Emissão de NF-e integrada ao emissor; cálculo de frete por transportadora/Correios; etiquetas de envio | MVP no ar; definição do emissor (P-09) e da logística (P-06) |
 | 2 | Solicitação de troca/devolução pelo próprio comprador em "Meus pedidos" | Política de troca validada (P-10) |
 | 2 | Destaques do catálogo puxados automaticamente para a seção Loja do site | API de catálogo do MVP |
+| 2 | Conteúdo do site: prévia/rascunho antes de publicar e voltar a uma versão anterior, se o cliente pedir | P-17, P-18; decisão do `dev-arquitetura` sobre onde o conteúdo vive |
 | 2 | Relatórios (vendas por período, mais vendidos, desconto concedido por plano) e exportação | MVP |
 | 3 | Telas nativas da loja no app (P-02: "por enquanto" página web) | Nova decisão do cliente e `dev-mobile` |
 | 3 | Entrada única (mesma conta no app e na loja) | Viabilidade no Base44 |
@@ -149,6 +160,9 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 - Desconto de assinante no MVP (fase 1b, ADR-0003).
 - Login com a conta do app N.UY e entrada única entre app e loja.
 - Qualquer alteração no app N.UY (Base44) no MVP.
+- Conteúdo do site: tornar editável o que hoje **não** é editável no `/admin` Sveltia (estrutura da página, vídeos, cabeçalho, rodapé, seções fixas no HTML); criar ou reordenar seções; editor visual livre (arrastar blocos); agendamento de publicação; fluxo de aprovação entre pessoas; outros idiomas; migração do histórico de commits do conteúdo para o painel.
+- Manter dois painéis permanentemente (ADR-0005); entrar no painel com token do GitHub.
+- Publicar ou manter o `/admin` Sveltia, nem como provisório (D-04: descartado; a branch `painel` fica só como referência).
 
 ---
 
@@ -258,7 +272,7 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 | CA-LOJ-38 | **Dado** um pedido "Entregue", **quando** o operador registra uma troca (itens devolvidos, itens novos, motivo), **então** o pedido fica "Em troca", a variação nova é reservada e, ao confirmar o recebimento do item devolvido, segue CA-LOJ-27. |
 | CA-LOJ-39 | **Dado** um pedido "Entregue", **quando** o operador registra devolução com reembolso total ou parcial (valor ≤ total pago), **então** o estorno é solicitado ao gateway pelo valor informado e o pedido fica "Devolvido" com o valor reembolsado visível. |
 
-### 5.8 Painel da loja e impacto no site atual
+### 5.8 Painel único (gestão da loja) e impacto no site atual
 
 **HU-11 — Gerir catálogo e regras.** Como **admin**, quero cadastrar produtos, preços, estoque, frete e percentuais de desconto, para operar a loja sem depender do desenvolvedor. *Must · Fase 1*
 
@@ -269,16 +283,56 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 | CA-LOJ-42 *(fase 1b)* | **Dado** o admin muda o desconto do Gold de 10% para 12%, **quando** salva, **então** a mudança vale para pedidos confirmados a partir daí, e o histórico registra valor anterior, novo, data e quem mudou `[PENDENTE: P-05, onde vive o percentual: loja ou app]`. |
 | CA-LOJ-43 | **Dado** um operador, **quando** tenta abrir produtos, preços, frete, descontos ou usuários, **então** vê "Sem permissão". |
 
-**Impacto sobre o painel `/admin` (Sveltia CMS) e a seção Loja do site (D5)**
+**Impacto sobre o painel `/admin` (Sveltia CMS) e a seção Loja do site (ADR-0005, substitui a D5 no ponto dos dois painéis)**
 
-- O painel `/admin` continua dono do **conteúdo de vitrine**: textos, planos (cartões), Explore, Novidades e os cartões editoriais da seção Loja (`site/conteudo/loja.json`: rótulo, títulos, cartões de categoria com foto e texto).
-- **Produtos vendáveis, preços, estoque, frete, descontos e pedidos passam a viver só no sistema da loja** (RN-LOJ-18). O `loja.json` nunca terá preço nem estoque, para não existirem duas fontes.
-- No MVP, a seção Loja do site muda pouco: os cartões continuam editoriais, o botão deixa de ser "Comprar no app" (que leva ao download) e passa a levar à categoria correspondente na loja. O texto do botão e o destino são campos de conteúdo `[PREMISSA: o link vira campo do cartão no painel; implementação é do dev de front, texto do copywriter]`. Com a P-02 respondida (página web), o título "Equipado sem sair do app" depende de como o Base44 abre o link (PEND-B44b); revisar com `copywriter`.
-- Na fase 2, a seção Loja pode mostrar destaques puxados do catálogo; aí os cartões de produto saem do `loja.json`.
-- **Divergência a vigiar:** `planos.json` tem o texto "Desconto na loja: 5%/10%/15%" escrito à mão nos itens de cada plano, e a seção Bônus diz "Até 15% de desconto em todos os produtos da loja". Se o percentual mudar na loja (ou no app), esses textos precisam ser atualizados também. Ver RISCO-05 e a contradição C-01.
-- O painel atual entra com token do GitHub e edita um repositório **público**: a gestão da loja exige um painel com login próprio da equipe e dados fora do Git (pedidos e dados pessoais nunca vão para o repositório).
-- **Onde fica o código (D-01 respondida):** neste mesmo repositório, branch `loja`, numa pasta própria (ex.: `loja/`), separada de `site/`. O `site/` e o painel `/admin` não passam a depender da loja; a ligação entre eles é só o link dos cartões. Nome exato da pasta e forma de publicar: `dev-arquitetura` e `dev-devops`.
+- **Um painel só.** A edição do conteúdo do site sai do `/admin` Sveltia e passa para o painel da loja, com o mesmo login da equipe e os papéis da loja (RN-LOJ-24, seção 5.9). Ninguém entra no painel único com token do GitHub.
+- **`/admin` Sveltia descartado (D-04, 2026-11-15):** não será publicado; a branch `painel` fica só como referência (inventário da 5.9). Até a fase 1a entrar, o conteúdo do site continua sendo editado pelo desenvolvedor, como hoje.
+- **Fonte única continua (RN-LOJ-18):** produtos vendáveis, preços, estoque, frete, descontos e pedidos vivem só nos registros da loja. O conteúdo da seção Loja do site (cartões editoriais) nunca terá preço nem estoque, mesmo editado no mesmo painel.
+- **Pedidos e dados pessoais continuam fora do Git** (RNF-13), seja qual for o lugar escolhido para o conteúdo do site.
+- **Para quem visita, o site continua independente:** abre e mostra o último conteúdo publicado mesmo com o sistema da loja fora do ar (RNF-14, `[PREMISSA: a confirmar pelo dev-arquitetura]`). Quem **edita** passa a depender da loja no ar (RISCO-11).
+- **Onde o conteúdo vive e como chega ao site** (JSON no Git gravado pelo servidor da loja via API do GitHub, banco com o site lendo, ou outra): decisão do `dev-arquitetura`, com ADR técnico (seção 15, tarefa 9). Esta spec só fixa o comportamento (CA-LOJ-50 a 59).
+- No MVP, a seção Loja do site muda pouco: os cartões continuam editoriais, o botão deixa de ser "Comprar no app" (que leva ao download) e passa a levar à categoria correspondente na loja. O texto do botão e o destino são campos do cartão, editáveis no painel único (CA-LOJ-58) `[PREMISSA: texto do copywriter]`. Com a P-02 respondida (página web), o título "Equipado sem sair do app" depende de como o Base44 abre o link (PEND-B44b); revisar com `copywriter`.
+- Na fase 2, a seção Loja pode mostrar destaques puxados do catálogo; aí os cartões de produto deixam de ser editoriais.
+- **Divergência a vigiar:** os planos do site têm o texto "Desconto na loja: 5%/10%/15%" escrito à mão nos itens de cada plano, e a seção Bônus diz "Até 15% de desconto em todos os produtos da loja". Agora que os dois ficam no mesmo painel, a divergência fica mais visível, mas **não** some sozinha: se o percentual mudar na loja (ou no app), esses textos precisam ser atualizados também. Ver RISCO-05 e a contradição C-01.
+- **Onde fica o código (D-01 respondida):** neste mesmo repositório, branch `loja`, pasta própria (`loja/`), separada de `site/`. A forma de o site receber o conteúdo publicado pelo painel é do `dev-arquitetura` e do `dev-devops`.
 - **Promessa de desconto no site enquanto a fase 1b não chega:** a seção Bônus ("Até 15% de desconto em todos os produtos da loja"), o cartão "Roupas e acessórios" ("Assinante paga até 15% menos"), o cartão Explore ("Equipamento com desconto de assinante") e os itens "Desconto na loja" dos planos prometem algo que o MVP não entrega. Ver RISCO-09: decidir com o cliente se esses textos mudam no lançamento da loja (copywriter).
+
+### 5.9 Conteúdo do site no painel único
+
+**HU-12 — Editar o conteúdo do site.** Como **admin** `[PREMISSA: P-15]`, quero editar no mesmo painel da loja os textos, planos, cartões do Explore, notícias e cartões da Loja do site, com as fotos, para atualizar o site sem token do GitHub e sem chamar o desenvolvedor. *Must · Fase 1a (primeiro módulo do painel, antes do resto do MVP; D-04)*
+
+**HU-13 — Publicar com segurança.** Como **admin**, quero publicar o que editei e ter certeza de que o site só muda quando a edição está completa, para não deixar o site quebrado ou pela metade. *Must · Fase 1a*
+
+**Inventário do que é editável hoje** (fonte: `site/admin/config.yml` e `site/conteudo/*.json`, branch `painel`). O painel único edita **os mesmos blocos e campos**; nada a mais no MVP (4.3).
+
+| Bloco do site | Campos | Listas (adicionar, remover, reordenar) | Fotos |
+|---|---|---|---|
+| Abertura | Frase; linha das plataformas | — | — |
+| Rede de parceiros (abertura) | Título (destaque); título (continuação); texto | — | — |
+| Planos e preços | Desconto do plano anual (%, 0 a 90); nota abaixo dos planos | Planos: nome, preço mensal (R$), resumo, texto do botão, selo (opcional), itens "O que inclui" (lista de textos) | Capa de cada plano |
+| Bônus do plano anual | Rótulo; título linha 1; título linha 2; texto | Vantagens (lista de textos) | — |
+| História | Rótulo; título linha 1; título linha 2; texto | — | — |
+| Explore (cartões) | — | Cartões: título, texto, enquadramento da imagem (opcional), "mostrar imagem inteira" (sim/não), seção de destino (escolha entre: Vídeos, Planos, Bônus anual, História, Explore, Loja, Baixar o app, Novidades) | Imagem de cada cartão |
+| Loja (cartões editoriais) | Rótulo da seção; título linha 1; título linha 2 (vazada) | Cartões: nome, descrição, descrição da foto (acessibilidade, opcional), texto do botão; **destino do botão** (novo, CA-LOJ-58) | Foto de cada cartão |
+| Novidades | — | Notícias: data (texto livre), título | Imagem de cada notícia |
+| Baixe o app | Rótulo; título linha 1; título linha 2; texto | — | — |
+
+> Os preços dos **planos de assinatura** são exibição: quem cobra os planos é o app (4.3). Eles continuam no conteúdo do site; não confundir com preço de produto da loja (RN-LOJ-18).
+
+| ID | Critério de aceite |
+|---|---|
+| CA-LOJ-50 | **Dado** um usuário da equipe com permissão de conteúdo (RN-LOJ-25) logado no painel, **quando** abre "Conteúdo do site", **então** vê os 9 blocos do inventário acima, cada um com os valores publicados no momento e exatamente os campos listados. |
+| CA-LOJ-51 | **Dado** o bloco "História" com o texto A publicado, **quando** o usuário troca para o texto B e publica, **então** quem abre o site passa a ver B em até o tempo definido em RNF-15, e o resto da página continua igual. |
+| CA-LOJ-52 | **Dado** uma edição com campo obrigatório vazio (ex.: título de um cartão do Explore) ou número fora da faixa (ex.: desconto anual de 95%), **quando** o usuário tenta publicar, **então** o campo é apontado, nada é publicado e o site continua com a versão anterior. Campos opcionais são só os marcados "opcional" no inventário. |
+| CA-LOJ-53 | **Dado** uma lista do inventário (ex.: cartões do Explore), **quando** o usuário adiciona um item, remove outro e muda a ordem, e publica, **então** o site mostra os itens na nova ordem, sem o removido. `[PREMISSA: sem mínimo nem máximo de itens; se o layout exigir limite, dev-uiux define e o painel impede passar dele]` |
+| CA-LOJ-54 | **Dado** um bloco com foto, **quando** o usuário envia uma imagem em formato e tamanho aceitos e publica, **então** a nova imagem aparece no lugar da anterior no site. **Quando** envia arquivo fora do aceito, **então** vê o motivo ("formato não aceito" ou "arquivo grande demais") e nada muda. Formatos e tamanho máximo: `[PENDENTE: dev-performance-seo e dev-uiux definem]`. |
+| CA-LOJ-55 | **Dado** que a publicação falha no meio (ex.: serviço que entrega o conteúdo ao site fora do ar), **quando** o usuário publica, **então** vê "Não foi possível publicar, tente de novo", a edição dele não se perde da tela, e o site continua inteiro com a versão anterior (nunca metade nova e metade antiga). |
+| CA-LOJ-56 | **Dado** um usuário da equipe sem permissão de conteúdo (pela premissa de P-15, o operador), **quando** tenta abrir "Conteúdo do site" ou publicar por qualquer caminho, **então** vê "Sem permissão" e nada é alterado. |
+| CA-LOJ-57 | **Dado** uma publicação feita, **quando** o admin consulta o histórico de conteúdo, **então** vê data/hora, quem publicou e qual bloco mudou (RN-LOJ-26). |
+| CA-LOJ-58 | **Dado** um cartão da seção Loja, **quando** o admin define o destino do botão (categoria da loja) e publica, **então** o botão no site leva àquela categoria da loja. O cartão não tem campo de preço nem de estoque (RN-LOJ-18). |
+| CA-LOJ-59 | **Dado** o sistema da loja (e portanto o painel) fora do ar, **quando** alguém abre o site, **então** o site abre normalmente com o último conteúdo publicado (RNF-14). `[PREMISSA: a confirmar pelo dev-arquitetura]` |
+
+Prévia/rascunho antes de publicar: `[PENDENTE: P-17]` `[PREMISSA: sem rascunho no MVP; publicar é um passo explícito, como "Salvar" no /admin atual]`. Desfazer uma publicação: `[PENDENTE: P-18]` `[PREMISSA: não no MVP; para voltar, edita-se de novo]`.
 
 ---
 
@@ -303,7 +357,10 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 | RN-LOJ-15 | Nota fiscal: emitida pela N.UY (CNPJ próprio) para todo pedido pago `[PENDENTE: P-09, momento da emissão e documento correto com o contador]`. No MVP a emissão é feita fora do sistema e o operador registra número/chave. `[PREMISSA: o pedido só vai a "Enviado" com nota registrada]`. | Desenvolvedor (D4) + `[PREMISSA]` | Cancelamento/devolução após a nota pode exigir nota de devolução/cancelamento: contador |
 | RN-LOJ-16 | Frete por tabela da N.UY: faixas de CEP (ou estado) com valor e prazo; CEP fora das faixas não é atendido. Frete grátis acima de um valor, se o cliente quiser. | `[PREMISSA]`, P-06 | — |
 | RN-LOJ-17 | Troca/devolução: prazo, condições do produto e quem paga o frete de volta conforme política da N.UY `[PENDENTE: P-10]`, respeitando o mínimo legal (advogado). | Pendente | — |
-| RN-LOJ-18 | Fonte única: produto vendável, preço, estoque, frete, percentuais e pedidos vivem só no sistema da loja; o painel de conteúdo (`/admin`) não guarda nenhum deles. | Desenvolvedor (D5) | — |
+| RN-LOJ-18 | Fonte única: produto vendável, preço, estoque, frete, percentuais e pedidos vivem só nos registros da loja; o **conteúdo do site** não guarda nenhum deles, mesmo sendo editado no mesmo painel (ADR-0005). | Desenvolvedor (D5, mantida pelo ADR-0005) | Preço dos planos de assinatura no site é exibição do app, não preço da loja |
+| RN-LOJ-24 | Painel único: a gestão da loja e a edição do conteúdo do site ficam num só painel, com o login da equipe da loja e seus papéis. Não há acesso ao painel por token do GitHub. | Desenvolvedor (2026-11-15, ADR-0005; D-04) | Sem transição pelo Sveltia (descartado): até a fase 1a, o desenvolvedor edita o conteúdo |
+| RN-LOJ-25 | Quem pode editar e publicar o conteúdo do site: `[PENDENTE: P-15]` `[PREMISSA: só admin]`. Se houver pessoa só de conteúdo, ela recebe papel próprio sem acesso a pedidos e dados de clientes. | Pendente (cliente) | — |
+| RN-LOJ-26 | Toda publicação de conteúdo fica registrada com data/hora, quem publicou e qual bloco mudou. | `[PREMISSA]` (mesma lógica da RN-LOJ-19; hoje o histórico vem dos commits do Git) | — |
 | RN-LOJ-19 | Alterações de preço, percentual de desconto, estoque, estado de pedido e estorno ficam registradas com quem, quando, valor anterior e novo. | `[PREMISSA]` | — |
 | RN-LOJ-21 | A loja tem login próprio; a conta da loja é separada da conta do app N.UY. Nenhuma senha ou dado de login do app passa pela loja. | Desenvolvedor (P-01, ADR-0003) | — |
 | RN-LOJ-22 | Compra como visitante é permitida, sempre pelo preço cheio. Dados obrigatórios do visitante: e-mail, nome, CPF, telefone e endereço de entrega `[PREMISSA: CPF por causa da nota fiscal e do gateway; telefone para a entrega; confirmar com contador e cliente]`. | Desenvolvedor (P-04) + `[PREMISSA]` | — |
@@ -328,8 +385,9 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 | RNF-10 | Retenção | Pedidos, notas e registros financeiros guardados pelo prazo legal `[PENDENTE: contador]`; dados de conta conforme política de privacidade (lgpd-specialist) | — |
 | RNF-11 | Auditoria | RN-LOJ-19 consultável no painel pelo admin | — |
 | RNF-12 | Fuso, idioma, moeda | America/Sao_Paulo; pt-BR; BRL com 2 casas | — |
-| RNF-13 | Segredos e dados | Nenhuma chave de gateway, do Base44, de e-mail ou de banco no repositório, e nenhum dado de cliente, pedido ou exportação versionado: o repositório `nuyvi` é público e a loja mora nele (pasta própria, branch `loja`) | dev-security, dev-devops |
-
+| RNF-13 | Segredos e dados | Nenhuma chave de gateway, do Base44, do GitHub, de e-mail ou de banco no repositório, e nenhum dado de cliente, pedido ou exportação versionado: o repositório `nuyvi` é público e a loja mora nele (pasta própria, branch `loja`). Vale também para o que o painel único publicar: só conteúdo de vitrine pode sair dele para o site | dev-security, dev-devops |
+| RNF-14 | Independência do site | Para quem visita, o site abre e mostra o último conteúdo publicado mesmo com o sistema da loja fora do ar; o desempenho atual do site não piora por causa do painel único | `[PREMISSA]`, a confirmar pelo dev-arquitetura (ADR-0005) |
+| RNF-15 | Tempo de publicação | Conteúdo publicado no painel aparece no site em até 5 minutos | `[PREMISSA]`, P-16 |
 ---
 
 ## 8. Modelo de domínio (conceitual)
@@ -358,6 +416,7 @@ erDiagram
 
 - `CONTA_LOJA` é da loja (login próprio, RN-LOJ-21). `CONTA_NUY`, `ASSINATURA` e `PLANO` são do app N.UY no Base44 (fonte da verdade fora da loja) e só entram na fase 1b, via vínculo a definir (ADR-0003). Nesse momento, a loja guarda a referência da conta N.UY e uma **fotografia** no pedido (plano e percentual usados). Onde vive `DESCONTO_PLANO`: P-05.
 - Comprador visitante faz pedido sem `CONTA_LOJA`, com e-mail, nome, CPF, telefone e endereço (RN-LOJ-22).
+- Conteúdo do site: entidades conceituais `BLOCO_CONTEUDO` (os 9 blocos da seção 5.9, com campos e listas) e `PUBLICACAO_CONTEUDO` (quem, quando, qual bloco; RN-LOJ-26), ligada a `USUARIO_EQUIPE`. Sem relação com produto, preço ou pedido (RN-LOJ-18). Onde e como vivem fisicamente: `dev-arquitetura` (seção 15, tarefa 9). Fora do diagrama acima de propósito.
 - Nunca apagar: `PEDIDO`, `ITEM_PEDIDO`, `PAGAMENTO`, `ESTORNO`, `MOVIMENTO_ESTOQUE`, `HISTORICO_PEDIDO`, `NOTA_FISCAL_REGISTRO`. Produto e variação são inativados, não apagados, se já venderam.
 
 **Estados do pedido**
@@ -431,6 +490,7 @@ sequenceDiagram
 | Painel: pedidos | Operador, admin | Lista, filtros, detalhe, estados, nota, rastreio, cancelamento, estorno, troca | Vazio · Estorno pendente · Cancelamento solicitado destacado |
 | Painel: produtos e estoque | Admin | Cadastro, variações, fotos, entradas e ajustes, histórico | Sem permissão (operador) · SKU repetido |
 | Painel: frete, descontos, equipe | Admin | Configurações | Sem permissão (operador) |
+| Painel: conteúdo do site (lista dos 9 blocos e edição de cada bloco) | Admin `[PREMISSA: P-15]` | Editar textos, listas e fotos e publicar (seção 5.9) | Sem permissão (operador) · Campo obrigatório vazio · Foto recusada · Publicando · Falha ao publicar (edição mantida na tela) · Publicado · Saída com edição não publicada (avisar antes de perder) |
 
 ---
 
@@ -443,6 +503,7 @@ sequenceDiagram
 | E-mail transacional | Avisos de pedido | Sai: e-mail, nome, número e estado do pedido | Pedido segue; envio é tentado de novo; falha visível ao operador | N.UY `[PENDENTE]` |
 | Emissor de NF-e | Nota fiscal | Fase 1: nenhuma (manual). Fase 2: dados do pedido | Fase 1: n/a | N.UY / contador `[PENDENTE: P-09]` |
 | Frete | Cálculo | Fase 1: tabela interna. Fase 2: transportadora/Correios | Fase 2: cair na tabela interna `[PREMISSA]` | N.UY |
+| Publicação do conteúdo do site | Levar o conteúdo publicado no painel único até o site | Sai: só conteúdo de vitrine (textos, listas, fotos). Mecanismo (ex.: API do GitHub, leitura do banco pelo site): `[PENDENTE: dev-arquitetura]` | CA-LOJ-55: nada publicado pela metade, site continua com a versão anterior, quem publicou vê o erro e tenta de novo | N.UY |
 | App N.UY (abrir a loja) | Acesso pelo app (D1) | Um link/botão no app abre a loja como página web; nenhum dado de login é passado (P-02, RN-LOJ-21) | Comprador abre a loja pelo navegador | N.UY (quem edita o app no Base44) |
 
 > Preços, taxas e limites de gateways, e-mail e emissores mudam: conferir na fonte oficial na hora de escolher (não fixados aqui). Se o app N.UY estiver publicado nas lojas de aplicativo, conferir na documentação vigente da Apple e do Google as regras para um app que abre página de venda de produto físico. Hipótese não verificada: produto físico não usa a compra integrada da loja de apps. Com `dev-mobile` fora, quem confere é o desenvolvedor, antes de pôr o botão no app.
@@ -465,7 +526,8 @@ sequenceDiagram
 
 **Sinalizações:**
 - `lgpd-specialist`: dados de visitante (compra sem conta) e vínculo posterior de pedidos à conta (CA-LOJ-47); na fase 1b, compartilhamento de dados entre app e loja (mesma controladora? base legal), e-mails de marketing (fora do MVP; avisos de pedido são transacionais), política de privacidade e termos da loja, usuários menores de idade no app (`[PENDENTE: o app aceita menores? compra exige 18+?]`), retenção.
-- `dev-security`: preço e desconto calculados no servidor (CA-LOJ-19), autorização "só o próprio pedido" (CA-LOJ-29) e link de acompanhamento do visitante (CA-LOJ-49), vínculo de pedidos por e-mail confirmado (CA-LOJ-47), confirmações do gateway autênticas e idempotentes, painel da equipe com login próprio, segredos fora do repositório público.
+- `dev-security`: preço e desconto calculados no servidor (CA-LOJ-19), autorização "só o próprio pedido" (CA-LOJ-29) e link de acompanhamento do visitante (CA-LOJ-49), vínculo de pedidos por e-mail confirmado (CA-LOJ-47), confirmações do gateway autênticas e idempotentes, painel da equipe com login próprio, segredos fora do repositório público; no painel único (ADR-0005), credencial usada para publicar o conteúdo do site (se houver) só no servidor e com escopo mínimo, e upload de imagens do conteúdo (tipo e tamanho).
+- `lgpd-specialist` e `dev-auth`: o painel único pode ganhar contas de pessoas que só editam conteúdo (P-15); elas não devem ver pedidos nem dados de clientes. Conteúdo do site não deve conter dados pessoais; fotos com pessoas identificáveis (ex.: cartões da Loja) exigem autorização de uso de imagem, que é do cliente.
 
 ---
 
@@ -491,9 +553,14 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 - ~~P-04~~ **Sim**, quem não tem conta compra pelo preço cheio (RN-LOJ-22).
 - ~~D-01~~ A loja será construída **neste repositório**, branch `loja`, pasta própria separada de `site/`. Repositório público: RNF-13.
 
+**Decidido em 2026-11-15 (pelo desenvolvedor)**
+- Painel único com o login da equipe para conteúdo do site e loja (ADR-0005, substitui a D5 no ponto dos dois painéis). Abre PEND-CONT e P-15 a P-18.
+- ~~D-04~~ O `/admin` Sveltia é **descartado** (não será publicado; branch `painel` só como referência). Até o painel único existir, o desenvolvedor edita o conteúdo como hoje. A edição de conteúdo vem **antes** do resto do painel da loja (fase 1a), usando login e papéis existentes, sem depender de gateway, frete ou NF-e.
+
 **Perguntas técnicas abertas (desenvolvedor, não vão ao cliente)**
 - **PEND-B44 (alta para a fase 1b)** Como a loja pode saber, com segurança, o plano vigente de um usuário do app feito em Base44? Hipóteses a verificar, nenhuma confirmada: (a) API ou funções de backend do Base44 que um sistema externo chame com credencial de servidor; (b) vínculo da conta da loja à conta N.UY pelo mesmo e-mail **verificado** nos dois lados, e consulta do plano por esse e-mail; (c) o app enviar um aviso à loja quando o plano muda (webhook/automação), se o Base44 permitir; (d) alternativa sem integração, como exportação periódica (fraca: atraso e risco de desconto indevido). Fonte: documentação oficial do Base44 e teste no app. Dono: desenvolvedor com `dev-integrations` e `dev-auth`; registrar a escolha em ADR.
 - **PEND-B44b (média)** Como o app em Base44 abre um link externo (navegador interno ou externo, volta ao app)? Afeta só a experiência, não o escopo.
+- **PEND-CONT (alta para o painel único)** Onde o conteúdo do site passa a viver e como chega ao site, mantendo o site independente para quem visita (RNF-14), pedidos e dados pessoais fora do Git (RNF-13) e publicação sem meio-termo (CA-LOJ-55)? Hipóteses, nenhuma escolhida: (a) JSON em `site/conteudo/` gravado pelo servidor da loja via API do GitHub (preserva o `build.mjs` e o histórico no Git; exige credencial do GitHub no servidor); (b) banco da loja, com o site lendo na publicação ou no build; (c) outra. Também decide onde ficam as fotos do conteúdo (hoje `site/img/conteudo/`, no Git). Dono: `dev-arquitetura`, com ADR técnico; revisão do `dev-security`.
 
 **Sobre a conta N.UY e os planos (fase 1b)**
 - **P-03 (alta para a fase 1b)** Quem conta como assinante para ter desconto: quem está em teste grátis? Quem está com pagamento atrasado? Quem cancelou mas ainda está no período pago?
@@ -508,6 +575,12 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 - **P-08 (alta)** Quem vai cuidar dos pedidos no dia a dia (separar, embalar, emitir nota, postar)? Quantas pessoas? Quem pode devolver dinheiro ao cliente?
 - **P-09 (alta)** A N.UY já emite nota fiscal hoje? Em qual sistema? Quem é o contador?
 - **P-12 (alta)** Quantos produtos diferentes no início, mais ou menos? Têm tamanho e cor? Onde fica o estoque (um lugar só)? Já existe estoque ou será comprado?
+
+**Sobre editar o site (painel único)**
+- **P-15 (alta)** Quem vai mudar os textos, fotos, planos e notícias do site? É a mesma pessoa que cuida da loja, ou alguém (ex.: marketing) que não precisa ver pedidos nem dados dos clientes? *Premissa: só o responsável (admin).*
+- **P-16 (média)** Depois de publicar uma mudança no site, quanto tempo pode levar até ela aparecer para todo mundo? (na hora, alguns minutos, tanto faz) *Premissa: até 5 minutos.*
+- **P-17 (média)** Querem ver como a página vai ficar antes de publicar (prévia), ou publicar direto como no painel atual já basta? *Premissa: publicar direto.*
+- **P-18 (média)** Precisam de um botão para voltar o site à versão anterior se publicarem algo errado? *Premissa: não no início; corrige-se editando de novo.*
 
 **Sobre pagamento (média)**
 - **P-07 (média)** Já têm conta em algum serviço de pagamento (Mercado Pago, Pagar.me, Stripe, Asaas, PagBank...)? Querem parcelar no cartão? Em quantas vezes e quem paga os juros? *Premissa: Pix e cartão à vista no início.*
@@ -534,6 +607,10 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | P-12 | Poucos itens sem variação: modelo simples | Muitas variações: cadastro, estoque e importação maiores |
 | P-07 | Gateway já contratado: usar o dele | Escolher do zero: ADR de gateway |
 | P-11 | Volume baixo: infraestrutura mínima | Picos altos: teste de carga e cuidados com reserva de estoque |
+| P-15 | Só o admin edita: papéis atuais bastam | Pessoa só de conteúdo: papel novo no `dev-auth`, matriz e testes de permissão maiores |
+| P-16 | Alguns minutos: publicação pode passar pelo build do site | "Na hora": pesa na escolha de onde o conteúdo vive (PEND-CONT) |
+| P-17 | Publicar direto: sem estado de rascunho | Prévia: guardar rascunho separado do publicado e tela de prévia (mais escopo; fase 2 pela proposta) |
+| P-18 | Sem desfazer: só o registro de quem publicou | Desfazer: guardar versões e tela de restauração (fase 2 pela proposta) || PEND-CONT | JSON no Git: `build.mjs` e histórico preservados, credencial do GitHub no servidor | Banco: site precisa ler do banco ou ser gerado a partir dele; muda a publicação do site |
 
 **Perguntas ao desenvolvedor**
 - **D-02** Você tem acesso de edição ao app no Base44 (para testar a PEND-B44 e pôr o botão da loja)?
@@ -557,6 +634,10 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | PREM-08 | Pix e cartão à vista | Parcelamento muda checkout e conciliação | Cliente (P-07) |
 | PREM-09 | Volume e RNF de desempenho/disponibilidade/RPO-RTO da seção 7 | Infraestrutura sub ou superdimensionada | Cliente (P-11) |
 | PREM-10 | Percentuais configurados no painel da loja | Fonte duplicada ou leitura do app | Cliente (P-05) |
+| PREM-11 | Só o admin edita e publica o conteúdo do site (RN-LOJ-25) | Papel novo para pessoa só de conteúdo | Cliente (P-15) |
+| PREM-12 | O site continua abrindo para o visitante com a loja fora do ar (RNF-14) | Queda da loja derruba também o site; muda RISCO-11 | dev-arquitetura (PEND-CONT) |
+| PREM-13 | Publicação aparece no site em até 5 min, sem prévia e sem desfazer no MVP | Mais escopo no painel de conteúdo | Cliente (P-16 a P-18) |
+| PREM-14 | O painel único edita os mesmos blocos e campos do `/admin` Sveltia atual, mais o destino do botão dos cartões da Loja | Escopo maior se quiserem editar outras partes da página | Desenvolvedor |
 
 **Riscos**
 
@@ -572,12 +653,17 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | RISCO-10 | Duas contas (app e loja) confundem o assinante ("por que outro cadastro?") | Média | Médio | Texto claro na tela de conta; vínculo na fase 1b |
 | RISCO-07 | Escopo crescer para "loja completa" (cupons, transportadoras, NF automática) no MVP | Alta | Alto | Fases da seção 4; mudança passa por análise de impacto |
 | RISCO-08 | Repositório público com segredos ou dados de clientes | Média | Alto | RNF-13; dados fora do Git; revisão do dev-security |
+| RISCO-11 | Com o painel único, editar o site depende do sistema da loja no ar | Baixa | Médio (site não é atualizado enquanto a loja está fora) | RNF-14 (visitante não é afetado); meta RNF-04; em emergência, desenvolvedor altera o conteúdo à mão `[PREMISSA]` |
+| RISCO-12 | Se o conteúdo continuar no Git (PEND-CONT a), o servidor da loja, que guarda pedidos e dados pessoais, passa a gravar no repositório público | Média | Alto (vazamento de dado ou de credencial) | Credencial de escopo mínimo só no servidor; só conteúdo de vitrine sai do painel (RNF-13); revisão do dev-security |
+| RISCO-13 | Até a fase 1a entrar, toda mudança no site passa pelo desenvolvedor (Sveltia descartado, D-04) | Alta | Baixo/médio (gargalo e atraso em textos e notícias) | Fase 1a é o primeiro módulo do painel, sem depender de gateway/frete/NF-e; trabalho do Sveltia aceito como perda (branch `painel` só referência) |
+| RISCO-14 | Contas de equipe criadas para editar conteúdo ganham acesso a pedidos e dados de clientes, ou entram sem MFA | Média | Alto | P-15 antes de criar contas; papel com o mínimo necessário; MFA da equipe antes do go-live do painel (TODO, auditoria de auth) |
 
 **Dependências**
 - D3 (desconto, fase 1b) depende de PEND-B44, P-03 e C-01.
 - Vender (MVP) depende de: gateway contratado no CNPJ da N.UY (P-07), emissão de nota estruturada (P-09), política de troca e termos validados (P-10, advogado), logística e área de entrega definidas (P-06), decisão sobre os textos de desconto do site (P-14).
 - Construção depende da escolha de stack (`dev-arquitetura`); local já definido (pasta própria na branch `loja`).
 - Ajuste da seção Loja do site depende da URL final da loja.
+- Edição de conteúdo no painel único (HU-12, HU-13) depende de: decisão de onde o conteúdo vive (PEND-CONT, `dev-arquitetura`), P-15 (papel) e MFA da equipe antes do go-live do painel. Não depende de gateway, frete, NF-e nem das demais perguntas da loja (D-04).
 
 ---
 
@@ -587,7 +673,7 @@ Fase atual = **descoberta e decisões** (spec 0.x → 1.0). A construção (fase
 
 | # | Tarefa | Agente | CA cobertos | Depende de | Tamanho |
 |---|---|---|---|---|---|
-| 1 | Enviar ao cliente as perguntas abertas da seção 13 (C-01, P-03, P-06 a P-14) e responder D-02, D-03 | Desenvolvedor | — | — | P |
+| 1 | Enviar ao cliente as perguntas abertas da seção 13 (C-01, P-03, P-06 a P-18) e responder D-02, D-03 | Desenvolvedor | — | — | P |
 | 2 | Atualizar spec para 1.0 com as respostas | arquiteto-specs | todos | 1 | M |
 | 3 | Escolher stack e arquitetura da loja (backend, banco, hospedagem, painel, pasta própria no repositório público, publicação separada do `site/`) com ADR técnico | dev-arquitetura | RNF-01 a 13 | — (pode começar) | M |
 | 4 | Login próprio da loja (comprador e equipe), compra como visitante e link de acompanhamento | dev-auth + dev-security | CA-LOJ-07, 08, 29, 43 a 47, 49 | 3 | M |
@@ -596,8 +682,18 @@ Fase atual = **descoberta e decisões** (spec 0.x → 1.0). A construção (fase
 | 5 | Orçamento/proposta do MVP, se for cobrado do cliente | orcamentos-propostas | — | 2 | M |
 | 6 | Revisão de privacidade (dados entre app e loja, menores, retenção, política) | lgpd-specialist | — | 2 | P |
 | 7 | Contador (NF-e/tributos) e advogado (termos, troca, arrependimento) | Cliente (humano) | RN-LOJ-15, 17 | 1 | — |
+| 8 | ~~Destino do `/admin` Sveltia e ordem de entrega (D-04)~~ Feito em 2026-11-15: Sveltia descartado; conteúdo é a fase 1a | Desenvolvedor | — | — | — |
+| 9 | Decidir onde o conteúdo do site vive e como chega ao site (PEND-CONT: JSON no Git via API do GitHub, banco com o site lendo, ou outra), onde ficam as fotos do conteúdo, como o conteúdo atual de `site/conteudo/*.json` e `site/img/conteudo/` entra no painel único; ADR técnico e atualização de `docs/tecnico/arquitetura.md` e das linhas "Painel" e "Ligação com o site" do ADR-0004 | dev-arquitetura | CA-LOJ-50 a 59; RNF-13, 14, 15 | ADR-0005; P-16 ajuda | M |
+| 10 | Papel de quem edita conteúdo (admin, ou papel novo só de conteúdo) e checagem no servidor | dev-auth (+ dev-security) | CA-LOJ-56 | P-15 | P |
+| 11 | Telas do painel de conteúdo (lista de blocos, edição, fotos, publicar, estados da 9.2) | dev-uiux | CA-LOJ-50 a 55, 57 | 9 | M |
+| 12 | Implementação do painel de conteúdo; se a publicação depender de serviço externo (ex.: API do GitHub), mecanismo e falha com `dev-integrations` | dev-react (+ dev-integrations) | CA-LOJ-50 a 59 | 9, 10, 11 | M |
+| 13 | Testes do painel de conteúdo (validação, permissão, falha de publicação sem meio-termo, site no ar com a loja fora) | dev-tests | CA-LOJ-52, 55, 56, 59 | 12 | P |
+| 14 | Revisão de segurança (credencial de publicação, upload de imagens, nada além de vitrine no Git) | dev-security | RNF-13, CA-LOJ-54, 55 | 12 | P |
+| 15 | `BRIEFING.md`: tirar já a descrição do Sveltia (descartado) e dizer que o conteúdo é editado pelo desenvolvedor até a fase 1a; depois da tarefa 12, descrever o painel único e escrever o manual da equipe | docs-handoff | — | agora; depois 12 | P |
 
-Ordem prevista da fase 1 (após aprovação), para referência: modelo de dados (`dev-database`) → login da equipe e identificação do comprador (`dev-auth`) → catálogo/estoque/painel (dev de aplicação) → checkout e gateway (`dev-integrations`) → e-mails (`dev-notifications`) → design das telas (`dev-uiux`) → testes (`dev-tests`, inclusive concorrência e idempotência) → auditoria (`dev-security`) → deploy (`dev-devops`, `dev-infra`) → aceite (`dev-qa`) → ajuste da seção Loja e textos (`copywriter`).
+**Ordem de execução do painel (D-04):** a fase 1a (tarefas 9 → 10 → 11 → 12 → 13 → 14 → 15) pode começar já, em paralelo às perguntas ao cliente, porque usa o login e os papéis existentes e não depende de gateway, frete nem NF-e. Só a tarefa 10 espera a P-15 (enquanto isso, vale a premissa "só admin"); a liberação em produção espera o MFA da equipe.
+
+Ordem prevista do resto da fase 1 (após aprovação da spec), para referência: modelo de dados (`dev-database`) → login da equipe e identificação do comprador (`dev-auth`) → catálogo/estoque/pedidos no painel único (dev de aplicação, sobre o painel já criado na fase 1a) → checkout e gateway (`dev-integrations`) → e-mails (`dev-notifications`) → design das telas (`dev-uiux`) → testes (`dev-tests`, inclusive concorrência e idempotência) → auditoria (`dev-security`) → deploy (`dev-devops`, `dev-infra`) → aceite (`dev-qa`) → ajuste da seção Loja e textos (`copywriter`).
 
 ---
 
@@ -608,6 +704,8 @@ Ordem prevista da fase 1 (após aprovação), para referência: modelo de dados 
 | [ADR-0001](../adr/ADR-0001-loja-propria-unica-n-uy-vendedora.md) | Loja própria e única para site e app, com a N.UY como vendedora | Aceito |
 | [ADR-0002](../adr/ADR-0002-desconto-automatico-por-plano-n-uy.md) | Desconto de assinante automático pelo plano da conta N.UY | Aceito como objetivo; suspenso no MVP por ADR-0003 |
 | [ADR-0003](../adr/ADR-0003-login-proprio-e-desconto-suspenso-no-mvp.md) | Login próprio da loja; desconto por plano suspenso até confirmar leitura no Base44 | Aceito |
+| [ADR-0004](../adr/ADR-0004-stack-loja.md) | Stack e arquitetura macro da loja (técnico, dev-arquitetura) | Aprovado; linhas "Painel" e "Ligação com o site" a revisar pelo dev-arquitetura após ADR-0005 |
+| [ADR-0005](../adr/ADR-0005-painel-unico-conteudo-do-site-e-loja.md) | Um único painel, com o login da equipe da loja, para conteúdo do site e loja | Aceito; substitui o item 4 do ADR-0001 (D5) no ponto dos dois painéis |
 
 ---
 
@@ -617,3 +715,5 @@ Ordem prevista da fase 1 (após aprovação), para referência: modelo de dados 
 |---|---|---|---|---|---|
 | 0.1 | 2026-11-14 | Rascunho inicial com perguntas abertas | — | todas | — |
 | 0.2 | 2026-11-14 | Respostas P-01 (app em Base44, login próprio), P-02 (página web no app), P-04 (visitante compra), D-01 (pasta própria na branch `loja`). Desconto de assinante vira fase 1b (ADR-0003); novos CA-LOJ-44 a 49, RN-LOJ-21 a 23, PEND-B44, P-14, RISCO-09/10 | Mudança de escopo (rascunho, antes de 1.0) | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16 | Desenvolvedor |
+| 0.3 | 2026-11-15 | Painel único com o login da equipe para gestão da loja e conteúdo do site (ADR-0005, substitui a D5 no ponto dos dois painéis). Novos HU-12, HU-13, seção 5.9 (inventário dos 9 blocos), CA-LOJ-50 a 59, RN-LOJ-24 a 26, RNF-14 e 15; RN-LOJ-18 e RNF-13 reescritas; 5.8 "Impacto sobre o painel /admin" reescrita; novos D-04, PEND-CONT, P-15 a P-18, PREM-11 a 14, RISCO-11 a 14; tarefas 8 a 15 no plano | Mudança de escopo (rascunho, antes de 1.0) | 1, 2, 3, 4, 5.8, 5.9, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16 | Desenvolvedor |
+| 0.4 | 2026-11-15 | D-04 respondida: `/admin` Sveltia descartado (branch `painel` só referência; desenvolvedor edita o conteúdo até lá); edição de conteúdo vira **fase 1a**, primeiro módulo do painel, antes do resto do MVP, sem depender de gateway/frete/NF-e. HU-12/13 passam a fase 1a; RN-LOJ-24 e RISCO-13 ajustados; plano com a nova ordem; tarefa 8 concluída | Ajuste (decisão pendente respondida) | 2, 4, 5.8, 5.9, 6, 13, 14, 15 | Desenvolvedor |

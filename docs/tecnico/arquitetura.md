@@ -1,21 +1,24 @@
 # Arquitetura: loja N.UY
 
-Desenho macro da loja (`loja/`). Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
+Desenho macro da loja (`loja/`) e do painel único. Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Conteúdo do site e publicação: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
 
 ## 1. Visão geral
 
 ```mermaid
 flowchart LR
   subgraph Vercel
-    S[Projeto nuyvi<br/>site/ estático + Sveltia CMS]
-    L[Projeto nuy-loja<br/>loja/ Next.js<br/>loja pública + /admin + webhooks + cron]
-    B[(Vercel Blob<br/>fotos de produto)]
+    S[Projeto nuyvi<br/>site/ estático<br/>build.mjs gera o HTML]
+    L[Projeto nuy-loja<br/>loja/ Next.js<br/>loja pública + painel /admin + webhooks + cron]
+    B[(Vercel Blob público<br/>fotos de produto e do conteúdo)]
   end
   N[(Neon Postgres<br/>aws-sa-east-1)]
   G[Gateway de pagamento<br/>Pix + cartão]
   E[E-mail transacional]
   APP[App N.UY - Base44<br/>abre a loja em webview]
   S -- link por categoria --> L
+  L -- publicar: deploy hook --> S
+  S -. no build: GET /api/conteudo-site .-> L
+  S -. imagens enviadas pelo painel .-> B
   APP -- abre URL --> L
   L --> N
   L --> B
@@ -26,10 +29,10 @@ flowchart LR
 
 | Onde roda | O quê |
 |---|---|
-| Projeto Vercel `nuyvi` (sem mudança) | Site estático, Sveltia CMS e `site/conteudo/*.json` (só vitrine; sem preço nem estoque, RN-LOJ-18) |
-| Projeto Vercel da loja (Root Directory `loja/`) | Páginas da loja, `/admin`, Route Handlers de webhook e de cron, Server Actions |
-| Neon | Única fonte da verdade de catálogo, estoque, pedidos, pagamentos, contas da loja e auditoria |
-| Vercel Blob | Fotos de produto enviadas pelo `/admin` |
+| Projeto Vercel `nuyvi` (ligado ao GitHub, Root Directory `site`) | Site estático. No build, o `build.mjs` busca a última versão publicada do conteúdo na loja e gera o HTML. Sem preço nem estoque (RN-LOJ-18) |
+| Projeto Vercel da loja (Root Directory `loja/`) | Páginas da loja, painel único `/admin` (loja e conteúdo do site), leitura pública do conteúdo publicado, Route Handlers de webhook e de cron, Server Actions |
+| Neon | Única fonte da verdade de catálogo, estoque, pedidos, pagamentos, contas da loja, auditoria e **versões do conteúdo do site** |
+| Vercel Blob (público) | Fotos de produto e fotos do conteúdo do site enviadas pelo painel |
 | Gateway | Dados de cartão (nunca passam pela loja, RNF-08), cobranças, estornos |
 
 Sem servidor próprio, sem fila externa, sem Redis. Monolito modular.
@@ -44,14 +47,15 @@ loja/
     app/
       (loja)/                  páginas públicas: início, categoria/[slug], produto/[slug],
                                carrinho, checkout, pedido/[codigo], conta/
-      admin/                   painel: pedidos, produtos, estoque, frete, descontos, equipe
+      admin/                   painel único: conteúdo do site (fase 1a), pedidos, produtos, estoque, frete, descontos, equipe
       api/
         auth/...               rota da biblioteca de auth (dev-auth)
+        conteudo-site/         GET público: última versão publicada do conteúdo (lida pelo build do site)
         webhooks/pagamento/    entrada do gateway
         cron/                  expiração de pedidos e reenvio de e-mails
     modules/
       catalogo/   estoque/   carrinho/   frete/   checkout/
-      pedidos/    pagamentos/   contas/
+      pedidos/    pagamentos/   contas/   conteudo-site/
     db/                        cliente do banco e schema Drizzle (um arquivo por módulo)
     lib/                       dinheiro (centavos inteiros), env (lê e valida variáveis), datas
 ```
@@ -61,7 +65,7 @@ loja/
 1. `app/` (páginas, Server Actions e Route Handlers) só valida a entrada, chama **uma** função de módulo e monta a resposta. Regra de negócio não fica em `app/`.
 2. Cada módulo expõe funções no seu `index.ts`. Outro módulo não lê nem grava tabela alheia diretamente: chama a função do dono.
 3. As funções que participam de uma transação recebem o executor do banco (`tx`) como parâmetro. É assim que o checkout reserva estoque e cria o pedido numa transação só, sem camada extra.
-4. Fornecedor externo (gateway, e-mail, e no futuro o Base44) só é importado dentro do seu módulo. Nenhum tipo do SDK sai dele.
+4. Fornecedor externo (gateway, e-mail, deploy hook da Vercel, e no futuro o Base44) só é importado dentro do seu módulo. Nenhum tipo do SDK sai dele.
 5. "Admin" não é módulo: é a UI em `app/admin/`, que chama os mesmos módulos com o papel checado.
 
 | Módulo | Responsabilidade | Regras da spec |
@@ -74,6 +78,7 @@ loja/
 | `pedidos` | Tabela de transições permitidas, histórico, "meus pedidos", acesso por link de visitante | Seção 8 da spec, CA-LOJ-28 a 39 |
 | `pagamentos` | Adaptador do gateway (criar cobrança, consultar, estornar, validar webhook) e registro de pagamentos e eventos | CA-LOJ-14, 18, 36, 37 |
 | `contas` | Sessão, papéis, dados do cliente, **ponto de extensão do plano** (seção 5) | CA-LOJ-28, 29, 43 |
+| `conteudo-site` | Versões publicadas do conteúdo do site (9 blocos), validação, publicar (grava a versão e chama o deploy hook do site), histórico, upload de fotos para o Blob. Não conhece produto, preço nem pedido (RN-LOJ-18) | CA-LOJ-50 a 59, RN-LOJ-24 a 26 |
 
 Sem interface com uma implementação só: `pagamentos/gateway.ts` é um módulo com funções que falam com **um** gateway. Uma interface só entra se aparecer um segundo gateway de verdade.
 
@@ -144,10 +149,38 @@ export async function obterPlanoVigente(clienteId: string | null): Promise<Plano
   Falha na consulta: retorna `null`, e o checkout segue RN-LOJ-07 (nunca há desconto sem verificação).
 - **Onde vive o percentual** (P-05): fica no painel da loja (premissa da spec) até o cliente responder. Se passar a vir do app, muda só esta função.
 
-## 6. Site estático → loja
+## 6. Conteúdo do site e ligação site → loja
 
-- MVP: cada cartão de categoria em `site/conteudo/loja.json` ganha um campo de link (editável no Sveltia) para `https://<subdomínio da loja>/categoria/<slug>`. Isso substitui o "Comprar no app". Preço e estoque nunca entram no JSON.
-- Fase 2: se o site mostrar destaques do catálogo, eles serão lidos de um endpoint público de leitura da loja (no build do site ou no navegador). Fica para quando a fase 2 for aprovada.
+Decisão: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). O Sveltia foi descartado (D-04).
+
+```mermaid
+sequenceDiagram
+  actor A as Admin (painel)
+  participant P as conteudo-site.publicar
+  participant DB as Postgres
+  participant H as Deploy hook (projeto nuyvi)
+  participant V as Build do site (build.mjs)
+  A->>P: bloco editado + versaoBase
+  P->>P: exigirPapel + valida (mesmas regras do build.mjs)
+  P->>DB: BEGIN; confere versaoBase; grava versão completa N+1 (autor, blocos alterados); COMMIT
+  P->>H: POST (timeout curto)
+  alt hook aceitou
+    P-->>A: Publicado (aparece no site em poucos minutos)
+    H->>V: build da branch de produção
+    V->>P: GET /api/conteudo-site (última versão publicada)
+    V->>V: valida, gera index.html; erro para o build e o deploy anterior continua
+  else hook falhou
+    P->>DB: marca a versão N+1 como não publicada (nunca servida)
+    P-->>A: Não foi possível publicar, tente de novo (edição mantida)
+  end
+```
+
+- **Fonte da verdade:** tabela de versões no Neon; cada versão é o conteúdo **inteiro** (os 5 documentos no formato de `site/conteudo/*.json` + `destino` dos cartões da Loja). Nunca há metade nova e metade antiga (CA-LOJ-55). Histórico de CA-LOJ-57 vem da mesma tabela; quem publicou fica só no banco (dado pessoal fora do Git, RNF-13).
+- **Site para quem visita:** HTML estático na Vercel, sem chamada à loja em tempo de execução (RNF-14). Loja fora do ar impede apenas um build novo.
+- **Fotos:** as já existentes continuam em `site/img/`; as enviadas pelo painel vão ao Blob público (prefixo `conteudo/`) e entram no site por URL absoluta, só do host configurado.
+- **Botão da seção Loja:** o campo `destino` do cartão aponta para `https://<subdomínio da loja>/categoria/<slug>` (CA-LOJ-58). Preço e estoque nunca entram no conteúdo.
+- **`site/` depois do corte:** `index.html`, `build.mjs` (busca o conteúdo em `CONTEUDO_URL`), `vercel.json`, CSS, JS e `img/`. `site/conteudo/` e `site/admin/` saem do repositório.
+- **Fase 2:** se o site mostrar destaques do catálogo, eles seguem o mesmo caminho (lidos da loja no build). Fica para quando a fase 2 for aprovada.
 
 ## 7. Ambientes e segredos
 
@@ -159,6 +192,16 @@ export async function obterPlanoVigente(clienteId: string | null): Promise<Plano
 
 O repositório é público: somente `.env.example` com nomes e sem valores. Os segredos de webhook e de cron também ficam fora do Git.
 
+Conteúdo do site (ADR-0006):
+
+| Variável | Projeto | Ambiente | Segredo? |
+|---|---|---|---|
+| `SITE_DEPLOY_HOOK_URL` | loja | **só Production** (em Preview, publicar não atualiza o site) | Sim: quem tem a URL dispara builds do site |
+| Credencial do Blob (OIDC da Vercel; `BLOB_READ_WRITE_TOKEN` só se precisar) | loja | Production e Preview (prefixo ou store separado) | Sim |
+| `CONTEUDO_URL` | nuyvi | Production e Preview | Não (aponta para a leitura pública da loja) |
+
+Nenhuma credencial do GitHub é usada pela aplicação.
+
 ## 8. Degradação
 
 | Falha | O que continua | O que para |
@@ -167,6 +210,9 @@ O repositório é público: somente `.env.example` com nomes e sem valores. Os s
 | Webhook atrasado ou perdido | Pedido em AguardandoPagamento | Resolvido pelo cron, que consulta o gateway antes de expirar |
 | Provedor de e-mail fora do ar | Pedido e pagamento | E-mail, reenviado pelo cron; a falha aparece para o operador |
 | Neon fora do ar | Nada da loja (o site estático segue no ar) | Tudo; o RTO depende do Neon |
+| Loja ou Neon fora do ar (conteúdo) | Site no ar com o último conteúdo publicado | Edição e publicação do conteúdo; qualquer build novo do site falha e o deploy anterior continua |
+| Deploy hook ou build da Vercel falhando | Site com a versão anterior | Publicação: o painel mostra o erro; versão não servida |
+| Vercel Blob fora do ar | Site e imagens de `site/img/` | Imagens enviadas pelo painel e fotos de produto |
 | Base44 (futuro) | Compra pelo preço cheio | Desconto (RN-LOJ-07) |
 
 ## 9. Gatilhos de crescimento
