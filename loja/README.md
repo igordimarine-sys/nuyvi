@@ -23,7 +23,23 @@ As credenciais do compose são só de desenvolvimento (substituíveis por `LOCAL
 | `dev` / `build` / `start` | Next.js |
 | `lint` / `typecheck` | ESLint / `next typegen` + `tsc --noEmit` (gera os tipos de rota antes, para funcionar sem `.next/`) |
 | `db:generate` / `db:migrate` | Drizzle Kit (migrations em `drizzle/`; schema em `src/db/schema`) |
+| `test` / `test:watch` | Vitest (veja "Testes"); `test:watch` reexecuta ao salvar |
 | `admin:criar` | Cria ou promove o admin: `npm run admin:criar -- email@dominio.com "Nome"` (senha pedida no terminal, sem eco; ou via stdin) |
+
+## Testes
+
+Vitest, com integração contra o Postgres real (nada de SQLite nem mock do banco). Requer o compose no ar (`docker compose up -d --wait`).
+
+```bash
+npm test
+```
+
+- O banco é o database `loja_test` no mesmo contêiner (o `loja` de desenvolvimento nunca é tocado). A primeira execução o cria e aplica as migrations de `drizzle/` com o migrator do Drizzle (`tests/global-setup.ts`); as seguintes só aplicam o que for novo.
+- Cada teste começa com as tabelas vazias (TRUNCATE em `tests/setup.ts`); os arquivos rodam em série porque dividem o banco.
+- Outro servidor (ex.: CI): defina `TEST_DATABASE_URL`. O nome do database precisa conter `test`, senão a suíte aborta (guarda contra rodar em banco real).
+- `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` dos testes são fictícios, definidos em `vitest.config.mts` (não lê `.env.local`). `server-only` é trocado por um módulo vazio.
+- Dados são sempre fictícios (`tests/fabricas.ts`). A sessão do Better Auth é simulada em `tests/contas/sessao-falsa.ts`; o resto do código roda de verdade.
+- Depois de uma migration nova que não se aplique sozinha (ex.: mudança manual), para recriar o banco de teste: `docker compose exec db psql -U loja -d postgres -c 'drop database loja_test'`.
 
 ## Variáveis de ambiente
 
@@ -39,7 +55,7 @@ Os scripts `db:*` carregam `.env.local` via `node --env-file-if-exists` (o `driz
 
 ## CI
 
-`.github/workflows/loja-ci.yml` roda lint, typecheck e build quando `loja/**` muda. O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
+`.github/workflows/loja-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `loja/**` muda. O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
 
 ## Deploy (pendente: depende das contas da N.UY)
 

@@ -29,8 +29,7 @@ export const pedidos = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     numero: integer("numero").notNull().generatedAlwaysAsIdentity({ startWith: 1000 }), // número amigável
 
-    // Id do usuário do Better Auth (text). Nulo = visitante. SEM FK por enquanto: o schema de auth é do
-    // dev-auth. Quando existir, adicionar FK ON DELETE SET NULL (conta apagada não apaga pedido).
+    // Id do usuário do Better Auth (text). Nulo = visitante.
     usuarioId: text("usuario_id").references(() => user.id, { onDelete: "set null" }), // conta apagada não apaga o pedido
 
     status: text("status").notNull().default("aguardando_pagamento"),

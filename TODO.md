@@ -5,7 +5,8 @@
 ## Pendente
 - Loja: projeto Vercel da loja (Root Directory `loja/`, sem afetar o de `site/`) e Neon com `main` para produção e branch por preview; definir como as migrations rodam em produção (etapa controlada, não no build); roles separadas no Neon `app_rw`/`app_migrate` (dev-devops + dev-infra, quando as contas da N.UY existirem).
 - Loja: proteção da branch `main` com o check `loja-ci / check` obrigatório (aguarda confirmação do desenvolvedor). Considerar fixar actions por SHA e ligar o Dependabot.
-- Loja: testes de integração contra o Postgres real: reserva concorrente, baixa, expiração, webhook duplicado, reconciliação `fisico = SUM(movimentos)`, transições de pedido, desconto do pedido = soma dos itens (dev-tests).
+- Loja: testes de integração que aguardam o código do checkout (spec 1.0): reserva concorrente, baixa, expiração, webhook duplicado (a regra, não só o índice), reconciliação `fisico = SUM(movimentos)`, transições de pedido, desconto do pedido = soma dos itens (dev-tests).
+- Loja (dev-tests): teste de regressão do A-01 com o Better Auth real (cadastro com e-mail alheio, confirmar e-mail, pedidos continuam com `usuario_id` nulo) exige simular a API do HIBP (MSW); testes do A-02 (script) e do rate limit também faltam.
 - Loja: pagamento que chega depois de `expira_em` (reserva pode ter ido para outro pedido), formato do `evento_id` por gateway, cron de expiração e e-mail (dev-integrations).
 - Loja: retenção e anonimização de pedidos e de `gateway_eventos.payload` (lgpd-specialist).
 - Loja: tabela de troca/devolução depende de P-10; frete grátis de P-06; estorno pelo operador de P-08.
@@ -37,6 +38,8 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora de `site/conteudo/loja.json`.
 
 ## Feito
+- 2026-11-14: Loja: `npm test` no `loja-ci` com service container Postgres 17.
+- 2026-11-14: Loja: primeira suíte de testes (Vitest 5.1.0, `npm test`, 51 testes, Postgres real `loja_test`): garantias do schema (CHECK de estoque e de estados, `gateway_eventos` único, 1 pagamento aprovado por pedido, `emails_saida` único, FK `pedidos.usuario_id`), token de acompanhamento (90 dias), vínculo de pedidos (CA-LOJ-47/A-01) e `exigirPapel`.
 - 2026-11-14: Loja: CI corrigido antes do primeiro run (simulado em clone limpo): `typecheck` passa a rodar `next typegen` antes do `tsc` (`LayoutProps` vinha de `.next/`) e o job define variáveis fictícias para o `build` validar `env.ts`. Branch `loja` no GitHub; primeiro run `loja-ci` verde.
 - 2026-11-14: Loja (fundação 3): login próprio com Better Auth 1.7.25 (e-mail e senha, confirmação obrigatória, recuperação), papéis e `exigirPapel`, script `admin:criar`, token de acompanhamento do visitante, vínculo de pedidos (CA-LOJ-47), FK `pedidos.usuario_id`, migration `0001_autenticacao`; `docs/tecnico/autenticacao.md`.
 - 2026-11-14: Loja (fundação 1, ambiente): Postgres 17 em Docker em `127.0.0.1:5436`, scripts `db:*` lendo `.env.local`, CI `.github/workflows/loja-ci.yml`.

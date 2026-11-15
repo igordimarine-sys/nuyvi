@@ -23,6 +23,19 @@ jobs:
       DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
       BETTER_AUTH_SECRET: ci-placeholder-nao-e-segredo-0000000000
       BETTER_AUTH_URL: http://localhost:3000
+      # Testes de integração: o global-setup cria o database loja_test no service abaixo.
+      TEST_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/loja_test
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci # fictício, só no runner efêmero
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s --health-timeout 3s --health-retries 10
     defaults:
       run:
         working-directory: loja
@@ -36,4 +49,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm test
       - run: npm run build
