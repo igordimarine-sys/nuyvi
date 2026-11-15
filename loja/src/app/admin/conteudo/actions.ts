@@ -3,6 +3,8 @@
 import { situacao } from "@/modules/conteudo-site/leitura";
 import { situacaoDeAcesso } from "@/modules/conteudo-site/permissao";
 import { publicar, type ResultadoPublicacao } from "@/modules/conteudo-site/publicar";
+import { unstable_rethrow } from "next/navigation";
+import { descreverErro } from "@/lib/erro-log";
 
 // Server Actions do painel de conteúdo. A permissão é conferida de novo dentro de `publicar` e `situacao`
 // (exigirPapel); aqui só se transforma "sem sessão" e "sem permissão" em respostas que a tela mostra.
@@ -14,7 +16,8 @@ export async function publicarBloco(bloco: string, dados: unknown, versaoBase: n
   try {
     return await publicar({ bloco, dados, versaoBase });
   } catch (e) {
-    console.error(`[conteudo-site] erro ao publicar: ${e instanceof Error ? e.message : "erro desconhecido"}`);
+    unstable_rethrow(e); // redirect/notFound do Next não são falha
+    console.error(`[conteudo-site] erro ao publicar: ${descreverErro(e)}`);
     return { tipo: "erro" };
   }
 }
@@ -25,7 +28,8 @@ export async function consultarSituacao(): Promise<{ pendente: boolean; versaoBa
   if (acesso.tipo !== "ok") return null;
   try {
     return await situacao();
-  } catch {
+  } catch (e) {
+    unstable_rethrow(e);
     return null;
   }
 }

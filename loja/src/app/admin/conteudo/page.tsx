@@ -4,6 +4,8 @@ import { lerPainel } from "@/modules/conteudo-site/leitura";
 import { BLOCOS, resumo, SLUGS } from "@/modules/conteudo-site/schema";
 import { barrarSeNaoPuder, ErroAoAbrir, Esqueleto } from "./estados";
 import { Aviso, formatarDataHora } from "./ui";
+import { unstable_rethrow } from "next/navigation";
+import { descreverErro } from "@/lib/erro-log";
 
 export const metadata = { title: "Conteúdo do site | Loja N.UY", robots: { index: false } };
 
@@ -14,7 +16,8 @@ async function Lista() {
   try {
     painel = await lerPainel();
   } catch (e) {
-    console.error(`[conteudo-site] lista falhou: ${e instanceof Error ? e.message : "erro desconhecido"}`);
+    unstable_rethrow(e); // redirect/notFound do Next não são falha
+    console.error(`[conteudo-site] lista falhou: ${descreverErro(e)}`);
     return <><h1>Conteúdo do site</h1><ErroAoAbrir o="o conteúdo" href="/admin/conteudo" /></>;
   }
   const { publicado, ultima, porBloco } = painel;

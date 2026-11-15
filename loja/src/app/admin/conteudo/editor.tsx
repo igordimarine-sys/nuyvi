@@ -608,7 +608,9 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
             <p>
               {resultado.mesmoBloco
                 ? "A outra publicação mudou este bloco."
-                : `A outra publicação mudou ${resultado.blocos.map((b) => `"${BLOCOS[b].nome}"`).join(", ")}. O bloco que você está editando não foi alterado.`}
+                : resultado.blocos.length === 0
+                  ? "O conteúdo mudou desde que você abriu; seu bloco não foi alterado."
+                  : `A outra publicação mudou ${resultado.blocos.map((b) => `"${BLOCOS[b].nome}"`).join(", ")}. O bloco que você está editando não foi alterado.`}
               {" "}O que você digitou continua aqui.
             </p>
           </Aviso>

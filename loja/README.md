@@ -51,9 +51,10 @@ npm test
 | `BETTER_AUTH_URL` | URL pública da loja (links de e-mail e checagem de origem); local: `http://localhost:3000` |
 | `SITE_DEPLOY_HOOK_URL` | Opcional. Deploy hook do projeto Vercel do site; **segredo**, só em Production. Sem ela, fora de produção a publicação é gravada como aceita com a nota "sem hook configurado" e o painel avisa que o site não foi atualizado; em produção sem ela a publicação falha. Nunca é logada |
 | `BLOB_READ_WRITE_TOKEN` | Opcional. Token do Vercel Blob para o upload de fotos (na Vercel basta o store conectado). Sem ele o envio de foto responde "armazenamento não configurado" e o resto do painel segue |
+| `NEXT_PUBLIC_BLOB_HOST` | Host do store Blob da loja (`<id>.public.blob.vercel-storage.com`; público, não é segredo). Sem ele o upload é recusado e só `img/...` é aceito como imagem. As fotos são reencodadas no servidor (`sharp`: sem EXIF/GPS, rotação aplicada, recusa o que não decodifica) |
 | `SITE_PUBLIC_URL` | Opcional. Endereço do site, só para a miniatura das fotos de `site/img/` no painel |
 
-No projeto do site (`site/`, não é desta pasta): `CONTEUDO_URL` (URL de `/api/conteudo-site`; quando definida o build do site busca o conteúdo ali) e `LOJA_URL` (endereço da loja, destino dos botões dos cartões da Loja; sem ela o botão continua em `#baixar`). Nenhuma das duas é segredo.
+No projeto do site (`site/`, não é desta pasta): `CONTEUDO_URL` (URL de `/api/conteudo-site`; quando definida o build do site busca o conteúdo ali) e `BLOB_PUBLIC_HOST` (o mesmo host do store; sem ele o build só aceita `img/...`) e `LOJA_URL` (endereço da loja, destino dos botões dos cartões da Loja; sem ela o botão continua em `#baixar`). Nenhuma das duas é segredo.
 
 Em desenvolvimento, os e-mails de conta (confirmação, recuperação) não são enviados: ficam em `.dev-outbox/` (ignorado pelo Git).
 

@@ -7,6 +7,8 @@ import { CAMPOS } from "../campos";
 import { BlocoEditor } from "../editor";
 import { barrarSeNaoPuder, ErroAoAbrir, Esqueleto } from "../estados";
 import { Aviso } from "../ui";
+import { unstable_rethrow } from "next/navigation";
+import { descreverErro } from "@/lib/erro-log";
 
 export const metadata = { title: "Editar conteúdo | Loja N.UY", robots: { index: false } };
 
@@ -27,7 +29,8 @@ async function Edicao({ params }: { params: PageProps<"/admin/conteudo/[bloco]">
   try {
     painel = await lerPainel();
   } catch (e) {
-    console.error(`[conteudo-site] bloco falhou: ${e instanceof Error ? e.message : "erro desconhecido"}`);
+    unstable_rethrow(e); // redirect/notFound do Next não são falha
+    console.error(`[conteudo-site] bloco falhou: ${descreverErro(e)}`);
     return <>{migalhas}<h1>{nome}</h1><ErroAoAbrir o="o conteúdo" href={`/admin/conteudo/${bloco}`} /></>;
   }
   if (!painel.publicado) {

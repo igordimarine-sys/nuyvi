@@ -97,7 +97,7 @@ export async function publicar(entrada: { bloco: unknown; dados: unknown; versao
   } catch {
     // não conseguiu marcar: a versão fica pendente e expira sozinha; para a pessoa é falha (nada foi servido)
   }
-  console.error(`[conteudo-site] versão ${numero} não publicada: ${disparo.estado === "falhou" ? disparo.erro : "estado não atualizado"}`);
+  console.error(`[conteudo-site] versão ${numero} não publicada: ${disparo.estado === "falhou" ? disparo.erro : "estado não atualizado"}`); // erro do hook é texto fixo, sem URL
   return { tipo: "falha_disparo", versaoBase: numero };
 }
 

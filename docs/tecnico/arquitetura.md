@@ -199,6 +199,8 @@ Conteúdo do site (ADR-0006):
 | `SITE_DEPLOY_HOOK_URL` | loja | **só Production** (em Preview, publicar não atualiza o site) | Sim: quem tem a URL dispara builds do site |
 | Credencial do Blob (OIDC da Vercel; `BLOB_READ_WRITE_TOKEN` só se precisar) | loja | Production e Preview (prefixo ou store separado) | Sim |
 | `CONTEUDO_URL` | nuyvi | Production e Preview | Não (aponta para a leitura pública da loja) |
+| `BLOB_PUBLIC_HOST` | nuyvi | Production e Preview | Não (host do store Blob; sem ele o build só aceita `img/...`) |
+| `NEXT_PUBLIC_BLOB_HOST` | loja | todos | Não (o mesmo host, para validar as imagens do conteúdo) |
 | `LOJA_URL` | nuyvi | Production e Preview | Não (destino dos botões da seção Loja; sem ela, `#baixar`) |
 | `SITE_PUBLIC_URL` | loja | todos | Não (só miniaturas no painel; opcional) |
 | `VERCEL_ENV` | loja | automática (Vercel) | Não; distingue Production de Preview para o hook |

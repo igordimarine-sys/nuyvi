@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sessaoDe } from "../contas/sessao-falsa";
 import { entrarComo } from "./dados";
@@ -6,10 +7,13 @@ const put = vi.fn();
 vi.mock("@vercel/blob", () => ({ put: (...a: unknown[]) => put(...a) }));
 const { detectarFormato, enviarFoto, TAMANHO_MAXIMO_FOTO } = await import("@/modules/conteudo-site/foto");
 
-const bytes = (...v: number[]) => new Uint8Array([...v, ...new Array(64).fill(0)]);
-const JPEG = bytes(0xff, 0xd8, 0xff, 0xe0);
-const PNG = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
-const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50, ...new Array(32).fill(0)]);
+const base = { create: { width: 8, height: 8, channels: 3 as const, background: "#c00" } };
+const JPEG = await sharp(base).jpeg().toBuffer();
+const PNG = await sharp(base).png().toBuffer();
+const WEBP = await sharp(base).webp().toBuffer();
+const JPEG_GPS = await sharp(base).jpeg().withExif({ IFD0: { Copyright: "SEGREDO-GPS" } }).toBuffer();
+// cabeçalho de JPEG válido seguido de lixo: passa na assinatura, não decodifica
+const FALSO = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, ...new Array(64).fill(7)]);
 const SVG = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
 const GIF = new TextEncoder().encode("GIF89a....");
 const arquivo = (dados: BlobPart, nome = "foto.jpg", tipo = "image/jpeg") => new File([dados], nome, { type: tipo });
@@ -18,6 +22,7 @@ beforeEach(() => {
   put.mockReset();
   put.mockResolvedValue({ url: "https://abc123.public.blob.vercel-storage.com/conteudo/foto-Xy12.jpg" });
   vi.stubEnv("BLOB_READ_WRITE_TOKEN", "token-falso-de-teste");
+  vi.stubEnv("NEXT_PUBLIC_BLOB_HOST", "abc123.public.blob.vercel-storage.com");
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => {
@@ -46,9 +51,23 @@ describe("enviarFoto (CA-LOJ-54)", () => {
   it("aceita imagem válida: envia ao Blob público em conteudo/, com sufixo aleatório e tipo detectado (não o informado)", async () => {
     const r = await enviarFoto(arquivo(PNG, "vovo-de-novo.jpg", "image/jpeg"));
     expect(r).toEqual({ ok: true, url: "https://abc123.public.blob.vercel-storage.com/conteudo/foto-Xy12.jpg" });
-    const [caminho, , opcoes] = put.mock.calls[0]!;
+    const [caminho, corpo, opcoes] = put.mock.calls[0]!;
+    expect((await sharp(corpo as Buffer).metadata()).format).toBe("png"); // reencodado, mesmo formato
     expect(caminho).toBe("conteudo/foto.png"); // nome do usuário nunca é usado
     expect(opcoes).toMatchObject({ access: "public", addRandomSuffix: true, contentType: "image/png" });
+  });
+
+  it("tira EXIF/GPS: o arquivo enviado ao Blob não tem os metadados do original", async () => {
+    expect((await sharp(JPEG_GPS).metadata()).exif).toBeDefined(); // o original tem
+    expect((await enviarFoto(arquivo(JPEG_GPS))).ok).toBe(true);
+    const enviado = put.mock.calls[0]![1] as Buffer;
+    expect((await sharp(enviado).metadata()).exif).toBeUndefined();
+    expect(enviado.includes(Buffer.from("SEGREDO-GPS"))).toBe(false);
+  });
+
+  it("recusa o que tem assinatura de imagem mas não decodifica", async () => {
+    expect(await enviarFoto(arquivo(FALSO))).toMatchObject({ ok: false, motivo: "formato" });
+    expect(put).not.toHaveBeenCalled();
   });
 
   it("recusa SVG mesmo com extensão e tipo de imagem, GIF e arquivo que não é imagem", async () => {
@@ -74,6 +93,12 @@ describe("enviarFoto (CA-LOJ-54)", () => {
     const r = await enviarFoto(arquivo(JPEG));
     expect(r).toMatchObject({ ok: false, motivo: "nao_configurado" });
     expect(!r.ok && r.mensagem).toContain("BLOB_READ_WRITE_TOKEN");
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it("sem o host do store configurado: recusa antes de enviar", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BLOB_HOST", "");
+    expect(await enviarFoto(arquivo(JPEG))).toMatchObject({ ok: false, motivo: "nao_configurado" });
     expect(put).not.toHaveBeenCalled();
   });
 

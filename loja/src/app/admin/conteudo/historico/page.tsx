@@ -4,6 +4,8 @@ import { historico } from "@/modules/conteudo-site/leitura";
 import { BLOCOS } from "@/modules/conteudo-site/schema";
 import { barrarSeNaoPuder, ErroAoAbrir, Esqueleto } from "../estados";
 import { Etiqueta, formatarDataHora } from "../ui";
+import { unstable_rethrow } from "next/navigation";
+import { descreverErro } from "@/lib/erro-log";
 
 export const metadata = { title: "Histórico de conteúdo | Loja N.UY", robots: { index: false } };
 
@@ -22,7 +24,8 @@ async function Tabela({ searchParams }: { searchParams: PageProps<"/admin/conteu
   try {
     h = await historico(Number.isInteger(n) && n > 0 ? n : undefined);
   } catch (e) {
-    console.error(`[conteudo-site] histórico falhou: ${e instanceof Error ? e.message : "erro desconhecido"}`);
+    unstable_rethrow(e); // redirect/notFound do Next não são falha
+    console.error(`[conteudo-site] histórico falhou: ${descreverErro(e)}`);
     return <><h1>Histórico de publicações</h1><ErroAoAbrir o="o histórico" href="/admin/conteudo/historico" /></>;
   }
   return (

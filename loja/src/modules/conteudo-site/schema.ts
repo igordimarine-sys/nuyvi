@@ -15,13 +15,16 @@ const lista = <T extends z.ZodType>(item: T) => z.array(item, { error: LISTA }).
 // Imagem: versionada no site ("img/...") ou enviada ao Vercel Blob público (https, pasta conteudo/, só bitmap).
 const IMG_SITE = /^img\/[\w\-./]+\.(webp|jpe?g|png|avif|gif|svg)$/i;
 const HOST_BLOB = /^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/;
+// Host do store Blob da loja (não é segredo: aparece nas imagens do site). NEXT_PUBLIC_ para o formulário validar igual ao servidor.
+// Sem ele, só "img/..." é aceito.
 const IMG_BLOB = /^\/conteudo\/[\w\-./]+\.(webp|jpe?g|png)$/i;
 export function imagemValida(v: string): boolean {
   const p = v.replace(/^\//, "");
   if (IMG_SITE.test(p) && !p.includes("..")) return true;
   try {
     const u = new URL(v);
-    return u.protocol === "https:" && HOST_BLOB.test(u.hostname) && !u.port && !u.username && !u.search && !u.hash && IMG_BLOB.test(u.pathname) && !u.pathname.includes("..") && u.href === v;
+    const host = process.env.NEXT_PUBLIC_BLOB_HOST?.toLowerCase();
+    return !!host && HOST_BLOB.test(host) && u.protocol === "https:" && u.hostname === host && !u.port && !u.username && !u.search && !u.hash && IMG_BLOB.test(u.pathname) && !u.pathname.includes("..") && u.href === v;
   } catch {
     return false;
   }

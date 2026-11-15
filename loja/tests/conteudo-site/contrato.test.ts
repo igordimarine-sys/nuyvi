@@ -10,7 +10,8 @@ import { conteudoDoSite, configurarHook, entrarComo, HOOK, HTML_SITE, semearVers
 // Contrato painel x site (ADR-0006, RISCO-16): o conteúdo que o painel aceita e a loja entrega PRECISA gerar o mesmo HTML no
 // site/build.mjs, e o que o painel recusa o build também recusa. Se as regras divergirem, o site falha DEPOIS de "publicado".
 const LOJA = "https://loja.exemplo.test";
-const BLOB = "https://abc123.public.blob.vercel-storage.com/conteudo/foto-Xy12.webp";
+const HOST = "abc123.public.blob.vercel-storage.com"; // = NEXT_PUBLIC_BLOB_HOST do vitest.config
+const BLOB = `https://${HOST}/conteudo/foto-Xy12.webp`;
 const clonar = <T,>(x: T): T => structuredClone(x);
 
 describe("contrato build.mjs x conteúdo da loja", () => {
@@ -53,12 +54,19 @@ describe("contrato build.mjs x conteúdo da loja", () => {
       globalThis.fetch = fetchOriginal;
       configurarHook({});
     }
-    const { html } = montar(HTML_SITE, (await obterPublicado())!.conteudo);
+    const { html } = montar(HTML_SITE, (await obterPublicado())!.conteudo, { blobHost: HOST });
     expect(html).toContain(`src="${BLOB}"`);
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert(1)");
     expect(html).toContain("&lt;b&gt;Novo&lt;/b&gt;"); // selo (também dentro do JSON dos planos) escapado
     expect(html).not.toMatch(/<b>Novo/);
+  });
+
+  it("sem o host do Blob configurado no build, só img/... é aceito", () => {
+    const c = conteudoDoSite();
+    c.novidades.noticias[0]!.imagem = BLOB;
+    expect(() => montar(HTML_SITE, c)).toThrow(/conteudo inválido/);
+    expect(() => montar(HTML_SITE, c, { blobHost: HOST })).not.toThrow();
   });
 
   it("os dois lados recusam o mesmo conteúdo inválido", () => {
@@ -72,8 +80,9 @@ describe("contrato build.mjs x conteúdo da loja", () => {
       ["preço mensal negativo", (c) => { c.planos.planos[0]!.mensal = -5; }],
       ["imagem fora de img/", (c) => { c.novidades.noticias[0]!.imagem = "http://evil.example/x.png"; }],
       ["imagem com ..", (c) => { c.novidades.noticias[0]!.imagem = "img/../segredo.png"; }],
-      ["imagem do Blob fora de conteudo/", (c) => { c.novidades.noticias[0]!.imagem = "https://abc123.public.blob.vercel-storage.com/outra/x.png"; }],
-      ["SVG no Blob", (c) => { c.novidades.noticias[0]!.imagem = "https://abc123.public.blob.vercel-storage.com/conteudo/x.svg"; }],
+      ["imagem de outro store Blob", (c) => { c.novidades.noticias[0]!.imagem = "https://zzz999.public.blob.vercel-storage.com/conteudo/x.png"; }],
+      ["imagem do Blob fora de conteudo/", (c) => { c.novidades.noticias[0]!.imagem = `https://${HOST}/outra/x.png`; }],
+      ["SVG no Blob", (c) => { c.novidades.noticias[0]!.imagem = `https://${HOST}/conteudo/x.svg`; }],
       ["link do Explore que não é seção", (c) => { c.explore.cartoes[0]!.link = "#outra"; }],
       ["destino da Loja inválido", (c) => { c.loja.produtos[0]!.destino = "http://evil.example"; }],
     ];
@@ -81,7 +90,7 @@ describe("contrato build.mjs x conteúdo da loja", () => {
       const c = clonar(conteudoDoSite());
       mutar(c);
       expect(conteudoSchema.safeParse(c).success, `painel deveria recusar: ${nome}`).toBe(false);
-      expect(() => montar(HTML_SITE, c, { lojaUrl: LOJA }), `build deveria recusar: ${nome}`).toThrow(/conteudo inválido/);
+      expect(() => montar(HTML_SITE, c, { lojaUrl: LOJA, blobHost: HOST }), `build deveria recusar: ${nome}`).toThrow(/conteudo inválido/);
     }
   });
 });

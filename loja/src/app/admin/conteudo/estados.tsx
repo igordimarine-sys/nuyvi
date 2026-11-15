@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { situacaoDeAcesso } from "@/modules/conteudo-site/permissao";
 import { Aviso } from "./ui";
 
-/** Acesso à área de conteúdo: sem sessão vai para /entrar; sem permissão mostra a tela "Sem permissão" (CA-LOJ-56); null = pode seguir. */
+/** Acesso à área de conteúdo: sem sessão vai para /entrar; cliente recebe 404; operador sem permissão mostra a tela "Sem permissão" (CA-LOJ-56); null = pode seguir. */
 export async function barrarSeNaoPuder() {
   const acesso = await situacaoDeAcesso();
   if (acesso.tipo === "sem_sessao") redirect("/entrar");
-  return acesso.tipo === "sem_permissao" ? <SemPermissao /> : null;
+  if (acesso.tipo === "sem_permissao" && acesso.usuario.papel === "cliente") notFound(); // cliente não sabe que o painel existe, como no resto do /admin
+  return acesso.tipo === "sem_permissao" ? <SemPermissao /> : null; // equipe sem a permissão (operador): CA-LOJ-56
 }
 
 export function SemPermissao() {

@@ -25,6 +25,7 @@ export default defineConfig({
       DATABASE_URL: URL_TESTE,
       BETTER_AUTH_SECRET: "teste-nao-e-segredo-0123456789abcdef0123456789",
       BETTER_AUTH_URL: "http://localhost:3000",
+      NEXT_PUBLIC_BLOB_HOST: "abc123.public.blob.vercel-storage.com", // fictício
       TZ: "America/Sao_Paulo",
     },
     // Um único banco compartilhado e isolamento por TRUNCATE: arquivos rodam em série.

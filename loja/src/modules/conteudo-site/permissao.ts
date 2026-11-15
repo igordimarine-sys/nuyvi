@@ -8,8 +8,8 @@ export const PAPEL_CONTEUDO: Papel = "admin";
 
 /** Só consulta (para a tela dizer "Sem permissão" ou a rota devolver 401/403). Quem barra de verdade é
  *  `exigirPapel(PAPEL_CONTEUDO)`, chamado dentro de cada função do módulo que lê dados da equipe ou escreve. */
-export async function situacaoDeAcesso(): Promise<{ tipo: "sem_sessao" } | { tipo: "sem_permissao" } | { tipo: "ok"; usuario: UsuarioAutenticado }> {
+export async function situacaoDeAcesso(): Promise<{ tipo: "sem_sessao" } | { tipo: "sem_permissao"; usuario: UsuarioAutenticado } | { tipo: "ok"; usuario: UsuarioAutenticado }> {
   const usuario = await obterUsuario();
   if (!usuario) return { tipo: "sem_sessao" };
-  return atende(usuario, PAPEL_CONTEUDO) ? { tipo: "ok", usuario } : { tipo: "sem_permissao" };
+  return atende(usuario, PAPEL_CONTEUDO) ? { tipo: "ok", usuario } : { tipo: "sem_permissao", usuario };
 }

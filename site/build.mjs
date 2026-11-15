@@ -9,6 +9,7 @@
 //   CONTEUDO_URL ausente  -> lê conteudo/*.json (fluxo anterior ao corte para o painel).
 // LOJA_URL (opcional): endereço da loja, para onde o botão dos cartões da seção Loja aponta (campo `destino`).
 // Sem ela o botão continua levando a #baixar. Não é segredo.
+// BLOB_PUBLIC_HOST (opcional): host do store Blob da loja (ex.: <id>.public.blob.vercel-storage.com). Sem ele só `img/...` é aceito como imagem.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
@@ -32,18 +33,18 @@ function erro(msg) { throw new Error(`conteudo inválido: ${msg}`); }
 function texto(v, onde) { if (typeof v !== 'string' || !v.trim()) erro(`${onde} está vazio`); return esc(v.trim()); }
 function lista(v, onde) { if (!Array.isArray(v) || !v.length) erro(`${onde} precisa de pelo menos um item`); return v; }
 // Imagens: versionadas no site ("img/..."; o painel antigo gravava "/img/..." e a página usa caminho relativo) ou
-// enviadas pelo painel ao Vercel Blob público (https, host *.public.blob.vercel-storage.com, pasta conteudo/).
+// enviadas pelo painel ao Vercel Blob público (https, exatamente o host de BLOB_PUBLIC_HOST, pasta conteudo/).
 const IMG_SITE = /^img\/[\w\-./]+\.(webp|jpe?g|png|avif|gif|svg)$/i;
-const HOST_BLOB = /^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/;
+const HOST_BLOB = /^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/; // formato do host; o valor aceito vem de BLOB_PUBLIC_HOST
 const IMG_BLOB = /^\/conteudo\/[\w\-./]+\.(webp|jpe?g|png)$/i;
-function imagem(v, onde) {
+function imagemDe(v, onde, blobHost) {
   const p = String(v ?? '').replace(/^\//, '');
   if (IMG_SITE.test(p) && !p.includes('..')) return esc(p);
   try {
     const u = new URL(String(v));
-    if (u.protocol === 'https:' && HOST_BLOB.test(u.hostname) && !u.port && !u.username && !u.search && !u.hash && IMG_BLOB.test(u.pathname) && !u.pathname.includes('..') && u.href === v) return esc(v);
+    if (blobHost && HOST_BLOB.test(blobHost) && u.protocol === 'https:' && u.hostname === blobHost && !u.port && !u.username && !u.search && !u.hash && IMG_BLOB.test(u.pathname) && !u.pathname.includes('..') && u.href === v) return esc(v);
   } catch { /* cai no erro abaixo */ }
-  return erro(`${onde}: imagem "${v}" fora de img/ e do Blob`);
+  return erro(`${onde}: imagem "${v}" fora de img/ e do host do Blob configurado`);
 }
 // Destino do botão dos cartões da Loja: "inicio" (página inicial da loja) ou "categoria/<slug>".
 // Sem `destino` (conteúdo antigo) ou sem LOJA_URL, o botão leva a #baixar, como antes.
@@ -57,7 +58,8 @@ const seta = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-
 const LINKS = ['#videos', '#premium', '#bonus', '#historia', '#explore', '#loja', '#baixar', '#novidades'];
 
 /** Remonta os trechos `<!--cms:...-->` de `html` com `dados` ({textos, loja, explore, novidades, planos}). Lança se o conteúdo for inválido. */
-export function montar(html, dados, { lojaUrl = '' } = {}) {
+export function montar(html, dados, { lojaUrl = '', blobHost = '' } = {}) {
+  const imagem = (v, onde) => imagemDe(v, onde, blobHost.toLowerCase());
   const desconto = () => { const d = dados.planos.desconto_anual; if (typeof d !== 'number' || d < 0 || d >= 100) erro('desconto anual inválido'); return d; };
 
   const blocos = {
@@ -122,7 +124,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const dados = process.env.CONTEUDO_URL ? await dadosDaLoja(process.env.CONTEUDO_URL) : dadosLocais();
   const lojaUrl = process.env.LOJA_URL ? urlSegura(process.env.LOJA_URL, 'LOJA_URL').href.replace(/\/$/, '') : '';
   const arq = new URL('index.html', raiz);
-  const { html, trechos } = montar(readFileSync(arq, 'utf8'), dados, { lojaUrl });
+  const { html, trechos } = montar(readFileSync(arq, 'utf8'), dados, { lojaUrl, blobHost: process.env.BLOB_PUBLIC_HOST ?? '' });
   writeFileSync(arq, html);
   console.log(`index.html atualizado (${trechos} trechos, conteúdo de ${process.env.CONTEUDO_URL ? 'CONTEUDO_URL' : 'conteudo/*.json'}).`);
 }
