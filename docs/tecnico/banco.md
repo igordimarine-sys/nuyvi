@@ -1,6 +1,6 @@
 # Banco de dados da loja (PostgreSQL, Drizzle)
 
-Schema: `loja/src/db/schema/` (um arquivo por módulo). Migrations: `loja/drizzle/` (`npm run db:generate`, `npm run db:migrate`). Dinheiro em centavos inteiros; instantes em `timestamptz`; ids `uuid` (`gen_random_uuid()`), exceto `pedidos.numero` (identity, a partir de 1000, número amigável).
+Schema: `admin/src/db/schema/` (um arquivo por módulo). Migrations: `admin/drizzle/` (`npm run db:generate`, `npm run db:migrate`). Dinheiro em centavos inteiros; instantes em `timestamptz`; ids `uuid` (`gen_random_uuid()`), exceto `pedidos.numero` (identity, a partir de 1000, número amigável).
 
 ## Tabelas
 
@@ -118,7 +118,7 @@ SELECT v.numero, v.criado_em, v.blocos_alterados, v.origem, v.disparo_estado, v.
  WHERE v.numero < $1 ORDER BY v.numero DESC LIMIT 50;                           -- sem a coluna conteudo
 ```
 
-No Drizzle, usar `db.transaction` + `sql` com `${}` (parâmetros). O endpoint público devolve só `conteudo` (nada de autor). Teste de integração das garantias: `loja/tests/db/conteudo-versoes.test.ts`.
+No Drizzle, usar `db.transaction` + `sql` com `${}` (parâmetros). O endpoint público devolve só `conteudo` (nada de autor). Teste de integração das garantias: `admin/tests/db/conteudo-versoes.test.ts`.
 
 **Migration e rollback.** Tabela nova, sem dados: aplicar antes do app que a usa (sem ordem crítica com o app atual). Rollback: `DROP TABLE conteudo_versoes; DROP FUNCTION conteudo_versoes_guarda();` (só antes da versão 1 em produção; depois disso, o histórico é perdido, então só com confirmação e backup). A versão 1 vem do script de migração do conteúdo (dev-react), com `origem = 'migracao'`, `disparo_estado = 'aceito'`, `disparo_em` preenchido e os 9 blocos.
 

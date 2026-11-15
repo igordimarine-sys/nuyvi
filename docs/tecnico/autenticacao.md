@@ -1,6 +1,6 @@
 # Autenticação e papéis da loja
 
-Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme [ADR-0004](../adr/ADR-0004-stack-loja.md). Conta da loja separada da conta do app N.UY ([ADR-0003](../adr/ADR-0003-login-proprio-e-desconto-suspenso-no-mvp.md), RN-LOJ-21). Código: `loja/src/lib/auth.ts`, `loja/src/modules/contas/`, `loja/src/modules/pedidos/token-acompanhamento.ts`, schema em `loja/src/db/schema/auth.ts`.
+Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme [ADR-0004](../adr/ADR-0004-stack-loja.md). Conta da loja separada da conta do app N.UY ([ADR-0003](../adr/ADR-0003-login-proprio-e-desconto-suspenso-no-mvp.md), RN-LOJ-21). Código: `admin/src/lib/auth.ts`, `admin/src/modules/contas/`, `admin/src/modules/pedidos/token-acompanhamento.ts`, schema em `admin/src/db/schema/auth.ts`.
 
 ## Fluxos (só e-mail e senha; login social fica para fase seguinte, a spec não pede)
 
@@ -28,7 +28,7 @@ Do próprio Better Auth, contador no Postgres (tabela `rate_limit`, vale em serv
 
 ## E-mail
 
-`modules/contas/enviar-email.ts` é o ponto único e ainda não envia: em desenvolvimento grava em `loja/.dev-outbox/` (ignorado pelo Git); fora dele registra só o tipo. Provedor, templates e reenvio: dev-notifications. A `emails_saida` atual é por pedido e não serve para e-mail de conta.
+`modules/contas/enviar-email.ts` é o ponto único e ainda não envia: em desenvolvimento grava em `admin/.dev-outbox/` (ignorado pelo Git); fora dele registra só o tipo. Provedor, templates e reenvio: dev-notifications. A `emails_saida` atual é por pedido e não serve para e-mail de conta.
 
 ## Divergência com a spec
 

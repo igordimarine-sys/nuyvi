@@ -1,6 +1,6 @@
 # Arquitetura: loja N.UY
 
-Desenho macro da loja (`loja/`) e do painel único. Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Conteúdo do site e publicação: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
+Desenho macro da loja (`admin/`) e do painel único. Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Conteúdo do site e publicação: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
 
 ## 1. Visão geral
 
@@ -8,7 +8,7 @@ Desenho macro da loja (`loja/`) e do painel único. Decisão de stack e alternat
 flowchart LR
   subgraph Vercel
     S[Projeto nuyvi<br/>site/ estático<br/>build.mjs gera o HTML]
-    L[Projeto nuy-loja<br/>loja/ Next.js<br/>loja pública + painel /admin + webhooks + cron]
+    L[Projeto nuy-loja<br/>admin/ Next.js<br/>loja pública + painel /admin + webhooks + cron]
     B[(Vercel Blob público<br/>fotos de produto e do conteúdo)]
   end
   N[(Neon Postgres<br/>aws-sa-east-1)]
@@ -30,17 +30,17 @@ flowchart LR
 | Onde roda | O quê |
 |---|---|
 | Projeto Vercel `nuyvi` (ligado ao GitHub, Root Directory `site`) | Site estático. No build, o `build.mjs` busca a última versão publicada do conteúdo na loja e gera o HTML. Sem preço nem estoque (RN-LOJ-18) |
-| Projeto Vercel da loja (Root Directory `loja/`) | Páginas da loja, painel único `/admin` (loja e conteúdo do site), leitura pública do conteúdo publicado, Route Handlers de webhook e de cron, Server Actions |
+| Projeto Vercel da loja (Root Directory `admin/`) | Páginas da loja, painel único `/admin` (loja e conteúdo do site), leitura pública do conteúdo publicado, Route Handlers de webhook e de cron, Server Actions |
 | Neon | Única fonte da verdade de catálogo, estoque, pedidos, pagamentos, contas da loja, auditoria e **versões do conteúdo do site** |
 | Vercel Blob (público) | Fotos de produto e fotos do conteúdo do site enviadas pelo painel |
 | Gateway | Dados de cartão (nunca passam pela loja, RNF-08), cobranças, estornos |
 
 Sem servidor próprio, sem fila externa, sem Redis. Monolito modular.
 
-## 2. Estrutura de `loja/`
+## 2. Estrutura de `admin/`
 
 ```
-loja/
+admin/
   package.json  next.config.ts  drizzle.config.ts  .env.example   (nunca .env)
   drizzle/                     migrations geradas (dev-database)
   src/
@@ -133,7 +133,7 @@ Decisões estruturais deste fluxo:
 A única fronteira para "qual o plano deste cliente":
 
 ```ts
-// loja/src/modules/contas/plano-assinante.ts
+// admin/src/modules/contas/plano-assinante.ts
 type PlanoVigente = { codigo: 'silver' | 'gold' | 'premium'; percentualDesconto: number } | null;
 export async function obterPlanoVigente(clienteId: string | null): Promise<PlanoVigente>;
 ```

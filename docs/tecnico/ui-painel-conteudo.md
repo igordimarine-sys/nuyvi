@@ -1,6 +1,6 @@
 # Painel de conteúdo do site: especificação visual e de comportamento
 
-Tarefa 11 do plano da [spec da loja](../specs/loja.md) (fase 1a). Requisitos: seção 5.9 (HU-12, HU-13, CA-LOJ-50 a 59), RN-LOJ-24 a 26, tela da 9.2. Decisão técnica: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md). Banco: [banco.md](banco.md) ("Conteúdo do site"). Fluxo de publicação: [arquitetura.md](arquitetura.md) seção 6. Quem implementa: `dev-react` em `loja/` (CSS próprio, sem biblioteca de UI nova).
+Tarefa 11 do plano da [spec da loja](../specs/loja.md) (fase 1a). Requisitos: seção 5.9 (HU-12, HU-13, CA-LOJ-50 a 59), RN-LOJ-24 a 26, tela da 9.2. Decisão técnica: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md). Banco: [banco.md](banco.md) ("Conteúdo do site"). Fluxo de publicação: [arquitetura.md](arquitetura.md) seção 6. Quem implementa: `dev-react` em `admin/` (CSS próprio, sem biblioteca de UI nova).
 
 Ferramenta interna: prioridade é clareza e segurança ao publicar. Sem animação decorativa. Movimento só funcional (seção 9).
 

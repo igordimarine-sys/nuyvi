@@ -1,16 +1,16 @@
-name: loja-ci
+name: admin-ci
 
 on:
   push:
-    paths: ["loja/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/loja-ci.yml"]
+    paths: ["admin/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/admin-ci.yml"]
   pull_request:
-    paths: ["loja/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/loja-ci.yml"]
+    paths: ["admin/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/admin-ci.yml"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: loja-ci-${{ github.ref }}
+  group: admin-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: loja/package-lock.json
+          cache-dependency-path: admin/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

@@ -1,4 +1,5 @@
 # Somente desenvolvimento local. Credenciais abaixo são de exemplo: não reutilize em lugar nenhum.
+name: loja # fixa o projeto do compose (container e volume loja_loja_pgdata) após a pasta virar admin/
 services:
   db:
     image: postgres:17 # Neon suporta 14 a 18; mantenha a mesma major do projeto no Neon

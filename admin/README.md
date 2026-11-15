@@ -78,8 +78,8 @@ Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi
 
 ## CI
 
-`.github/workflows/loja-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `loja/**`, `site/build.mjs`, `site/index.html` ou `site/conteudo/**` mudam (o teste de contrato do painel lê esses arquivos). O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
+`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, `site/index.html` ou `site/conteudo/**` mudam (o teste de contrato do painel lê esses arquivos). O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
 
 ## Deploy (pendente: depende das contas da N.UY)
 
-Ainda não configurado. Quando as contas existirem: projeto Vercel próprio com Root Directory `loja/` (independente do projeto do site estático em `site/`); Neon Postgres em aws-sa-east-1, branch `main` para Production e uma branch por preview (nunca a produção); `DATABASE_URL` e demais segredos como variáveis da Vercel por ambiente (Preview/Production), nunca no Git; migrations como etapa controlada do deploy, não no build.
+Ainda não configurado. Quando as contas existirem: projeto Vercel próprio com Root Directory `admin/` (independente do projeto do site estático em `site/`); Neon Postgres em aws-sa-east-1, branch `main` para Production e uma branch por preview (nunca a produção); `DATABASE_URL` e demais segredos como variáveis da Vercel por ambiente (Preview/Production), nunca no Git; migrations como etapa controlada do deploy, não no build.

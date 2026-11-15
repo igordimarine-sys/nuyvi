@@ -3,7 +3,7 @@
 // O navegador recarrega sozinho quando:
 //   - um arquivo de site/ é salvo (HTML, CSS, JS, imagens, conteudo/*.json);
 //   - CONTEUDO_URL definida: alguém publica no painel. Sem consulta periódica: a loja local chama
-//     POST /__publicado (SITE_DEPLOY_HOOK_URL=http://127.0.0.1:8765/__publicado em loja/.env.local), como o deploy
+//     POST /__publicado (SITE_DEPLOY_HOOK_URL=http://127.0.0.1:8765/__publicado em admin/.env.local), como o deploy
 //     hook faz na Vercel, e só então o conteúdo é lido. Também lê uma vez ao iniciar.
 // LOJA_URL e BLOB_PUBLIC_HOST: mesmas variáveis do build.mjs.
 import { createServer } from 'node:http';
