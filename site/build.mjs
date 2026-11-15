@@ -17,7 +17,7 @@ const raiz = new URL('.', import.meta.url);
 const ler = nome => JSON.parse(readFileSync(new URL(`conteudo/${nome}.json`, raiz), 'utf8'));
 const dadosLocais = () => ({ textos: ler('textos'), loja: ler('loja'), explore: ler('explore'), novidades: ler('novidades'), planos: ler('planos') });
 
-function urlSegura(v, nome) {
+export function urlSegura(v, nome) {
   const u = new URL(v);
   if (!(u.protocol === 'https:' || (u.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(u.hostname)))) throw new Error(`${nome} deve ser https (http só para localhost)`);
   return u;

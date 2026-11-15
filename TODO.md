@@ -52,6 +52,8 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: `site/dev.mjs` + `site/package.json` (`dev`, `dev:painel`, `build`): servidor local com recarga automática ao salvar arquivo do site ou ao publicar no painel (a loja chama `POST /__publicado` via `SITE_DEPLOY_HOOK_URL`, que passa a aceitar http só para localhost fora de produção; sem consulta periódica), montando a página em memória (não grava o `index.html`).
+- 2026-11-15: Login: equipe (`operador`/`admin`) vai para `/admin` depois de entrar; cliente continua indo para `/` (`formularios.tsx`, `auth-client.ts` com `inferAdditionalFields`).
 - 2026-11-15: Painel único, tarefa 13: testes da rota de upload (Origin/401/403/status), das actions `publicarBloco`/`consultarSituacao` e do `build.mjs` falhando com a loja fora sem tocar no `index.html` (CA-LOJ-59); `npm test` 132/132. Fase 1a completa em código.
 - 2026-11-15: Correções do painel de conteúdo: foto reencodada com `sharp` sem EXIF/GPS (M-01), host do Blob fixo por variável (B-02), `overrides` do zod (B-03; restam 4 moderadas da cadeia `drizzle-kit`), `unstable_rethrow` nas actions/páginas, texto de conflito sem blocos, `cliente` recebe 404 em `/admin/conteudo*`, logs só com classe/código do erro. `npm test` 107/107.
 - 2026-11-15: Revisão (dev-reviewer: aprovado com ressalvas) e auditoria de segurança do painel de conteúdo (dev-security, tarefa 14: sem crítico/alto; relatório em `docs/seguranca/2026-11-15-painel-conteudo.md`). Endpoint público fica sem token de leitura.
