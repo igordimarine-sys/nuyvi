@@ -9,6 +9,9 @@ import { auth } from "@/lib/auth";
 const NIVEL: Record<Papel, number> = { cliente: 0, operador: 1, admin: 2 };
 const papelSchema = z.enum(PAPEIS);
 
+/** O usuário tem o papel mínimo (hierarquia acima)? Só confere; quem barra é `exigirPapel`. */
+export const atende = (usuario: { papel: Papel }, minimo: Papel) => NIVEL[usuario.papel] >= NIVEL[minimo];
+
 export type UsuarioAutenticado = { id: string; nome: string; email: string; papel: Papel; sessaoId: string };
 
 /** Usuário da sessão atual (lida no banco a cada chamada, então mudança de papel vale na hora) ou null. */
@@ -28,6 +31,6 @@ export async function obterUsuario(): Promise<UsuarioAutenticado | null> {
 export async function exigirPapel(minimo: Papel): Promise<UsuarioAutenticado> {
   const usuario = await obterUsuario();
   if (!usuario) redirect("/entrar");
-  if (NIVEL[usuario.papel] < NIVEL[minimo]) notFound();
+  if (!atende(usuario, minimo)) notFound();
   return usuario;
 }

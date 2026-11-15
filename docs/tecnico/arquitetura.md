@@ -199,6 +199,11 @@ Conteúdo do site (ADR-0006):
 | `SITE_DEPLOY_HOOK_URL` | loja | **só Production** (em Preview, publicar não atualiza o site) | Sim: quem tem a URL dispara builds do site |
 | Credencial do Blob (OIDC da Vercel; `BLOB_READ_WRITE_TOKEN` só se precisar) | loja | Production e Preview (prefixo ou store separado) | Sim |
 | `CONTEUDO_URL` | nuyvi | Production e Preview | Não (aponta para a leitura pública da loja) |
+| `LOJA_URL` | nuyvi | Production e Preview | Não (destino dos botões da seção Loja; sem ela, `#baixar`) |
+| `SITE_PUBLIC_URL` | loja | todos | Não (só miniaturas no painel; opcional) |
+| `VERCEL_ENV` | loja | automática (Vercel) | Não; distingue Production de Preview para o hook |
+
+Sem `SITE_DEPLOY_HOOK_URL`: fora de produção a versão é gravada como aceita com `disparo_erro = 'sem hook configurado'` e o painel avisa que o site não foi atualizado; em produção a publicação falha. O upload de foto é um Route Handler (`POST /api/conteudo-site/foto`), não Server Action, para não elevar o limite de corpo (1 MB) de todas as actions. O valor guardado em `destino` dos cartões da Loja é `inicio` (futuro `categoria/<slug>`); o build monta `LOJA_URL` + valor.
 
 Nenhuma credencial do GitHub é usada pela aplicação.
 

@@ -2,9 +2,9 @@ name: loja-ci
 
 on:
   push:
-    paths: ["loja/**", ".github/workflows/loja-ci.yml"]
+    paths: ["loja/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/loja-ci.yml"]
   pull_request:
-    paths: ["loja/**", ".github/workflows/loja-ci.yml"]
+    paths: ["loja/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/loja-ci.yml"]
 
 permissions:
   contents: read
