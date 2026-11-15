@@ -13,7 +13,7 @@
 - Loja: `npm audit` acusa 8 vulnerabilidades moderadas nas dependências do create-next-app; avaliar (dev-security).
 - Ligar o projeto `nuyvi` da Vercel ao repositório do GitHub (Root Directory `site`) para cada edição do painel publicar sozinha. Na primeira publicação, conferir se a Vercel roda o `node build.mjs` e serve a pasta `site` (`buildCommand` em `site/vercel.json`, saída padrão do preset "Other").
 - Testar o painel em produção: entrar com token, editar um produto, salvar, conferir o commit e o site atualizado.
-- Push da branch `painel` e teste do painel com token nela. Ao juntar na `main`, trocar `branch: painel` para `branch: main` em `site/admin/config.yml`.
+- Teste do painel com token na branch `painel` (já no GitHub). `https://nuyvi.vercel.app/admin/` ainda dá 404: o painel não foi publicado. Ao juntar na `main`, trocar `branch: painel` para `branch: main` em `site/admin/config.yml`.
 - Fotos reais do cliente em alta resolução, notícias reais, links das lojas (vindos do BRIEFING).
 - Loja: enviar ao cliente as perguntas ainda abertas da seção 13 de `docs/specs/loja.md` (C-01, P-03, P-05 a P-14) e atualizar a spec para 1.0 com as respostas (arquiteto-specs).
 - Loja: verificar a integração com o Base44 para o desconto de assinante (PEND-B44: API/funções de backend do Base44, vínculo de contas por e-mail verificado ou alternativa) na documentação oficial e testando no app; registrar ADR da fase 1b (desenvolvedor + dev-integrations + dev-auth). Confirmar acesso de edição ao app no Base44 (D-02).
