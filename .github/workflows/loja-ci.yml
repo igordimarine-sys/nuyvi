@@ -17,6 +17,12 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Valores fictícios só para o build validar env.ts; não são segredos nem apontam para banco real.
+    # O build não conecta ao banco (pg.Pool é preguiçoso). Segredos reais ficam só na Vercel.
+    env:
+      DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+      BETTER_AUTH_SECRET: ci-placeholder-nao-e-segredo-0000000000
+      BETTER_AUTH_URL: http://localhost:3000
     defaults:
       run:
         working-directory: loja

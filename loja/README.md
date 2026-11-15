@@ -21,7 +21,7 @@ As credenciais do compose são só de desenvolvimento (substituíveis por `LOCAL
 | Script | O que faz |
 |---|---|
 | `dev` / `build` / `start` | Next.js |
-| `lint` / `typecheck` | ESLint / `tsc --noEmit` |
+| `lint` / `typecheck` | ESLint / `next typegen` + `tsc --noEmit` (gera os tipos de rota antes, para funcionar sem `.next/`) |
 | `db:generate` / `db:migrate` | Drizzle Kit (migrations em `drizzle/`; schema em `src/db/schema`) |
 | `admin:criar` | Cria ou promove o admin: `npm run admin:criar -- email@dominio.com "Nome"` (senha pedida no terminal, sem eco; ou via stdin) |
 
@@ -39,7 +39,7 @@ Os scripts `db:*` carregam `.env.local` via `node --env-file-if-exists` (o `driz
 
 ## CI
 
-`.github/workflows/loja-ci.yml` roda lint, typecheck e build quando `loja/**` muda.
+`.github/workflows/loja-ci.yml` roda lint, typecheck e build quando `loja/**` muda. O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
 
 ## Deploy (pendente: depende das contas da N.UY)
 
