@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Cliente | N.UY, app esportivo (parceiros de treino, quadras, eventos, especialistas, IA) |
-| Versão | 0.4 |
+| Versão | 0.5 |
 | Status | Rascunho, com perguntas abertas ao cliente e ao desenvolvedor (seção 13) |
 | Autor | arquiteto-specs · Data: 2026-11-15 |
 | Aprovada por / em | (pendente) |
-| Fontes | Decisões do desenvolvedor repassadas em 2026-11-14 (D1 a D5, ver ADR-0001 e ADR-0002); respostas do desenvolvedor em 2026-11-14 (P-01, P-02, P-04, D-01; ver ADR-0003); decisão do desenvolvedor em 2026-11-15: painel único (ADR-0005, substitui a D5 no ponto dos dois painéis); `BRIEFING.md`; `site/index.html` (seções Planos, Bônus, Loja); `site/admin/config.yml` e `site/conteudo/*.json` (branch `painel`) |
+| Fontes | Decisões do desenvolvedor repassadas em 2026-11-14 (D1 a D5, ver ADR-0001 e ADR-0002); respostas do desenvolvedor em 2026-11-14 (P-01, P-02, P-04, D-01; ver ADR-0003); decisão do desenvolvedor em 2026-11-15: painel único (ADR-0005, substitui a D5 no ponto dos dois painéis), D-04 e ADR-0006 (onde vive o conteúdo do site); `BRIEFING.md`; `site/index.html` (seções Planos, Bônus, Loja); `site/admin/config.yml` e `site/conteudo/*.json` (branch `painel`) |
 
 > Convenções: `CA-LOJ-xx` critério de aceite · `RN-LOJ-xx` regra de negócio · `RNF-xx` · `[PENDENTE: ...]` falta resposta · `[PREMISSA: ...]` assumido por nós, a confirmar.
 > Esta spec define **o quê e o porquê**. Stack, banco, forma de integrar e telas são decisões de `dev-arquitetura` e dos especialistas (seção 15).
@@ -131,7 +131,7 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 
 | Fase | Conteúdo | Depende de |
 |---|---|---|
-| 1a (antes do resto do MVP) | Primeiro módulo do painel único: edição do conteúdo do site (HU-12, HU-13, CA-LOJ-50 a 59), usando o login e os papéis da equipe que já existem. Não depende de gateway, frete nem NF-e. Até ela entrar, o conteúdo do site continua sendo editado pelo desenvolvedor, como hoje | PEND-CONT (dev-arquitetura), P-15, MFA da equipe antes de liberar contas de equipe em produção |
+| 1a (antes do resto do MVP) | Primeiro módulo do painel único: edição do conteúdo do site (HU-12, HU-13, CA-LOJ-50 a 59), usando o login e os papéis da equipe que já existem. Não depende de gateway, frete nem NF-e. Até ela entrar, o conteúdo do site continua sendo editado pelo desenvolvedor, como hoje | P-15, MFA da equipe antes de liberar contas de equipe em produção (mecanismo decidido no ADR-0006) |
 | 1b | Desconto de assinante: vínculo da conta da loja com a conta N.UY, leitura do plano vigente, percentuais no painel, HU-03 e CA-LOJ-04, 09 a 12, 42 | Confirmar como ler o plano no Base44 (PEND-B44, ADR-0003); P-03; C-01; revisão dos textos do site |
 | 2 | Emissão de NF-e integrada ao emissor; cálculo de frete por transportadora/Correios; etiquetas de envio | MVP no ar; definição do emissor (P-09) e da logística (P-06) |
 | 2 | Solicitação de troca/devolução pelo próprio comprador em "Meus pedidos" | Política de troca validada (P-10) |
@@ -289,8 +289,8 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 - **`/admin` Sveltia descartado (D-04, 2026-11-15):** não será publicado; a branch `painel` fica só como referência (inventário da 5.9). Até a fase 1a entrar, o conteúdo do site continua sendo editado pelo desenvolvedor, como hoje.
 - **Fonte única continua (RN-LOJ-18):** produtos vendáveis, preços, estoque, frete, descontos e pedidos vivem só nos registros da loja. O conteúdo da seção Loja do site (cartões editoriais) nunca terá preço nem estoque, mesmo editado no mesmo painel.
 - **Pedidos e dados pessoais continuam fora do Git** (RNF-13), seja qual for o lugar escolhido para o conteúdo do site.
-- **Para quem visita, o site continua independente:** abre e mostra o último conteúdo publicado mesmo com o sistema da loja fora do ar (RNF-14, `[PREMISSA: a confirmar pelo dev-arquitetura]`). Quem **edita** passa a depender da loja no ar (RISCO-11).
-- **Onde o conteúdo vive e como chega ao site** (JSON no Git gravado pelo servidor da loja via API do GitHub, banco com o site lendo, ou outra): decisão do `dev-arquitetura`, com ADR técnico (seção 15, tarefa 9). Esta spec só fixa o comportamento (CA-LOJ-50 a 59).
+- **Para quem visita, o site continua independente:** o site no ar é estático e abre com o último conteúdo publicado mesmo com o sistema da loja fora do ar (RNF-14, ADR-0006). Com a loja fora, o que falha é **publicar** e **remontar** o site (qualquer build novo, inclusive de mudança de código em `site/`); a versão no ar não é afetada (RISCO-11, RISCO-15).
+- **Onde o conteúdo vive e como chega ao site:** decidido no ADR-0006 (versões no banco da loja, rebuild do site estático por deploy hook, fotos novas no Vercel Blob). Esta spec fixa o comportamento (CA-LOJ-50 a 59).
 - No MVP, a seção Loja do site muda pouco: os cartões continuam editoriais, o botão deixa de ser "Comprar no app" (que leva ao download) e passa a levar à categoria correspondente na loja. O texto do botão e o destino são campos do cartão, editáveis no painel único (CA-LOJ-58) `[PREMISSA: texto do copywriter]`. Com a P-02 respondida (página web), o título "Equipado sem sair do app" depende de como o Base44 abre o link (PEND-B44b); revisar com `copywriter`.
 - Na fase 2, a seção Loja pode mostrar destaques puxados do catálogo; aí os cartões de produto deixam de ser editoriais.
 - **Divergência a vigiar:** os planos do site têm o texto "Desconto na loja: 5%/10%/15%" escrito à mão nos itens de cada plano, e a seção Bônus diz "Até 15% de desconto em todos os produtos da loja". Agora que os dois ficam no mesmo painel, a divergência fica mais visível, mas **não** some sozinha: se o percentual mudar na loja (ou no app), esses textos precisam ser atualizados também. Ver RISCO-05 e a contradição C-01.
@@ -330,7 +330,7 @@ Justificativa: o valor está em **receber o primeiro pedido pago com estoque cer
 | CA-LOJ-56 | **Dado** um usuário da equipe sem permissão de conteúdo (pela premissa de P-15, o operador), **quando** tenta abrir "Conteúdo do site" ou publicar por qualquer caminho, **então** vê "Sem permissão" e nada é alterado. |
 | CA-LOJ-57 | **Dado** uma publicação feita, **quando** o admin consulta o histórico de conteúdo, **então** vê data/hora, quem publicou e qual bloco mudou (RN-LOJ-26). |
 | CA-LOJ-58 | **Dado** um cartão da seção Loja, **quando** o admin define o destino do botão (categoria da loja) e publica, **então** o botão no site leva àquela categoria da loja. O cartão não tem campo de preço nem de estoque (RN-LOJ-18). |
-| CA-LOJ-59 | **Dado** o sistema da loja (e portanto o painel) fora do ar, **quando** alguém abre o site, **então** o site abre normalmente com o último conteúdo publicado (RNF-14). `[PREMISSA: a confirmar pelo dev-arquitetura]` |
+| CA-LOJ-59 | **Dado** o sistema da loja (e portanto o painel) fora do ar, **quando** alguém abre o site, **então** o site abre normalmente com o último conteúdo publicado (RNF-14). **E quando** um build do site é disparado nesse período, **então** o build falha e o site continua exatamente com a versão anterior; refeito o build com a loja no ar, o site é atualizado (ADR-0006). |
 
 Prévia/rascunho antes de publicar: `[PENDENTE: P-17]` `[PREMISSA: sem rascunho no MVP; publicar é um passo explícito, como "Salvar" no /admin atual]`. Desfazer uma publicação: `[PENDENTE: P-18]` `[PREMISSA: não no MVP; para voltar, edita-se de novo]`.
 
@@ -386,7 +386,7 @@ Prévia/rascunho antes de publicar: `[PENDENTE: P-17]` `[PREMISSA: sem rascunho 
 | RNF-11 | Auditoria | RN-LOJ-19 consultável no painel pelo admin | — |
 | RNF-12 | Fuso, idioma, moeda | America/Sao_Paulo; pt-BR; BRL com 2 casas | — |
 | RNF-13 | Segredos e dados | Nenhuma chave de gateway, do Base44, do GitHub, de e-mail ou de banco no repositório, e nenhum dado de cliente, pedido ou exportação versionado: o repositório `nuyvi` é público e a loja mora nele (pasta própria, branch `loja`). Vale também para o que o painel único publicar: só conteúdo de vitrine pode sair dele para o site | dev-security, dev-devops |
-| RNF-14 | Independência do site | Para quem visita, o site abre e mostra o último conteúdo publicado mesmo com o sistema da loja fora do ar; o desempenho atual do site não piora por causa do painel único | `[PREMISSA]`, a confirmar pelo dev-arquitetura (ADR-0005) |
+| RNF-14 | Independência do site | Para quem visita, o site (estático) abre e mostra o último conteúdo publicado mesmo com o sistema da loja fora do ar; o desempenho atual do site não piora por causa do painel único. Com a loja fora, só publicar e remontar o site falham; a versão no ar não muda | Garantido pelo desenho do ADR-0006 (ADR-0005) |
 | RNF-15 | Tempo de publicação | Conteúdo publicado no painel aparece no site em até 5 minutos | `[PREMISSA]`, P-16 |
 ---
 
@@ -416,7 +416,7 @@ erDiagram
 
 - `CONTA_LOJA` é da loja (login próprio, RN-LOJ-21). `CONTA_NUY`, `ASSINATURA` e `PLANO` são do app N.UY no Base44 (fonte da verdade fora da loja) e só entram na fase 1b, via vínculo a definir (ADR-0003). Nesse momento, a loja guarda a referência da conta N.UY e uma **fotografia** no pedido (plano e percentual usados). Onde vive `DESCONTO_PLANO`: P-05.
 - Comprador visitante faz pedido sem `CONTA_LOJA`, com e-mail, nome, CPF, telefone e endereço (RN-LOJ-22).
-- Conteúdo do site: entidades conceituais `BLOCO_CONTEUDO` (os 9 blocos da seção 5.9, com campos e listas) e `PUBLICACAO_CONTEUDO` (quem, quando, qual bloco; RN-LOJ-26), ligada a `USUARIO_EQUIPE`. Sem relação com produto, preço ou pedido (RN-LOJ-18). Onde e como vivem fisicamente: `dev-arquitetura` (seção 15, tarefa 9). Fora do diagrama acima de propósito.
+- Conteúdo do site: entidades conceituais `BLOCO_CONTEUDO` (os 9 blocos da seção 5.9, com campos e listas) e `PUBLICACAO_CONTEUDO` (quem, quando, qual bloco; RN-LOJ-26), ligada a `USUARIO_EQUIPE`. Sem relação com produto, preço ou pedido (RN-LOJ-18). Onde e como vivem: ADR-0006 (versões completas no banco da loja, nunca editadas nem apagadas); schema físico: `dev-database`. Fora do diagrama acima de propósito.
 - Nunca apagar: `PEDIDO`, `ITEM_PEDIDO`, `PAGAMENTO`, `ESTORNO`, `MOVIMENTO_ESTOQUE`, `HISTORICO_PEDIDO`, `NOTA_FISCAL_REGISTRO`. Produto e variação são inativados, não apagados, se já venderam.
 
 **Estados do pedido**
@@ -503,7 +503,7 @@ sequenceDiagram
 | E-mail transacional | Avisos de pedido | Sai: e-mail, nome, número e estado do pedido | Pedido segue; envio é tentado de novo; falha visível ao operador | N.UY `[PENDENTE]` |
 | Emissor de NF-e | Nota fiscal | Fase 1: nenhuma (manual). Fase 2: dados do pedido | Fase 1: n/a | N.UY / contador `[PENDENTE: P-09]` |
 | Frete | Cálculo | Fase 1: tabela interna. Fase 2: transportadora/Correios | Fase 2: cair na tabela interna `[PREMISSA]` | N.UY |
-| Publicação do conteúdo do site | Levar o conteúdo publicado no painel único até o site | Sai: só conteúdo de vitrine (textos, listas, fotos). Mecanismo (ex.: API do GitHub, leitura do banco pelo site): `[PENDENTE: dev-arquitetura]` | CA-LOJ-55: nada publicado pela metade, site continua com a versão anterior, quem publicou vê o erro e tenta de novo | N.UY |
+| Publicação do conteúdo do site | Levar o conteúdo publicado no painel único até o site | Sai: só conteúdo de vitrine (textos, listas, fotos), sem dado de quem publicou. Mecanismo: deploy hook da Vercel + leitura da última versão publicada no build; fotos novas no Vercel Blob (ADR-0006) | Hook falha: CA-LOJ-55 (versão não servida, quem publicou vê o erro e tenta de novo). Build falha depois de aceito o hook, ou loja fora durante um build: site continua com a versão anterior (CA-LOJ-59, RISCO-16) | N.UY (contas Vercel) |
 | App N.UY (abrir a loja) | Acesso pelo app (D1) | Um link/botão no app abre a loja como página web; nenhum dado de login é passado (P-02, RN-LOJ-21) | Comprador abre a loja pelo navegador | N.UY (quem edita o app no Base44) |
 
 > Preços, taxas e limites de gateways, e-mail e emissores mudam: conferir na fonte oficial na hora de escolher (não fixados aqui). Se o app N.UY estiver publicado nas lojas de aplicativo, conferir na documentação vigente da Apple e do Google as regras para um app que abre página de venda de produto físico. Hipótese não verificada: produto físico não usa a compra integrada da loja de apps. Com `dev-mobile` fora, quem confere é o desenvolvedor, antes de pôr o botão no app.
@@ -554,13 +554,13 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 - ~~D-01~~ A loja será construída **neste repositório**, branch `loja`, pasta própria separada de `site/`. Repositório público: RNF-13.
 
 **Decidido em 2026-11-15 (pelo desenvolvedor)**
-- Painel único com o login da equipe para conteúdo do site e loja (ADR-0005, substitui a D5 no ponto dos dois painéis). Abre PEND-CONT e P-15 a P-18.
+- Painel único com o login da equipe para conteúdo do site e loja (ADR-0005, substitui a D5 no ponto dos dois painéis). Abriu PEND-CONT (fechada pelo ADR-0006) e P-15 a P-18.
 - ~~D-04~~ O `/admin` Sveltia é **descartado** (não será publicado; branch `painel` só como referência). Até o painel único existir, o desenvolvedor edita o conteúdo como hoje. A edição de conteúdo vem **antes** do resto do painel da loja (fase 1a), usando login e papéis existentes, sem depender de gateway, frete ou NF-e.
 
 **Perguntas técnicas abertas (desenvolvedor, não vão ao cliente)**
 - **PEND-B44 (alta para a fase 1b)** Como a loja pode saber, com segurança, o plano vigente de um usuário do app feito em Base44? Hipóteses a verificar, nenhuma confirmada: (a) API ou funções de backend do Base44 que um sistema externo chame com credencial de servidor; (b) vínculo da conta da loja à conta N.UY pelo mesmo e-mail **verificado** nos dois lados, e consulta do plano por esse e-mail; (c) o app enviar um aviso à loja quando o plano muda (webhook/automação), se o Base44 permitir; (d) alternativa sem integração, como exportação periódica (fraca: atraso e risco de desconto indevido). Fonte: documentação oficial do Base44 e teste no app. Dono: desenvolvedor com `dev-integrations` e `dev-auth`; registrar a escolha em ADR.
 - **PEND-B44b (média)** Como o app em Base44 abre um link externo (navegador interno ou externo, volta ao app)? Afeta só a experiência, não o escopo.
-- **PEND-CONT (alta para o painel único)** Onde o conteúdo do site passa a viver e como chega ao site, mantendo o site independente para quem visita (RNF-14), pedidos e dados pessoais fora do Git (RNF-13) e publicação sem meio-termo (CA-LOJ-55)? Hipóteses, nenhuma escolhida: (a) JSON em `site/conteudo/` gravado pelo servidor da loja via API do GitHub (preserva o `build.mjs` e o histórico no Git; exige credencial do GitHub no servidor); (b) banco da loja, com o site lendo na publicação ou no build; (c) outra. Também decide onde ficam as fotos do conteúdo (hoje `site/img/conteudo/`, no Git). Dono: `dev-arquitetura`, com ADR técnico; revisão do `dev-security`.
+- ~~**PEND-CONT**~~ **Fechada em 2026-11-15 pelo [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito):** o conteúdo do site fica em versões completas no Postgres da loja; publicar grava a versão e dispara o deploy hook do projeto `nuyvi` na Vercel; o `site/build.mjs` lê a última versão publicada no build e gera o site estático; fotos novas vão para o Vercel Blob (as atuais continuam em `site/img/`). Nada vai para o Git e nenhuma credencial de escrita no GitHub é usada.
 
 **Sobre a conta N.UY e os planos (fase 1b)**
 - **P-03 (alta para a fase 1b)** Quem conta como assinante para ter desconto: quem está em teste grátis? Quem está com pagamento atrasado? Quem cancelou mas ainda está no período pago?
@@ -608,9 +608,9 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | P-07 | Gateway já contratado: usar o dele | Escolher do zero: ADR de gateway |
 | P-11 | Volume baixo: infraestrutura mínima | Picos altos: teste de carga e cuidados com reserva de estoque |
 | P-15 | Só o admin edita: papéis atuais bastam | Pessoa só de conteúdo: papel novo no `dev-auth`, matriz e testes de permissão maiores |
-| P-16 | Alguns minutos: publicação pode passar pelo build do site | "Na hora": pesa na escolha de onde o conteúdo vive (PEND-CONT) |
+| P-16 | Alguns minutos: publicação pode passar pelo build do site | "Na hora": o rebuild do ADR-0006 não atende; revisitar o ADR |
 | P-17 | Publicar direto: sem estado de rascunho | Prévia: guardar rascunho separado do publicado e tela de prévia (mais escopo; fase 2 pela proposta) |
-| P-18 | Sem desfazer: só o registro de quem publicou | Desfazer: guardar versões e tela de restauração (fase 2 pela proposta) || PEND-CONT | JSON no Git: `build.mjs` e histórico preservados, credencial do GitHub no servidor | Banco: site precisa ler do banco ou ser gerado a partir dele; muda a publicação do site |
+| P-18 | Sem desfazer: só o registro de quem publicou | Desfazer: tela de restauração; as versões já existem no banco (ADR-0006), então é republicar uma versão antiga (fase 2 pela proposta) |
 
 **Perguntas ao desenvolvedor**
 - **D-02** Você tem acesso de edição ao app no Base44 (para testar a PEND-B44 e pôr o botão da loja)?
@@ -635,7 +635,7 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | PREM-09 | Volume e RNF de desempenho/disponibilidade/RPO-RTO da seção 7 | Infraestrutura sub ou superdimensionada | Cliente (P-11) |
 | PREM-10 | Percentuais configurados no painel da loja | Fonte duplicada ou leitura do app | Cliente (P-05) |
 | PREM-11 | Só o admin edita e publica o conteúdo do site (RN-LOJ-25) | Papel novo para pessoa só de conteúdo | Cliente (P-15) |
-| PREM-12 | O site continua abrindo para o visitante com a loja fora do ar (RNF-14) | Queda da loja derruba também o site; muda RISCO-11 | dev-arquitetura (PEND-CONT) |
+| PREM-12 | ~~Premissa~~ Confirmado pelo ADR-0006: o site no ar continua abrindo com a loja fora (RNF-14); com a loja fora, falham só publicar e remontar o site | — | Fechada (ADR-0006) |
 | PREM-13 | Publicação aparece no site em até 5 min, sem prévia e sem desfazer no MVP | Mais escopo no painel de conteúdo | Cliente (P-16 a P-18) |
 | PREM-14 | O painel único edita os mesmos blocos e campos do `/admin` Sveltia atual, mais o destino do botão dos cartões da Loja | Escopo maior se quiserem editar outras partes da página | Desenvolvedor |
 
@@ -653,8 +653,10 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 | RISCO-10 | Duas contas (app e loja) confundem o assinante ("por que outro cadastro?") | Média | Médio | Texto claro na tela de conta; vínculo na fase 1b |
 | RISCO-07 | Escopo crescer para "loja completa" (cupons, transportadoras, NF automática) no MVP | Alta | Alto | Fases da seção 4; mudança passa por análise de impacto |
 | RISCO-08 | Repositório público com segredos ou dados de clientes | Média | Alto | RNF-13; dados fora do Git; revisão do dev-security |
-| RISCO-11 | Com o painel único, editar o site depende do sistema da loja no ar | Baixa | Médio (site não é atualizado enquanto a loja está fora) | RNF-14 (visitante não é afetado); meta RNF-04; em emergência, desenvolvedor altera o conteúdo à mão `[PREMISSA]` |
-| RISCO-12 | Se o conteúdo continuar no Git (PEND-CONT a), o servidor da loja, que guarda pedidos e dados pessoais, passa a gravar no repositório público | Média | Alto (vazamento de dado ou de credencial) | Credencial de escopo mínimo só no servidor; só conteúdo de vitrine sai do painel (RNF-13); revisão do dev-security |
+| RISCO-11 | Com o painel único, editar o site depende do sistema da loja no ar | Baixa | Médio (site não é atualizado enquanto a loja está fora) | RNF-14 (visitante não é afetado); meta RNF-04; ver RISCO-15 |
+| RISCO-12 | ~~Servidor da loja gravando no repositório público (conteúdo no Git)~~ **Encerrado pelo ADR-0006:** o conteúdo não vai para o Git e não há credencial de escrita no GitHub | — | — | Resta proteger a URL do deploy hook (só dispara builds) e o upload de fotos (dev-security) |
+| RISCO-15 | **Consequência aceita (ADR-0006):** qualquer build do site, inclusive um push de código em `site/`, depende da loja no ar. Com a loja fora, o build falha e o site fica na versão anterior | Baixa | Baixo/médio (atraso em publicar conteúdo ou corrigir o site) | Refazer o build quando a loja voltar; se acontecer mais de uma vez por mês e atrapalhar, revisitar o ADR-0006 (cópia de reserva da última versão, dev-devops) |
+| RISCO-16 | O painel diz "publicado" quando a Vercel aceita o pedido, não quando o build termina; um build que falhe depois (ex.: validação diferente entre painel e `build.mjs`) só aparece no aviso de falha de deploy da Vercel | Baixa | Médio (editor acha que publicou e o site não mudou) | Mesmas regras de validação nos dois lados e teste de contrato (dev-tests); quem recebe o aviso de falha da Vercel: `[PENDENTE: dev-devops define com o desenvolvedor]` |
 | RISCO-13 | Até a fase 1a entrar, toda mudança no site passa pelo desenvolvedor (Sveltia descartado, D-04) | Alta | Baixo/médio (gargalo e atraso em textos e notícias) | Fase 1a é o primeiro módulo do painel, sem depender de gateway/frete/NF-e; trabalho do Sveltia aceito como perda (branch `painel` só referência) |
 | RISCO-14 | Contas de equipe criadas para editar conteúdo ganham acesso a pedidos e dados de clientes, ou entram sem MFA | Média | Alto | P-15 antes de criar contas; papel com o mínimo necessário; MFA da equipe antes do go-live do painel (TODO, auditoria de auth) |
 
@@ -663,7 +665,7 @@ Prontas para enviar. **Alta** = bloqueia a spec ou muda arquitetura/custo. **Mé
 - Vender (MVP) depende de: gateway contratado no CNPJ da N.UY (P-07), emissão de nota estruturada (P-09), política de troca e termos validados (P-10, advogado), logística e área de entrega definidas (P-06), decisão sobre os textos de desconto do site (P-14).
 - Construção depende da escolha de stack (`dev-arquitetura`); local já definido (pasta própria na branch `loja`).
 - Ajuste da seção Loja do site depende da URL final da loja.
-- Edição de conteúdo no painel único (HU-12, HU-13) depende de: decisão de onde o conteúdo vive (PEND-CONT, `dev-arquitetura`), P-15 (papel) e MFA da equipe antes do go-live do painel. Não depende de gateway, frete, NF-e nem das demais perguntas da loja (D-04).
+- Edição de conteúdo no painel único (HU-12, HU-13) depende de: P-15 (papel) e MFA da equipe antes do go-live do painel. Não depende de gateway, frete, NF-e nem das demais perguntas da loja (D-04).
 
 ---
 
@@ -683,15 +685,15 @@ Fase atual = **descoberta e decisões** (spec 0.x → 1.0). A construção (fase
 | 6 | Revisão de privacidade (dados entre app e loja, menores, retenção, política) | lgpd-specialist | — | 2 | P |
 | 7 | Contador (NF-e/tributos) e advogado (termos, troca, arrependimento) | Cliente (humano) | RN-LOJ-15, 17 | 1 | — |
 | 8 | ~~Destino do `/admin` Sveltia e ordem de entrega (D-04)~~ Feito em 2026-11-15: Sveltia descartado; conteúdo é a fase 1a | Desenvolvedor | — | — | — |
-| 9 | Decidir onde o conteúdo do site vive e como chega ao site (PEND-CONT: JSON no Git via API do GitHub, banco com o site lendo, ou outra), onde ficam as fotos do conteúdo, como o conteúdo atual de `site/conteudo/*.json` e `site/img/conteudo/` entra no painel único; ADR técnico e atualização de `docs/tecnico/arquitetura.md` e das linhas "Painel" e "Ligação com o site" do ADR-0004 | dev-arquitetura | CA-LOJ-50 a 59; RNF-13, 14, 15 | ADR-0005; P-16 ajuda | M |
+| 9 | ~~Decidir onde o conteúdo do site vive e como chega ao site (PEND-CONT)~~ **Feito em 2026-11-15:** ADR-0006 aceito (versões no banco da loja, rebuild por deploy hook, fotos novas no Blob; substitui as linhas "Painel" e "Ligação com o site" do ADR-0004) | dev-arquitetura | CA-LOJ-50 a 59; RNF-13, 14, 15 | — | — |
 | 10 | Papel de quem edita conteúdo (admin, ou papel novo só de conteúdo) e checagem no servidor | dev-auth (+ dev-security) | CA-LOJ-56 | P-15 | P |
 | 11 | Telas do painel de conteúdo (lista de blocos, edição, fotos, publicar, estados da 9.2) | dev-uiux | CA-LOJ-50 a 55, 57 | 9 | M |
-| 12 | Implementação do painel de conteúdo; se a publicação depender de serviço externo (ex.: API do GitHub), mecanismo e falha com `dev-integrations` | dev-react (+ dev-integrations) | CA-LOJ-50 a 59 | 9, 10, 11 | M |
+| 12 | Implementação do painel de conteúdo conforme ADR-0006 (tabela de versões com `dev-database`; endpoint de leitura, upload ao Blob, chamada do hook, migração do conteúdo atual e ajustes no `build.mjs` com `dev-react`; projeto `nuyvi` ligado ao GitHub, deploy hook e variáveis com `dev-devops`/`dev-infra`; semântica de falha do hook revisada por `dev-integrations`) | dev-react (+ dev-database, dev-devops, dev-infra, dev-integrations) | CA-LOJ-50 a 59 | 10, 11 | M |
 | 13 | Testes do painel de conteúdo (validação, permissão, falha de publicação sem meio-termo, site no ar com a loja fora) | dev-tests | CA-LOJ-52, 55, 56, 59 | 12 | P |
 | 14 | Revisão de segurança (credencial de publicação, upload de imagens, nada além de vitrine no Git) | dev-security | RNF-13, CA-LOJ-54, 55 | 12 | P |
 | 15 | `BRIEFING.md`: tirar já a descrição do Sveltia (descartado) e dizer que o conteúdo é editado pelo desenvolvedor até a fase 1a; depois da tarefa 12, descrever o painel único e escrever o manual da equipe | docs-handoff | — | agora; depois 12 | P |
 
-**Ordem de execução do painel (D-04):** a fase 1a (tarefas 9 → 10 → 11 → 12 → 13 → 14 → 15) pode começar já, em paralelo às perguntas ao cliente, porque usa o login e os papéis existentes e não depende de gateway, frete nem NF-e. Só a tarefa 10 espera a P-15 (enquanto isso, vale a premissa "só admin"); a liberação em produção espera o MFA da equipe.
+**Ordem de execução do painel (D-04):** a fase 1a (tarefa 9 feita; 10 → 11 → 12 → 13 → 14 → 15) pode seguir já, em paralelo às perguntas ao cliente, porque usa o login e os papéis existentes e não depende de gateway, frete nem NF-e. Só a tarefa 10 espera a P-15 (enquanto isso, vale a premissa "só admin"); a liberação em produção espera o MFA da equipe.
 
 Ordem prevista do resto da fase 1 (após aprovação da spec), para referência: modelo de dados (`dev-database`) → login da equipe e identificação do comprador (`dev-auth`) → catálogo/estoque/pedidos no painel único (dev de aplicação, sobre o painel já criado na fase 1a) → checkout e gateway (`dev-integrations`) → e-mails (`dev-notifications`) → design das telas (`dev-uiux`) → testes (`dev-tests`, inclusive concorrência e idempotência) → auditoria (`dev-security`) → deploy (`dev-devops`, `dev-infra`) → aceite (`dev-qa`) → ajuste da seção Loja e textos (`copywriter`).
 
@@ -704,8 +706,9 @@ Ordem prevista do resto da fase 1 (após aprovação da spec), para referência:
 | [ADR-0001](../adr/ADR-0001-loja-propria-unica-n-uy-vendedora.md) | Loja própria e única para site e app, com a N.UY como vendedora | Aceito |
 | [ADR-0002](../adr/ADR-0002-desconto-automatico-por-plano-n-uy.md) | Desconto de assinante automático pelo plano da conta N.UY | Aceito como objetivo; suspenso no MVP por ADR-0003 |
 | [ADR-0003](../adr/ADR-0003-login-proprio-e-desconto-suspenso-no-mvp.md) | Login próprio da loja; desconto por plano suspenso até confirmar leitura no Base44 | Aceito |
-| [ADR-0004](../adr/ADR-0004-stack-loja.md) | Stack e arquitetura macro da loja (técnico, dev-arquitetura) | Aprovado; linhas "Painel" e "Ligação com o site" a revisar pelo dev-arquitetura após ADR-0005 |
+| [ADR-0004](../adr/ADR-0004-stack-loja.md) | Stack e arquitetura macro da loja (técnico, dev-arquitetura) | Aprovado; linhas "Painel" e "Ligação com o site" substituídas pelo ADR-0006 |
 | [ADR-0005](../adr/ADR-0005-painel-unico-conteudo-do-site-e-loja.md) | Um único painel, com o login da equipe da loja, para conteúdo do site e loja | Aceito; substitui o item 4 do ADR-0001 (D5) no ponto dos dois painéis |
+| [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) | Conteúdo do site no banco da loja, publicado por rebuild do site estático (técnico, dev-arquitetura) | Aceito em 2026-11-15; fecha PEND-CONT |
 
 ---
 
@@ -717,3 +720,4 @@ Ordem prevista do resto da fase 1 (após aprovação da spec), para referência:
 | 0.2 | 2026-11-14 | Respostas P-01 (app em Base44, login próprio), P-02 (página web no app), P-04 (visitante compra), D-01 (pasta própria na branch `loja`). Desconto de assinante vira fase 1b (ADR-0003); novos CA-LOJ-44 a 49, RN-LOJ-21 a 23, PEND-B44, P-14, RISCO-09/10 | Mudança de escopo (rascunho, antes de 1.0) | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16 | Desenvolvedor |
 | 0.3 | 2026-11-15 | Painel único com o login da equipe para gestão da loja e conteúdo do site (ADR-0005, substitui a D5 no ponto dos dois painéis). Novos HU-12, HU-13, seção 5.9 (inventário dos 9 blocos), CA-LOJ-50 a 59, RN-LOJ-24 a 26, RNF-14 e 15; RN-LOJ-18 e RNF-13 reescritas; 5.8 "Impacto sobre o painel /admin" reescrita; novos D-04, PEND-CONT, P-15 a P-18, PREM-11 a 14, RISCO-11 a 14; tarefas 8 a 15 no plano | Mudança de escopo (rascunho, antes de 1.0) | 1, 2, 3, 4, 5.8, 5.9, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16 | Desenvolvedor |
 | 0.4 | 2026-11-15 | D-04 respondida: `/admin` Sveltia descartado (branch `painel` só referência; desenvolvedor edita o conteúdo até lá); edição de conteúdo vira **fase 1a**, primeiro módulo do painel, antes do resto do MVP, sem depender de gateway/frete/NF-e. HU-12/13 passam a fase 1a; RN-LOJ-24 e RISCO-13 ajustados; plano com a nova ordem; tarefa 8 concluída | Ajuste (decisão pendente respondida) | 2, 4, 5.8, 5.9, 6, 13, 14, 15 | Desenvolvedor |
+| 0.5 | 2026-11-15 | ADR-0006 aceito: PEND-CONT fechada (conteúdo em versões no banco da loja, rebuild do site estático por deploy hook, fotos novas no Vercel Blob). RNF-14, CA-LOJ-59 e PREM-12 deixam de ser premissa e passam a dizer o que o ADR garante (site no ar segue com a loja fora; falham publicar e remontar). RISCO-12 encerrado; novos RISCO-15 (todo build do site depende da loja no ar, consequência aceita) e RISCO-16 ("publicado" antes de o build terminar). Integração "Publicação do conteúdo" e modelo conceitual atualizados; tarefa 9 feita, tarefa 12 detalhada | Ajuste (decisão técnica registrada) | 4, 5.8, 5.9, 7, 8, 10, 13, 14, 15, 16 | Desenvolvedor |

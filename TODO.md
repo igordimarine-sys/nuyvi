@@ -3,7 +3,9 @@
 ## Em andamento
 
 ## Pendente
-- Loja: projeto Vercel da loja (Root Directory `loja/`, sem afetar o de `site/`) e Neon com `main` para produção e branch por preview; definir como as migrations rodam em produção (etapa controlada, não no build); roles separadas no Neon `app_rw`/`app_migrate` (dev-devops + dev-infra, quando as contas da N.UY existirem).
+- Painel único: definir quem recebe o aviso de falha de deploy da Vercel do site (RISCO-16; dev-devops + desenvolvedor).
+- Painel único: confirmar `conteudo_versoes.autor_id ON DELETE SET NULL` e a retenção do nome de quem publicou (lgpd-specialist).
+- Loja: projeto Vercel da loja (Root Directory `loja/`, sem afetar o de `site/`) e Neon com `main` para produção e branch por preview; definir como as migrations rodam em produção (etapa controlada, não no build); roles separadas no Neon `app_rw`/`app_migrate` (dev-devops + dev-infra, quando as contas da N.UY existirem); `app_rw` sem `TRUNCATE`/DDL e com `UPDATE` em `conteudo_versoes` só nas colunas `disparo_*` (ver `docs/tecnico/banco.md`).
 - Loja: proteção da branch `main` com o check `loja-ci / check` obrigatório (aguarda confirmação do desenvolvedor). Considerar fixar actions por SHA e ligar o Dependabot.
 - Loja: testes de integração que aguardam o código do checkout (spec 1.0): reserva concorrente, baixa, expiração, webhook duplicado (a regra, não só o índice), reconciliação `fisico = SUM(movimentos)`, transições de pedido, desconto do pedido = soma dos itens (dev-tests).
 - Loja (dev-tests): teste de regressão do A-01 com o Better Auth real (cadastro com e-mail alheio, confirmar e-mail, pedidos continuam com `usuario_id` nulo) exige simular a API do HIBP (MSW); testes do A-02 (script) e do rate limit também faltam.
@@ -12,7 +14,6 @@
 - Loja: tabela de troca/devolução depende de P-10; frete grátis de P-06; estorno pelo operador de P-08.
 - Loja: `npm audit` acusa 8 vulnerabilidades moderadas nas dependências do create-next-app; avaliar (dev-security).
 - Painel único, fase 1a (edição do conteúdo do site, primeiro módulo do painel, pode começar já; plano na seção 15 de `docs/specs/loja.md` 0.4, tarefas 9 a 15). Até lá, o conteúdo do site é editado pelo desenvolvedor como hoje.
-- Painel único (ADR-0006 aceito): tabela de versões do conteúdo, `jsonb` completo, autor, blocos alterados, estado do disparo (dev-database).
 - Painel único (ADR-0006 aceito): módulo `loja/src/modules/conteudo-site/`, endpoint público de leitura, upload para o Blob, chamada do hook só em Production, script de migração (versão 1 a partir de `site/conteudo/*.json`, imagens `img/...` sem copiar) e mudanças no `site/build.mjs` (`fetch` em `CONTEUDO_URL`, host do Blob em `imagem()`, `destino` nos cartões da Loja) (dev-react; revisão da falha do hook: dev-integrations).
 - Painel único: ligar o projeto `nuyvi` ao GitHub (Root Directory `site`, produção `main`), Ignored Build Step dos dois projetos sem barrar o deploy hook (testar), criar o deploy hook, variáveis `CONTEUDO_URL` (site) e `SITE_DEPLOY_HOOK_URL` (loja, só Production); sequência de corte (dev-devops).
 - Painel único: projeto `nuyvi` no time Pro da N.UY, store Blob público ligado à loja (Preview separado de Production), domínio da loja (dev-infra; depende das contas da N.UY).
@@ -47,6 +48,7 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: Painel único (ADR-0006): tabela `conteudo_versoes` (migration `0002`, triggers de imutabilidade e sequência, índice da última publicada, testes). Queries de referência em `docs/tecnico/banco.md` (dev-database).
 - 2026-11-15: Origem do deploy atual de `nuyvi.vercel.app`: igual ao `site/index.html` da `main` (só difere em CRLF), sem marcadores `cms:`. O corte do ADR-0006 parte da `main`.
 - 2026-11-15: ADR-0006 aceito pelo desenvolvedor (status do ADR-0006, do ADR-0004 e de `arquitetura.md` atualizados).
 - 2026-11-15: PEND-CONT (tarefa 9): ADR-0006 proposto (conteúdo do site no banco da loja com rebuild do site estático); `docs/tecnico/arquitetura.md` sem o Sveltia, com painel único e fluxo de publicação; status do ADR-0004 aponta a substituição das linhas "Painel" e "Ligação com o site".
