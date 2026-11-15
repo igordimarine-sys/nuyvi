@@ -3,6 +3,7 @@
 ## Em andamento
 
 ## Pendente
+- Painel único (tarefa 12): remover `site/admin/` (Sveltia) e `site/img/conteudo/.gitkeep` da branch `loja` antes de qualquer merge na `main` (dev-react).
 - Painel único: definir quem recebe o aviso de falha de deploy da Vercel do site (RISCO-16; dev-devops + desenvolvedor).
 - Painel único: confirmar `conteudo_versoes.autor_id ON DELETE SET NULL` e a retenção do nome de quem publicou (lgpd-specialist).
 - Loja: projeto Vercel da loja (Root Directory `loja/`, sem afetar o de `site/`) e Neon com `main` para produção e branch por preview; definir como as migrations rodam em produção (etapa controlada, não no build); roles separadas no Neon `app_rw`/`app_migrate` (dev-devops + dev-infra, quando as contas da N.UY existirem); `app_rw` sem `TRUNCATE`/DDL e com `UPDATE` em `conteudo_versoes` só nas colunas `disparo_*` (ver `docs/tecnico/banco.md`).
@@ -48,6 +49,7 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: Painel único, tarefa 11: especificação visual do painel de conteúdo em `docs/tecnico/ui-painel-conteudo.md` (edição e publicação por bloco, estados, microcopy, tokens; 9 perguntas abertas na seção 11) (dev-uiux).
 - 2026-11-15: Painel único (ADR-0006): tabela `conteudo_versoes` (migration `0002`, triggers de imutabilidade e sequência, índice da última publicada, testes). Queries de referência em `docs/tecnico/banco.md` (dev-database).
 - 2026-11-15: Origem do deploy atual de `nuyvi.vercel.app`: igual ao `site/index.html` da `main` (só difere em CRLF), sem marcadores `cms:`. O corte do ADR-0006 parte da `main`.
 - 2026-11-15: ADR-0006 aceito pelo desenvolvedor (status do ADR-0006, do ADR-0004 e de `arquitetura.md` atualizados).

@@ -12,14 +12,13 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 - **Versão 2 (abertura em palco, antes do palco entre todas as seções e dos carrosséis de Explore/Novidades):** `site/versao-2.html`, online em https://nuyvi.vercel.app/versao-2.html
 - **Código no GitHub:** https://github.com/igordimarine-sys/nuyvi (público, ramo `main`; a pasta do repositório é `projetos/nuyvi/`). O GitHub não publica sozinho: a Vercel continua sendo atualizada com `vercel deploy --prod` dentro de `site/`.
 
-## Painel de conteúdo (`/admin`)
+## Conteúdo do site e painel administrativo
 
-- **O que edita:** produtos da loja, planos e preços (com o desconto anual), cartões do Explore, notícias e os textos das seções (abertura, bônus, história, baixe o app). O resto da página continua no HTML.
-- **Como funciona:** o painel (Sveltia CMS, `site/admin/`) grava em `site/conteudo/*.json` e faz commit no GitHub. O `site/build.mjs` (Node, sem dependências) reescreve no `site/index.html` só os trechos entre `<!--cms:CHAVE-->` e `<!--/cms:CHAVE-->`. A Vercel roda esse build sozinha (`site/vercel.json`). Imagens enviadas pelo painel vão para `site/img/conteudo/`.
-- **Editar à mão:** mude o JSON e rode `node build.mjs` dentro de `site/` (pode rodar quantas vezes quiser). O build para com uma mensagem clara se faltar texto ou se a imagem não estiver em `img/`.
-- **Entrar no painel:** abra `https://nuyvi.vercel.app/admin/`, clique em "Entrar usando token de acesso" e cole um token do GitHub (fine-grained, só este repositório, permissão **Contents: Read and write**). Quem edita precisa ter acesso de escrita ao repositório. O botão "Entrar com GitHub" não funciona sem um servidor de OAuth, que não foi configurado.
-- **Para publicar sozinho a cada edição:** ligar o projeto `nuyvi` da Vercel ao repositório no GitHub, com Root Directory `site`. Sem isso, o commit do painel fica no GitHub e o site só muda no próximo `vercel deploy --prod`.
+- **Hoje:** o conteúdo do site é editado pelo desenvolvedor, direto no HTML. O site no ar sai do `site/index.html` da `main`, publicado com `vercel deploy --prod` dentro de `site/`.
+- **Painel único (em construção):** o painel administrativo, com o conteúdo do site e a loja no mesmo lugar e o login da equipe (sem token do GitHub), está sendo feito no sistema da loja (`loja/`). A edição do conteúdo é a fase 1a, o primeiro módulo do painel. Até ela ficar pronta, vale o fluxo de "Hoje".
+- **Como vai funcionar:** o conteúdo do site fica guardado em versões no banco da loja; ao publicar, a loja dispara um deploy hook e o site estático é remontado com a última versão publicada. O site no ar continua abrindo mesmo com a loja fora do ar. Decisões em `docs/adr/ADR-0005-painel-unico-conteudo-do-site-e-loja.md` e `docs/adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md`; comportamento na seção 5.8 de `docs/specs/loja.md`.
+- **Painel Sveltia (`/admin`):** descartado (decisão D-04, 2026-11-15); nunca foi publicado. A branch `painel` fica só como referência.
 
 ## Loja (`loja/`)
 
-- Aplicação Next.js (TypeScript, Drizzle, PostgreSQL) separada de `site/`; em construção, só o esqueleto. Stack em `docs/adr/ADR-0004-stack-loja.md`, estrutura em `docs/tecnico/arquitetura.md`, como rodar em `loja/README.md`.
+- Aplicação Next.js (TypeScript, Drizzle, PostgreSQL) separada de `site/`; em construção: login e papéis da equipe, modelo de dados, tabela de versões do conteúdo do site e testes de integração prontos; painel e vendas ainda não. Stack em `docs/adr/ADR-0004-stack-loja.md`, estrutura em `docs/tecnico/arquitetura.md`, como rodar em `loja/README.md`.
