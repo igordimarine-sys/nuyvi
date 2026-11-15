@@ -3,11 +3,10 @@
 ## Em andamento
 
 ## Pendente
-- Painel único (em andamento): testes dos pontos de entrada (rota de upload com Origin/401/403, actions `publicarBloco`/`consultarSituacao`, falha do `build.mjs` com `CONTEUDO_URL` fora deixando o `index.html` intacto); o mock de `next/navigation` em `tests/setup.ts` precisa de `unstable_rethrow` (dev-tests).
 - Painel único (no corte): `NEXT_PUBLIC_BLOB_HOST` (loja) e `BLOB_PUBLIC_HOST` (site) com o host real do store Blob (dev-devops/dev-infra).
 - Painel único (antes do go-live): rate limit na Vercel Firewall para `GET /api/conteudo-site` (B-01) e confirmar se a Observability da Vercel registra a URL do hook e se o Preview da loja usa o banco de produção (dev-infra); headers de segurança em `site/vercel.json` (B-04) e `SITE_DEPLOY_HOOK_URL` só em Production; conferir a janela hook × marcação `aceito` no corte (dev-devops); headers da loja com `frame-ancestors 'none'` e `img-src` do Blob (dev-react, junto do M-02 anterior); MFA de admin (dev-auth).
 - Painel único: fotos com pessoas e remoção de blobs públicos (lgpd-specialist); logs de erro só com a classe do erro (dev-observability).
-- Painel único: contas da N.UY (Vercel Pro, store Blob, deploy hook), ligar o projeto `nuyvi` ao GitHub, variáveis `SITE_DEPLOY_HOOK_URL` (loja, Production), `CONTEUDO_URL` e `LOJA_URL` (site); rodar `npm run conteudo:migrar` em produção; corte do site para `CONTEUDO_URL`; no corte, congelar cópia dos JSON em `loja/tests/conteudo-site/` (hoje `dados.ts` lê `site/conteudo/`) e remover `site/conteudo/` (dev-devops, dev-infra, desenvolvedor).
+- Painel único: contas da N.UY (Vercel Pro, store Blob, deploy hook), ligar o projeto `nuyvi` ao GitHub, variáveis `SITE_DEPLOY_HOOK_URL` (loja, Production), `CONTEUDO_URL` e `LOJA_URL` (site); rodar `npm run conteudo:migrar` em produção; corte do site para `CONTEUDO_URL`; no corte, congelar cópia dos JSON em `loja/tests/conteudo-site/` (hoje `dados.ts` e `build-site.test.ts` leem `site/conteudo/`) e remover `site/conteudo/` (dev-devops, dev-infra, desenvolvedor).
 - Painel único: `LOJA_URL` e a URL real do destino "Página inicial da loja" dependem do subdomínio da loja; título/botão dos cartões da Loja com o copywriter.
 - Painel único: restaurar o digitado após sessão expirada e navegação pelo botão Voltar com edição não publicada não estão cobertos (hoje: aviso e nova aba; só links e fechar/recarregar são interceptados) (dev-react, pergunta 7 do `ui-painel-conteudo.md`).
 - Painel único: definir quem recebe o aviso de falha de deploy da Vercel do site (RISCO-16; dev-devops + desenvolvedor).
@@ -53,6 +52,7 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: Painel único, tarefa 13: testes da rota de upload (Origin/401/403/status), das actions `publicarBloco`/`consultarSituacao` e do `build.mjs` falhando com a loja fora sem tocar no `index.html` (CA-LOJ-59); `npm test` 132/132. Fase 1a completa em código.
 - 2026-11-15: Correções do painel de conteúdo: foto reencodada com `sharp` sem EXIF/GPS (M-01), host do Blob fixo por variável (B-02), `overrides` do zod (B-03; restam 4 moderadas da cadeia `drizzle-kit`), `unstable_rethrow` nas actions/páginas, texto de conflito sem blocos, `cliente` recebe 404 em `/admin/conteudo*`, logs só com classe/código do erro. `npm test` 107/107.
 - 2026-11-15: Revisão (dev-reviewer: aprovado com ressalvas) e auditoria de segurança do painel de conteúdo (dev-security, tarefa 14: sem crítico/alto; relatório em `docs/seguranca/2026-11-15-painel-conteudo.md`). Endpoint público fica sem token de leitura.
 - 2026-11-15: Painel único (tarefa 12): módulo `conteudo-site`, telas `/admin/conteudo`, `GET /api/conteudo-site`, upload ao Blob, deploy hook, script `conteudo:migrar`, `build.mjs` com `CONTEUDO_URL`/`LOJA_URL`, Sveltia removido; `npm test` 103/103, lint, typecheck e build limpos; `index.html` gerado idêntico ao atual.

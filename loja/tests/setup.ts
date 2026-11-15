@@ -29,6 +29,12 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");
   },
+  // Mesmo contrato do next@16.4.6 (dist/client/components/unstable-rethrow.js): relança o erro de roteamento do Next
+  // (aqui, os dois erros acima) e desce por `cause`; qualquer outro erro é ignorado (o chamador trata).
+  unstable_rethrow: function unstableRethrow(erro: unknown): void {
+    if (erro instanceof Error && (erro.message.startsWith("REDIRECT:") || erro.message === "NOT_FOUND")) throw erro;
+    if (erro instanceof Error && "cause" in erro) unstableRethrow(erro.cause);
+  },
 }));
 vi.mock("@/lib/auth", async () => {
   const { estado } = await import("./contas/sessao-falsa");
