@@ -99,11 +99,11 @@ const VIDEOS: Record<string, (s: string, p: string, cel: string) => string> = {
  * Grupo de conta do cabeçalho (ADR-0007 A2). Sai sempre no estado visitante, igual para todos (a página é cacheada e nunca leva
  * dado de ninguém); `public/js/conta.js` pergunta a sessão e troca. Textos fixos (só leitor de tela e erro de saída): PREM-15.
  */
-export function grupoConta(longo: string, curto: string, painel: string, sair: string): string {
+export function grupoConta(longo: string, curto: string, sair: string): string {
   return `<div class="conta" data-conta data-estado="carregando" role="group" aria-label="Conta">`
     + `<a class="bt bt-claro" href="/login" data-login aria-label="${longo}"><span class="rot-longo">${longo}</span><span class="rot-curto" aria-hidden="true">${curto}</span></a>`
     + `<div class="conta-logada" data-logada hidden><button type="button" class="conta-toggle" data-conta-toggle aria-expanded="false" aria-controls="conta-painel"><span class="conta-inicial" data-inicial aria-hidden="true"></span><span class="sr-only" data-conta-rotulo>Conta</span></button>`
-    + `<div class="conta-painel" id="conta-painel" data-conta-painel><span class="sr-only">Conectado como </span><span class="conta-nome" data-nome></span><a class="bt bt-claro" href="/admin" data-painel>${painel}</a><button type="button" class="bt bt-linha" data-sair>${sair}</button></div></div>`
+    + `<div class="conta-painel" id="conta-painel" data-conta-painel><span class="sr-only">Conectado como </span><span class="conta-nome" data-nome></span><button type="button" class="bt bt-linha" data-sair>${sair}</button></div></div>`
     + `<p class="sr-only" role="status" data-conta-aviso></p><p class="conta-erro" role="alert" data-conta-erro hidden>Não foi possível sair. Tente de novo.</p></div>`;
 }
 /** Chaves que já existiam antes de A1: continuam obrigatórias e com o marcador no HTML. */
@@ -204,7 +204,7 @@ export function montar(html: string, dados: DadosPagina, { lojaUrl = "", blobHos
   const novos: Record<string, () => string | undefined> = {
     "textos.geral.seo": () => g && `<title>${texto(g.seoTitulo, "geral: título da página")}</title>\n<meta name="description" content="${texto(g.seoDescricao, "geral: descrição")}">`,
     "textos.geral.menu": () => g && lista(g.menu, "geral: menu").map((l, i) => link(l, `geral: menu, link ${i + 1}`)).join("\n      "),
-    "textos.geral.entrar": () => g && grupoConta(texto(g.entrarLongo, "geral: entrar (completo)"), texto(g.entrarCurto, "geral: entrar (curto)"), texto(g.painel, "geral: Painel"), texto(g.sair, "geral: Sair")),
+    "textos.geral.entrar": () => g && grupoConta(texto(g.entrarLongo, "geral: entrar (completo)"), texto(g.entrarCurto, "geral: entrar (curto)"), texto(g.sair, "geral: Sair")),
     "textos.paginaLoja.seo": () => p && `<title>${texto(p.seoTitulo, "página da loja: título")}</title>\n<meta name="description" content="${texto(p.seoDescricao, "página da loja: descrição")}">`,
     "textos.geral.rodapeLinks": () => g && lista(g.rodapeLinks, "geral: links do rodapé").map((l, i) => link(l, `geral: rodapé, link ${i + 1}`)).join("\n        "),
     "textos.geral.rodapeBase": () => g && `<span>${texto(g.direitos, "geral: direitos")}</span>${typeof g.versao === "string" && g.versao.trim() ? `<span>${texto(g.versao, "geral: versão")}</span>` : ""}`,

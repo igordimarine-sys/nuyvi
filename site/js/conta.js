@@ -30,7 +30,16 @@ function enderecoDeLogin(caminho, busca) {
   const logada = q('[data-logada]'), toggle = q('[data-conta-toggle]'), painel = q('[data-conta-painel]');
   const nomeEl = q('[data-nome]'), inicialEl = q('[data-inicial]'), rotuloEl = q('[data-conta-rotulo]');
   const sair = q('[data-sair]'), aviso = q('[data-conta-aviso]'), erro = q('[data-conta-erro]');
-  const linkPainel = q('[data-painel]'), paiPainel = linkPainel ? linkPainel.parentNode : null;
+  // o nome (ou o botão com a inicial) fica logo depois do botão de pausa, à frente dos outros botões; movido no DOM
+  // (não só com CSS) para a ordem do Tab seguir a da tela. Em /loja não há pausa e ele fica no grupo.
+  const pausa = document.querySelector('[data-pausa]');
+  if (pausa) pausa.after(logada);
+  // a partir de 1280 px (conta em linha) o "Sair" vai para depois de "Baixar", no início do grupo de conta;
+  // abaixo disso volta para o painel que abre pelo botão com a inicial
+  const largo = matchMedia('(min-width: 1280px)');
+  const posicionarSair = () => { if (pausa && largo.matches) grupo.prepend(sair); else painel.append(sair); };
+  posicionarSair();
+  largo.addEventListener('change', posicionarSair);
   const entrar = [...document.querySelectorAll('[data-login]')];
   const destino = enderecoDeLogin(location.pathname, location.search);
   entrar.forEach((a) => { a.href = destino; });
@@ -50,9 +59,6 @@ function enderecoDeLogin(caminho, busca) {
     nomeEl.title = r.nome;
     inicialEl.textContent = inicialDe(r.nome);
     rotuloEl.textContent = 'Conta de ' + r.nome;
-    // "Painel" só existe no DOM para a equipe (e não apenas escondido)
-    if (r.estado === 'equipe' && linkPainel && !linkPainel.isConnected) paiPainel.insertBefore(linkPainel, sair);
-    if (r.estado !== 'equipe' && linkPainel && linkPainel.isConnected) linkPainel.remove();
   }
 
   async function perguntar() {

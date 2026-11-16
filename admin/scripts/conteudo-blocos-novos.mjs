@@ -28,7 +28,7 @@ export const INICIAL = {
       seoDescricao: "NUYVI: teste de design da landing N.UY, com imagens de borda a borda, logo em zoom na rolagem e seções presas na tela.",
       slogan: "Conexões para viver melhor",
       menu: menu.map(link),
-      botaoBaixar: "Baixar", entrarLongo: "Entrar na NUY", entrarCurto: "Entrar", sair: "Sair", painel: "Painel",
+      botaoBaixar: "Baixar", entrarLongo: "Entrar na NUY", entrarCurto: "Entrar", sair: "Sair",
       lojaIos: "", lojaAndroid: "", lojaDica: "Em breve",
       rodapeSlogan: "Conexões para viver melhor.",
       rodapeLinks: [...menu.slice(0, 4), ["Política de privacidade", "politica-de-privacidade.html"], ["Termos de uso", "termos-de-uso.html"]].map(link),

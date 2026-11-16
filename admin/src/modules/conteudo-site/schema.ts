@@ -178,7 +178,6 @@ const geral = z.object({
   entrarLongo: ate(20),
   entrarCurto: ate(10),
   sair: ate(12),
-  painel: ate(14),
   lojaIos: httpsOpcional,
   lojaAndroid: httpsOpcional,
   lojaDica: ate(30),

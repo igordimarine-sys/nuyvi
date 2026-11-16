@@ -44,7 +44,6 @@ export const CAMPOS: Record<Bloco, Campo[]> = {
       t("entrarLongo", "Botão de entrar, texto completo", { ajuda: "Para quem não está conectado." }),
       t("entrarCurto", "Botão de entrar, texto curto", { ajuda: "Usado em telas estreitas (até 479 px)." }),
       t("sair", "Texto \"Sair\"", { ajuda: "Para quem está conectado." }),
-      t("painel", "Texto \"Painel\"", { ajuda: "Só a equipe vê este botão." }),
     ]),
     g("g-lojas", "Lojas de aplicativos", [
       t("lojaIos", "Endereço na App Store", { opcional: true, ajuda: "Cole o endereço da página do app. Vazio: o botão fica desativado. Vale para a seção Baixe o app e para o rodapé." }),

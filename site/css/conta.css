@@ -6,6 +6,8 @@ html[data-sessao="cliente"] .hero [data-login], html[data-sessao="equipe"] .hero
 .conta[data-estado="cliente"] [data-login], .conta[data-estado="equipe"] [data-login] { display: none; }
 .conta-logada { display: flex; align-items: center; position: relative; }
 .conta-logada[hidden], .conta-erro[hidden] { display: none; }
+/* "Sair" fora do painel (≥ 1280 px, depois de "Baixar"): só para quem está conectado */
+.conta:not([data-estado="cliente"]):not([data-estado="equipe"]) > [data-sair] { display: none; }
 .conta-toggle { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(7,9,10,.4);
                 color: var(--branco); cursor: pointer; padding: 0; font: 900 1rem Archivo, sans-serif; }
 .conta-painel { display: none; position: absolute; top: calc(100% + .5rem); right: 0; flex-direction: column; gap: .5rem; padding: .5rem; min-width: 14rem;
@@ -17,7 +19,7 @@ html[data-sessao="cliente"] .hero [data-login], html[data-sessao="equipe"] .hero
 .conta-painel .bt { width: 100%; }
 .conta-erro { position: absolute; top: calc(100% + .5rem); right: 0; width: max-content; max-width: 16rem; margin: 0; padding: .5rem .75rem; border-radius: .75rem;
               background: var(--vinho); color: var(--branco); font-size: .875rem; }
-/* a partir de 1280 px a conta fica em linha: nome + Painel + Sair */
+/* a partir de 1280 px a conta fica em linha: nome + Sair (logo depois do botão de pausa) */
 @media (min-width: 1280px) {
   .conta-toggle { display: none; }
   .conta-painel, .conta-logada.aberto .conta-painel { display: flex; position: static; flex-direction: row; align-items: center; padding: 0; min-width: 0; max-width: none; background: none; border: 0; border-radius: 0; animation: none; }

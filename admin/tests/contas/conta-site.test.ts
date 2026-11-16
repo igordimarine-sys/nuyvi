@@ -42,11 +42,11 @@ describe("HTML da página com o grupo de conta", () => {
   it("sai no estado visitante, escondendo a parte logada, sem dado de ninguém, e com os rótulos do conteúdo", () => {
     const c = conteudoComBlocosNovos();
     c.textos.geral!.sair = "Encerrar";
-    c.textos.geral!.painel = "Gestão";
     const out = montar(HTML_SITE, c).html;
     expect(out).toContain('data-conta data-estado="carregando"');
     expect(out).toContain('<div class="conta-logada" data-logada hidden>');
-    expect(out).toContain('data-painel>Gestão</a><button type="button" class="bt bt-linha" data-sair>Encerrar</button>');
+    expect(out).toContain('<span class="conta-nome" data-nome></span><button type="button" class="bt bt-linha" data-sair>Encerrar</button>');
+    expect(out).not.toContain('data-painel');
     expect(out).toContain('<span class="conta-nome" data-nome></span>');
     expect(out).toContain('src="/js/conta.js"');
   });
