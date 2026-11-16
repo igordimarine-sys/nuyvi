@@ -78,7 +78,7 @@ Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi
 
 ## CI
 
-`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, ou `site/index.html` mudam (o teste de contrato do painel lê esses arquivos). O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
+`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, ou `site/index.html` mudam (o teste de contrato do painel lê esses arquivos). Antes do build o job roda `npm run db:migrate` no database `ci` do service, porque o build prerenderiza `/` lendo `conteudo_versoes` (tabela vazia = conteúdo embutido no template). `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` são valores fictícios.
 
 ## Deploy (pendente: depende das contas da N.UY)
 
