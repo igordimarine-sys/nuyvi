@@ -1,10 +1,15 @@
 # TODO
 
 ## Em andamento
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 e 1; em curso: 2 (`montar` em TS) e 3 (CI com banco no build).
 
 ## Pendente
-- ADR-0007 (tudo num app Next; proposto): desenvolvedor aceitar o ADR e seguir o plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo: 0 CI `working-directory: loja` → `admin` (dev-devops; ficou para trás no rename, o job aponta para pasta inexistente); 1 `site/conteudo/` → `admin/scripts/conteudo-inicial/` + teste de caracterização do HTML (dev-tests); 2 `montar` em TS no módulo `conteudo-site` (dev-react); 3 build do CI contra o Postgres do service (dev-devops); 4 `app/route.ts` + `paginaDoSite()` + `public/` + template (dev-react); 5 `updateTag` ao publicar, remover hook, `GET /api/conteudo-site` e `site/` (dev-react, dev-tests, dev-uiux); 6 `/entrar` → `/login` (dev-react); 7 verificar H1 a H4 em Preview (dev-devops); 8 corte do domínio (dev-devops, dev-infra, desenvolvedor); 9 remover projeto `nuyvi` (dev-infra).
-- ADR-0007 (arquiteto-specs): PEND-07a onde fica a loja pública (proposta `/loja`) e o que `inicio` significa nos cartões da Loja (CA-LOJ-58); PEND-07b caminho das páginas de cliente; reescrever RNF-14 (site no ar com o banco fora), CA-LOJ-59, RNF-15, RISCO-15/16, integração "Publicação do conteúdo" e menções a subdomínio da loja; 404 com visual do site ou não.
+- Spec v0.6 (desenvolvedor): PEND-10 contradição de fase (carrinho/checkout no MVP fase 1 da spec × "fase 1b" na decisão de 2026-11-15); confirmar PREM-15 (logos, selos das lojas de app, rótulos de leitor de tela, páginas legais e `versao-*.html` fora da edição) e PREM-16 ("Sair" mantém na página; equipe com `volta` dentro de `/admin` volta para lá; produto esgotado aparece como "Esgotado"; vitrine sem página de produto).
+- Spec v0.6: PEND-08 visual da 404 para visitantes (dev-uiux); PEND-09 newsletter do rodapé não grava nada e promete envio (decidir gravar ou remover; lgpd-specialist + copywriter); botão "Entrar na NUY" sugere a conta do app (copywriter, tarefa 22).
+- ADR-0007 adendo A1 (dev-database): migration da CHECK `conteudo_versoes_blocos_ck` com os blocos `videos`, `geral`, `pagina-loja` (1..12) e script idempotente da versão `migracao` com o texto atual do HTML, rodando antes do deploy do código novo.
+- ADR-0007 adendo (dev-uiux): campos do painel para vídeo, lista de links do menu/rodapé e blocos novos; spec visual curta da `/loja`.
+- ADR-0007 adendo (dev-security + dev-auth): revisar upload de vídeo (mp4/webm, `ftyp`/EBML, 4,5 MB), links externos, `volta`, `conta.js`, CSP por caminho; confirmar se a resposta de `get-session` pode ir para cache compartilhado (hipótese não verificada; CA-LOJ-72).
+- ADR-0007: até existirem telas de catálogo, produto alterado fora do painel só aparece em `/loja` após deploy.
 - ADR-0007 (dev-security + dev-react): CSP e headers por caminho em `next.config.ts` (`/` tem `<style>` e scripts embutidos; app com M-02); substitui o B-04 de `site/vercel.json`.
 - ADR-0007 (dev-database): colunas `disparo_*` e índice de "uma pendente" ficam ou são simplificados depois que o hook sair (sem mudança de schema para o corte).
 - Painel único (no corte): `NEXT_PUBLIC_BLOB_HOST` (loja) e `BLOB_PUBLIC_HOST` (site) com o host real do store Blob (dev-devops/dev-infra).
