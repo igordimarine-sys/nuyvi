@@ -1,5 +1,22 @@
 "use client";
 
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormLabel from "@mui/material/FormLabel";
+import IconButton from "@mui/material/IconButton";
+import LinearProgress from "@mui/material/LinearProgress";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -48,12 +65,12 @@ const useEditor = () => {
 
 function Rotulado({ id, rotulo, ajuda, erro, opcional, children }: { id: string; rotulo: string; ajuda?: string; erro?: string; opcional?: boolean; children: ReactNode }) {
   return (
-    <div className={`campo${erro ? " campo-erro" : ""}`}>
-      <label htmlFor={id}>{rotulo}{opcional && <> <Etiqueta>Opcional</Etiqueta></>}</label>
+    <FormControl fullWidth error={!!erro} className="campo">
+      <FormLabel htmlFor={id} className="rotulo">{rotulo}{opcional && <> <Etiqueta>Opcional</Etiqueta></>}</FormLabel>
       {children}
-      {ajuda && !erro && <p id={`${id}-desc`} className="ajuda">{ajuda}</p>}
-      {erro && <p id={`${id}-desc`} className="erro-texto"><span aria-hidden="true">! </span>{erro}</p>}
-    </div>
+      {ajuda && !erro && <FormHelperText id={`${id}-desc`}>{ajuda}</FormHelperText>}
+      {erro && <FormHelperText id={`${id}-desc`} sx={{ fontWeight: 600 }}><span aria-hidden="true">! </span>{erro}</FormHelperText>}
+    </FormControl>
   );
 }
 
@@ -81,7 +98,7 @@ function Grupo({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: "grupo
   return (
     <fieldset className="grupo" id={`grupo-${campo.chave}`}>
       <legend tabIndex={-1}>{campo.rotulo} {temErro && <Etiqueta tom="erro">Tem erro</Etiqueta>}</legend>
-      <button type="button" className="botao botao-link" aria-expanded={aberto} disabled={temErro} onClick={() => setRecolhido((x) => !x)}>{aberto ? "Recolher" : "Expandir"}</button>
+      <Button size="small" aria-expanded={aberto} disabled={temErro} onClick={() => setRecolhido((x) => !x)}>{aberto ? "Recolher" : "Expandir"}</Button>
       {aberto && <Campos campos={campo.campos} valor={valor} caminho={caminho} />}
     </fieldset>
   );
@@ -98,33 +115,31 @@ function CampoGenerico({ campo, valor, caminho, contexto }: { campo: Campo; valo
     case "texto":
       return (
         <Rotulado id={id} rotulo={campo.rotulo} ajuda={campo.ajuda} erro={erro} opcional={campo.opcional}>
-          {campo.longo
-            ? <textarea {...comuns} rows={4} value={String(valor ?? "")} onChange={(e) => alterar(e.target.value)} {...descricao(id, erro, campo.ajuda)} />
-            : <input {...comuns} type="text" value={String(valor ?? "")} onChange={(e) => alterar(e.target.value)} {...descricao(id, erro, campo.ajuda)} />}
+          <OutlinedInput {...comuns} multiline={campo.longo} minRows={campo.longo ? 4 : undefined} value={String(valor ?? "")} onChange={(e) => alterar(e.target.value)} inputProps={descricao(id, erro, campo.ajuda)} />
         </Rotulado>
       );
     case "inteiro":
     case "preco":
       return (
         <Rotulado id={id} rotulo={campo.rotulo} ajuda={campo.ajuda} erro={erro}>
-          <input {...comuns} type="text" inputMode={campo.tipo === "inteiro" ? "numeric" : "decimal"} value={String(valor ?? "")} onChange={(e) => alterar(e.target.value)} {...descricao(id, erro, campo.ajuda)} />
+          <OutlinedInput {...comuns} value={String(valor ?? "")} onChange={(e) => alterar(e.target.value)} inputProps={{ inputMode: campo.tipo === "inteiro" ? "numeric" : "decimal", ...descricao(id, erro, campo.ajuda) }} />
         </Rotulado>
       );
     case "sim_nao":
       return (
         <div className="campo campo-caixa">
-          <label htmlFor={id}><input {...comuns} type="checkbox" checked={valor === true} onChange={(e) => alterar(e.target.checked)} /> {campo.rotulo}</label>
+          <FormControlLabel control={<Checkbox {...comuns} checked={valor === true} onChange={(e) => alterar(e.target.checked)} />} label={campo.rotulo} />
         </div>
       );
     case "selecao": {
       const v = String(valor ?? "");
       return (
         <Rotulado id={id} rotulo={campo.rotulo} ajuda={campo.ajuda} erro={erro}>
-          <select {...comuns} value={v} onChange={(e) => alterar(e.target.value)} {...descricao(id, erro, campo.ajuda)}>
+          <Select native input={<OutlinedInput />} value={v} onChange={(e) => alterar(e.target.value)} onBlur={comuns.onBlur} inputProps={{ id, ...descricao(id, erro, campo.ajuda) }}>
             <option value="">{campo.vazio}</option>
             {v && !campo.opcoes.some((o) => o.valor === v) && <option value={v}>Opção que não existe mais</option>}
             {campo.opcoes.map((o) => <option key={o.valor} value={o.valor}>{o.rotulo}</option>)}
-          </select>
+          </Select>
         </Rotulado>
       );
     }
@@ -184,11 +199,11 @@ function CampoFoto({ campo, valor, caminho, contexto }: { campo: Extract<Campo, 
         <div>
           <p className="foto-nome">{valor.startsWith("img/") ? `Imagem atual do site (${valor.split("/").at(-1)})` : valor ? "Foto enviada pelo painel" : "Sem foto"}</p>
           {anterior !== null && !enviando && <p><Etiqueta tom="aviso">Nova, ainda não publicada</Etiqueta></p>}
-          {enviando && <p role="status">Enviando...</p>}
+          {enviando && <p role="status" className="enviando"><CircularProgress size={16} aria-hidden="true" /> Enviando...</p>}
           <div className="linha-botoes">
-            <button type="button" id={id} className="botao botao-secundario" disabled={enviando} aria-describedby={`${id}-desc`} onClick={() => entrada.current?.click()}>Trocar foto</button>
+            <Button id={id} variant="outlined" color="inherit" disabled={enviando} aria-describedby={`${id}-desc`} onClick={() => entrada.current?.click()}>Trocar foto</Button>
             {anterior !== null && !enviando && (
-              <button type="button" className="botao botao-link" onClick={() => { ed.alterar(caminho, anterior); setAnterior(null); setErroLocal(null); }}>Voltar à foto anterior</button>
+              <Button onClick={() => { ed.alterar(caminho, anterior); setAnterior(null); setErroLocal(null); }}>Voltar à foto anterior</Button>
             )}
           </div>
           <input ref={entrada} type="file" hidden accept="image/jpeg,image/png,image/webp" tabIndex={-1}
@@ -196,8 +211,8 @@ function CampoFoto({ campo, valor, caminho, contexto }: { campo: Extract<Campo, 
         </div>
       </div>
       {erro
-        ? <p id={`${id}-desc`} className="erro-texto"><span aria-hidden="true">! </span>{erro}</p>
-        : <p id={`${id}-desc`} className="ajuda">JPEG, PNG ou WebP, até 4,5 MB. Use imagens com pelo menos 1200 px de largura; fotos muito pesadas deixam o site lento.</p>}
+        ? <FormHelperText error id={`${id}-desc`} sx={{ fontWeight: 600 }}><span aria-hidden="true">! </span>{erro}</FormHelperText>
+        : <FormHelperText id={`${id}-desc`}>JPEG, PNG ou WebP, até 4,5 MB. Use imagens com pelo menos 1200 px de largura; fotos muito pesadas deixam o site lento.</FormHelperText>}
     </div>
   );
 }
@@ -257,25 +272,25 @@ function CampoVideo({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: "
       <p className="foto-nome">{nome}</p>
       {anterior !== null && !enviando && <p><Etiqueta tom="aviso">{doSite ? "Alterado, ainda não publicado" : "Novo, ainda não publicado"}</Etiqueta></p>}
       {anterior !== null && !enviando && <p role="status" className="ajuda">Você trocou o vídeo. Confira se a imagem de espera combina com ele.</p>}
-      <label htmlFor={id}>Vídeos que já estão no site</label>
-      <select id={id} disabled={enviando} value={valor} onChange={(e) => escolher(e.target.value)} onBlur={() => ed.aoSair(caminho)}>
+      <FormLabel htmlFor={id} className="rotulo">Vídeos que já estão no site</FormLabel>
+      <Select native fullWidth input={<OutlinedInput />} disabled={enviando} value={valor} onChange={(e) => escolher(e.target.value)} onBlur={() => ed.aoSair(caminho)} inputProps={{ id }}>
         {campo.opcional && <option value="">Nenhum (usar o do computador)</option>}
         {!campo.opcional && !valor && <option value="">Escolha um vídeo</option>}
         {valor && !naLista && <option value={valor}>Vídeo enviado pelo painel (atual)</option>}
         {ed.videos.map((v) => <option key={v} value={v}>{v.replace(/^video\//, "")}</option>)}
-      </select>
+      </Select>
       <div className="linha-botoes">
-        <button type="button" className="botao botao-secundario" disabled={enviando} onClick={() => entrada.current?.click()}>Enviar um vídeo novo</button>
-        {enviando && <button type="button" className="botao botao-link" onClick={() => cancelar.current?.abort()}>Cancelar envio</button>}
-        {anterior !== null && !enviando && <button type="button" className="botao botao-link" onClick={() => { ed.alterar(caminho, anterior); setAnterior(null); setErroLocal(null); }}>Voltar ao vídeo anterior</button>}
+        <Button variant="outlined" color="inherit" disabled={enviando} onClick={() => entrada.current?.click()}>Enviar um vídeo novo</Button>
+        {enviando && <Button onClick={() => cancelar.current?.abort()}>Cancelar envio</Button>}
+        {anterior !== null && !enviando && <Button onClick={() => { ed.alterar(caminho, anterior); setAnterior(null); setErroLocal(null); }}>Voltar ao vídeo anterior</Button>}
       </div>
-      {enviando && <p role="status"><progress aria-label="Enviando o vídeo" /> Enviando...</p>}
+      {enviando && <div role="status" className="enviando-video"><LinearProgress aria-label="Enviando o vídeo" /> Enviando...</div>}
       <input ref={entrada} type="file" hidden accept="video/mp4,video/webm" tabIndex={-1}
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void enviar(f); }} />
       {aviso && !enviando && !erro && <p role="status" className="ajuda">{aviso}</p>}
       {erro
-        ? <p id={`${id}-desc`} className="erro-texto" role="alert"><span aria-hidden="true">! </span>{erro}</p>
-        : <p id={`${id}-desc`} className="ajuda">{campo.ajuda ? `${campo.ajuda} ` : ""}MP4 ou WebM, até 4,5 MB. É vídeo de fundo, sem som; de preferência com até 15 segundos.</p>}
+        ? <FormHelperText error id={`${id}-desc`} role="alert" sx={{ fontWeight: 600 }}><span aria-hidden="true">! </span>{erro}</FormHelperText>
+        : <FormHelperText id={`${id}-desc`}>{campo.ajuda ? `${campo.ajuda} ` : ""}MP4 ou WebM, até 4,5 MB. É vídeo de fundo, sem som; de preferência com até 15 segundos.</FormHelperText>}
     </fieldset>
   );
 }
@@ -290,9 +305,9 @@ function mover<T>(lista: T[], de: number, delta: -1 | 1): T[] {
 function BotaoMover({ id, i, n, delta, nome, aoMover }: { id: string; i: number; n: number; delta: -1 | 1; nome: string; aoMover: () => void }) {
   const desabilitado = delta === -1 ? i === 0 : i === n - 1;
   return (
-    <button type="button" id={id} className="botao botao-icone" disabled={desabilitado} aria-label={`Mover ${nome} para ${delta === -1 ? "cima" : "baixo"}`} onClick={aoMover}>
+    <IconButton id={id} disabled={desabilitado} aria-label={`Mover ${nome} para ${delta === -1 ? "cima" : "baixo"}`} onClick={aoMover}>
       <span aria-hidden="true">{delta === -1 ? "↑" : "↓"}</span>
-    </button>
+    </IconButton>
   );
 }
 
@@ -350,14 +365,14 @@ function ListaEditavel({ campo, valor, caminho }: { campo: Extract<Campo, { tipo
                   </div>
                   <div className="item-acoes">
                     {colapsavel && (
-                      <button type="button" className="botao botao-link" aria-expanded={aberto} disabled={temErro}
+                      <Button size="small" aria-expanded={aberto} disabled={temErro}
                         onClick={() => setRecolhidos((s) => { const x = new Set(s); if (x.has(String(it._k))) x.delete(String(it._k)); else x.add(String(it._k)); return x; })}>
                         {aberto ? "Recolher" : "Expandir"}
-                      </button>
+                      </Button>
                     )}
                     <BotaoMover id={`${id}-${i}-sobe`} i={i} n={n} delta={-1} nome={nome} aoMover={() => mudar(i, -1)} />
                     <BotaoMover id={`${id}-${i}-desce`} i={i} n={n} delta={1} nome={nome} aoMover={() => mudar(i, 1)} />
-                    <button type="button" className="botao botao-perigo" disabled={n === 1} title={n === 1 ? "A lista precisa de pelo menos um item" : undefined} aria-label={`Remover ${nome}`} onClick={() => remover(i)}>Remover</button>
+                    <Button variant="outlined" color="error" disabled={n === 1} title={n === 1 ? "A lista precisa de pelo menos um item" : undefined} aria-label={`Remover ${nome}`} onClick={() => remover(i)}>Remover</Button>
                   </div>
                 </div>
                 {aberto && <div className="item-corpo"><Campos campos={campo.campos} valor={it} caminho={cam} /></div>}
@@ -366,8 +381,8 @@ function ListaEditavel({ campo, valor, caminho }: { campo: Extract<Campo, { tipo
           );
         })}
       </ol>
-      {ed.erros[caminho.join(".")] && <p className="erro-texto" id={`${id}-desc`}><span aria-hidden="true">! </span>{ed.erros[caminho.join(".")]}</p>}
-      <button type="button" id={`${id}-adicionar`} className="botao botao-secundario" disabled={campo.max !== undefined && n >= campo.max} onClick={adicionar}>{campo.adicionar}</button>
+      {ed.erros[caminho.join(".")] && <FormHelperText error id={`${id}-desc`} sx={{ fontWeight: 600, mb: 1 }}><span aria-hidden="true">! </span>{ed.erros[caminho.join(".")]}</FormHelperText>}
+      <Button id={`${id}-adicionar`} variant="outlined" disabled={campo.max !== undefined && n >= campo.max} onClick={adicionar}>{campo.adicionar}</Button>
       {campo.max !== undefined && n >= campo.max && <p className="ajuda">O máximo é {campo.max} itens.</p>}
     </fieldset>
   );
@@ -396,20 +411,20 @@ function ListaTextos({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: 
           return (
             <li key={it._k} className={erro ? "campo-erro" : ""}>
               <div className="linha-texto">
-                <input id={idc} type="text" aria-label={nome} value={it._v} onChange={(e) => ed.alterar([...cam, "_v"], e.target.value)} onBlur={() => ed.aoSair(cam)} {...descricao(idc, erro)} />
+                <OutlinedInput id={idc} size="small" error={!!erro} value={it._v} onChange={(e) => ed.alterar([...cam, "_v"], e.target.value)} onBlur={() => ed.aoSair(cam)} inputProps={{ "aria-label": nome, ...descricao(idc, erro) }} sx={{ flex: "1 1 200px" }} />
                 <BotaoMover id={`${id}-${i}-sobe`} i={i} n={n} delta={-1} nome={nome} aoMover={() => muda(-1)} />
                 <BotaoMover id={`${id}-${i}-desce`} i={i} n={n} delta={1} nome={nome} aoMover={() => muda(1)} />
-                <button type="button" className="botao botao-perigo" disabled={n === 1} title={n === 1 ? "A lista precisa de pelo menos um item" : undefined} aria-label={`Remover ${nome}`}
-                  onClick={() => { trocar(valor.filter((_, k) => k !== i)); ed.anunciar(`${nome} removido`); ed.focar(`${id}-adicionar`); }}>Remover</button>
+                <Button variant="outlined" color="error" disabled={n === 1} title={n === 1 ? "A lista precisa de pelo menos um item" : undefined} aria-label={`Remover ${nome}`}
+                  onClick={() => { trocar(valor.filter((_, k) => k !== i)); ed.anunciar(`${nome} removido`); ed.focar(`${id}-adicionar`); }}>Remover</Button>
               </div>
-              {erro && <p id={`${idc}-desc`} className="erro-texto"><span aria-hidden="true">! </span>{erro}</p>}
+              {erro && <FormHelperText error id={`${idc}-desc`} sx={{ fontWeight: 600 }}><span aria-hidden="true">! </span>{erro}</FormHelperText>}
             </li>
           );
         })}
       </ol>
-      <button type="button" id={`${id}-adicionar`} className="botao botao-secundario" onClick={() => { trocar([...valor, { _k: `n${Date.now()}${n}`, _v: "" }]); ed.anunciar(`${campo.item} ${n + 1} adicionado`); ed.focar(idDe([...caminho, n])); }}>
+      <Button id={`${id}-adicionar`} variant="outlined" onClick={() => { trocar([...valor, { _k: `n${Date.now()}${n}`, _v: "" }]); ed.anunciar(`${campo.item} ${n + 1} adicionado`); ed.focar(idDe([...caminho, n])); }}>
         {campo.adicionar}
-      </button>
+      </Button>
     </fieldset>
   );
 }
@@ -417,28 +432,24 @@ function ListaTextos({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: 
 // ---------- Diálogo de confirmação ----------
 
 function Dialogo({ confirmacao, aoFechar }: { confirmacao: Confirmacao | null; aoFechar: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    if (confirmacao && !d.open) {
-      d.showModal();
-      d.querySelector<HTMLElement>("[data-foco-inicial]")?.focus(); // foco no botão seguro (cancelar)
-    } else if (!confirmacao && d.open) d.close();
-  }, [confirmacao]);
+  // guarda o último conteúdo para o texto não sumir durante a animação de saída
+  const [ultima, setUltima] = useState<Confirmacao | null>(confirmacao);
+  if (confirmacao && confirmacao !== ultima) setUltima(confirmacao);
+  const c = confirmacao ?? ultima;
   return (
-    <dialog ref={ref} className="modal" aria-labelledby="modal-titulo" onClose={aoFechar}>
-      {confirmacao && (
+    <Dialog open={confirmacao !== null} onClose={aoFechar} aria-labelledby="modal-titulo" aria-describedby="modal-texto" maxWidth="xs" fullWidth>
+      {c && (
         <>
-          <h2 id="modal-titulo">{confirmacao.titulo}</h2>
-          <p>{confirmacao.texto}</p>
-          <div className="linha-botoes">
-            <button type="button" data-foco-inicial className="botao botao-secundario" onClick={aoFechar}>{confirmacao.cancelar ?? "Cancelar"}</button>
-            <button type="button" className={`botao ${confirmacao.perigo ? "botao-perigo" : "botao-primario"}`} onClick={() => { const f = confirmacao.aoConfirmar; aoFechar(); f(); }}>{confirmacao.ok}</button>
-          </div>
+          <DialogTitle id="modal-titulo">{c.titulo}</DialogTitle>
+          <DialogContent><DialogContentText id="modal-texto">{c.texto}</DialogContentText></DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2.5, flexWrap: "wrap", gap: 1 }}>
+            {/* foco inicial no botão seguro (cancelar) */}
+            <Button autoFocus variant="outlined" color="inherit" onClick={aoFechar}>{c.cancelar ?? "Cancelar"}</Button>
+            <Button variant={c.perigo ? "outlined" : "contained"} color={c.perigo ? "error" : "primary"} onClick={() => { const f = c.aoConfirmar; aoFechar(); f(); }}>{c.ok}</Button>
+          </DialogActions>
         </>
       )}
-    </dialog>
+    </Dialog>
   );
 }
 
@@ -647,12 +658,12 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, videos }:
         {resultado?.tipo === "publicado" && (
           <Aviso tipo="sucesso" titulo="Publicado." refEl={avisoRef}>
             <p>A mudança já está no site.</p>
-            <p className="aviso-links"><a href={slug === "pagina-loja" ? "/loja" : "/"} target="_blank" rel="noopener">Ver no site<span className="so-leitor"> (abre em nova aba)</span></a> · <Link href="/admin/conteudo">Voltar à lista de blocos</Link> · <button type="button" className="botao botao-link" onClick={() => setResultado(null)}>Continuar editando</button></p>
+            <p className="aviso-links"><a href={slug === "pagina-loja" ? "/loja" : "/"} target="_blank" rel="noopener">Ver no site<span className="so-leitor"> (abre em nova aba)</span></a> · <Link href="/admin/conteudo">Voltar à lista de blocos</Link> · <Button size="small" onClick={() => setResultado(null)}>Continuar editando</Button></p>
           </Aviso>
         )}
         {resultado?.tipo === "falha" && (
           <Aviso tipo="erro" titulo="Não foi possível publicar, tente de novo." refEl={avisoRef}
-            acoes={<button type="button" className="botao botao-primario" disabled={!podePublicar} onClick={() => void publicar(base)}>Tentar de novo</button>}>
+            acoes={<Button variant="contained" disabled={!podePublicar} onClick={() => void publicar(base)}>Tentar de novo</Button>}>
             <p>O site continua como estava; nada foi alterado. O que você digitou está aqui, nada foi perdido.{resultado.repetida && " Se continuar, avise o responsável técnico."}</p>
           </Aviso>
         )}
@@ -667,19 +678,19 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, videos }:
               <>
                 {resultado.mesmoBloco ? (
                   <>
-                    <button type="button" className="botao botao-secundario" onClick={() => confirmarCarregar(resultado)}>Carregar a versão atual</button>
-                    <button type="button" className="botao botao-perigo" onClick={() => setConfirmacao({
+                    <Button variant="outlined" color="inherit" onClick={() => confirmarCarregar(resultado)}>Carregar a versão atual</Button>
+                    <Button variant="outlined" color="error" onClick={() => setConfirmacao({
                       titulo: "Publicar a minha por cima?",
                       texto: "Isso substitui o que a outra pessoa publicou neste bloco. A versão dela continua no histórico.",
                       ok: "Publicar a minha",
                       perigo: true,
                       aoConfirmar: () => { setBase(resultado.versaoBase); void publicar(resultado.versaoBase); },
-                    })}>Publicar a minha por cima</button>
+                    })}>Publicar a minha por cima</Button>
                   </>
                 ) : (
                   <>
-                    <button type="button" className="botao botao-primario" onClick={() => { setBase(resultado.versaoBase); void publicar(resultado.versaoBase); }}>Publicar o meu bloco</button>
-                    <button type="button" className="botao botao-secundario" onClick={() => confirmarCarregar(resultado)}>Carregar a versão atual</button>
+                    <Button variant="contained" onClick={() => { setBase(resultado.versaoBase); void publicar(resultado.versaoBase); }}>Publicar o meu bloco</Button>
+                    <Button variant="outlined" color="inherit" onClick={() => confirmarCarregar(resultado)}>Carregar a versão atual</Button>
                   </>
                 )}
               </>
@@ -711,34 +722,35 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, videos }:
           </nav>
         )}
 
-        <form className="cartao" noValidate onSubmit={(e) => e.preventDefault() /* Enter num campo não publica: só o botão Publicar */}>
+        <Paper component="form" variant="outlined" className="cartao" noValidate onSubmit={(e) => e.preventDefault() /* Enter num campo não publica: só o botão Publicar */}>
           <fieldset disabled={bloqueado} className="form-bloco">
             <legend className="so-leitor">{nome}</legend>
             <Campos key={geracao} campos={campos} valor={estado} caminho={[]} />
           </fieldset>
-        </form>
+        </Paper>
 
         <div className="so-leitor" aria-live="polite">{anuncio}</div>
-        <div className="barra-publicar" role="region" aria-label="Publicar">
+        <Paper square elevation={8} className="barra-publicar" role="region" aria-label="Publicar">
           <div className="barra-texto">
             <p role="status">{situacao}</p>
             {lento && publicando && <p className="ajuda">Isso está demorando mais que o normal. Não feche esta página.</p>}
           </div>
           <div className="barra-acoes">
             {alterado && !publicando && (
-              <button type="button" className="botao botao-link" onClick={() => setConfirmacao({
+              <Button color="inherit" onClick={() => setConfirmacao({
                 titulo: "Descartar alterações?",
                 texto: "O que você digitou neste bloco será trocado pela versão publicada.",
                 ok: "Descartar",
                 perigo: true,
                 aoConfirmar: () => carregar(JSON.parse(publicado), base),
-              })}>Descartar alterações</button>
+              })}>Descartar alterações</Button>
             )}
-            <button type="button" className="botao botao-primario" disabled={!podePublicar} aria-busy={publicando} onClick={() => void publicar(base)}>
-              {publicando ? <><span className="giro" aria-hidden="true" /> Publicando...</> : `Publicar ${nome}`}
-            </button>
+            <Button variant="contained" size="large" disabled={!podePublicar} aria-busy={publicando} onClick={() => void publicar(base)}
+              startIcon={publicando ? <CircularProgress size={16} color="inherit" aria-hidden="true" /> : undefined}>
+              {publicando ? "Publicando..." : `Publicar ${nome}`}
+            </Button>
           </div>
-        </div>
+        </Paper>
         <Dialogo confirmacao={confirmacao} aoFechar={() => setConfirmacao(null)} />
       </div>
     </EditorCtx.Provider>

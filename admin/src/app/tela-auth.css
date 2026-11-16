@@ -1,0 +1,74 @@
+/* Telas de conta com a identidade do site (tokens do :root de site/index.html). Escopo em .tela-auth. */
+.tela-auth {
+  --preto: #07090A; --grafite: #111517; --branco: #F4F7F5; --nevoa: #A9B1AD;
+  --laranja: #FF7A2E; --rosa: #E8476A; --vinho: #3A1222; --ciano: #2EC8E8; --verde: #8BE04E;
+  --sol-texto: linear-gradient(180deg, #FFB25E 0%, #FF7A2E 50%, #EE5A73 100%);
+  --mov-entra: cubic-bezier(.2,.8,.2,1); --mov-micro: .2s;
+  --lado: clamp(1rem, 4vw, 3rem);
+  /* esquema escuro: o texto que o Chrome mostra na prévia do preenchimento automático (ao passar o mouse numa
+     sugestão salva) usa a cor de sistema, que só fica clara assim; nenhuma regra da página sobrescreve essa prévia */
+  color-scheme: dark;
+  position: relative; isolation: isolate; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+  background: radial-gradient(120% 70% at 50% 110%, rgba(232,71,106,.22), transparent 60%), radial-gradient(80% 50% at 50% 100%, rgba(255,122,46,.18), transparent 70%), var(--preto);
+  color: var(--branco); font-family: var(--fonte-texto), Manrope, system-ui, sans-serif; font-size: 1rem; line-height: 1.6;
+}
+.tela-auth *, .tela-auth *::before, .tela-auth *::after { box-sizing: border-box; }
+.tela-auth :focus-visible { outline: 2px solid var(--ciano); outline-offset: 3px; border-radius: 4px; }
+.auth-fibras { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.auth-fibras .ghost-fibers-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+.auth-topo { padding: 1.25rem var(--lado); }
+.auth-logo { display: inline-block; }
+.auth-logo img { display: block; height: 40px; width: auto; }
+
+.auth-palco { flex: 1; display: grid; place-items: center; padding: 1rem var(--lado) 4rem; }
+.auth-cartao { width: 100%; max-width: 27rem; padding: 2rem clamp(1.25rem, 5vw, 2.25rem); border-radius: 1.5rem;
+  background: rgba(17,21,23,.72); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+@media (prefers-reduced-motion: no-preference) { .auth-cartao { animation: auth-entra .6s var(--mov-entra) both; } }
+@keyframes auth-entra { from { opacity: 0; transform: translateY(16px); } }
+
+.tela-auth h1 { margin: 0 0 .75rem; font-family: var(--fonte-titulo), Archivo, sans-serif; font-stretch: 125%; font-variation-settings: "wdth" 125; font-weight: 900;
+  text-transform: uppercase; line-height: .92; letter-spacing: -.01em; font-size: clamp(2rem, 8vw, 2.75rem); }
+.tela-auth .sol { background: var(--sol-texto); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tela-auth p { margin: 0; }
+.auth-apoio { color: var(--nevoa); margin-bottom: 1.5rem !important; }
+
+/* Formulários (markup de formularios.tsx) */
+.tela-auth form { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.tela-auth .auth-apoio + form { margin-top: 0; }
+.tela-auth label { display: grid; gap: .4rem; font-size: .875rem; font-weight: 600; color: var(--branco); }
+.tela-auth input:not([type="hidden"]) { width: 100%; min-height: 48px; padding: .7rem 1rem; font: 500 1rem var(--fonte-texto), Manrope, system-ui, sans-serif; color: var(--branco);
+  background: rgba(7,9,10,.6); border: 1px solid rgba(255,255,255,.2); border-radius: .875rem;
+  transition: border-color var(--mov-micro) var(--mov-entra), background-color var(--mov-micro) var(--mov-entra); }
+.tela-auth input:hover { border-color: rgba(255,255,255,.35); }
+.tela-auth input:focus { border-color: var(--laranja); background: rgba(7,9,10,.85); }
+.tela-auth input:-webkit-autofill, .tela-auth input:-webkit-autofill:hover, .tela-auth input:-webkit-autofill:focus, .tela-auth input:autofill {
+  -webkit-text-fill-color: var(--branco); -webkit-box-shadow: 0 0 0 100px #14181a inset; box-shadow: 0 0 0 100px #14181a inset; caret-color: var(--branco); }
+
+/* Botões do site (.bt .bt-claro / .bt-linha) */
+.auth-bt { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; width: 100%; min-height: 48px; padding: 0 1.5rem; border-radius: 999px;
+  font: 700 .95rem var(--fonte-texto), Manrope, system-ui, sans-serif; letter-spacing: .02em; border: 0; cursor: pointer; text-decoration: none;
+  transition: transform var(--mov-micro) var(--mov-entra), background-color var(--mov-micro) var(--mov-entra), color var(--mov-micro) var(--mov-entra); }
+.auth-bt:hover:not(:disabled) { transform: translateY(-2px); }
+.auth-bt:disabled { opacity: .6; cursor: progress; }
+.auth-bt-claro { background: var(--branco); color: var(--preto); margin-top: .5rem; }
+.auth-bt-claro:hover:not(:disabled) { background: #fff; }
+.auth-bt-linha { background: rgba(7,9,10,.55); color: var(--branco); box-shadow: inset 0 0 0 1.5px rgba(244,247,245,.7); }
+.auth-bt-linha:hover:not(:disabled) { background: var(--branco); color: var(--preto); }
+.auth-bt svg { width: 1.1em; height: 1.1em; flex: none; }
+@media (prefers-reduced-motion: reduce) { .auth-bt, .tela-auth input { transition: none; } .auth-bt:hover:not(:disabled) { transform: none; } }
+
+/* Mensagens: nunca só por cor (borda + texto) */
+.auth-msg { padding: .75rem 1rem; border-radius: .875rem; font-size: .9rem; line-height: 1.45; }
+.auth-msg[role="alert"] { background: rgba(58,18,34,.85); border: 1px solid var(--rosa); color: var(--branco); }
+.auth-msg[role="status"] { background: rgba(139,224,78,.1); border: 1px solid rgba(139,224,78,.6); color: var(--branco); }
+.auth-alternativa { display: grid; gap: 1rem; }
+
+.auth-ou { display: flex; align-items: center; gap: .75rem; margin: 1.5rem 0 !important; color: var(--nevoa); font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; }
+.auth-ou::before, .auth-ou::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.14); }
+
+.auth-links { display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem 1.25rem; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,.1); font-size: .9rem; }
+.tela-auth .auth-links a:any-link { color: var(--nevoa); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.tela-auth .auth-links a:any-link:hover { color: var(--branco); text-decoration: underline; text-underline-offset: 3px; }
+.tela-auth .auth-links a.auth-destaque:any-link { color: var(--laranja); font-weight: 700; }

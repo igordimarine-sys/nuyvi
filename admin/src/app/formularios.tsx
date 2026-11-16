@@ -5,7 +5,7 @@ import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "
 import { authClient } from "@/lib/auth-client";
 import { destinoDepoisDeEntrar, voltaSegura } from "@/modules/contas/volta";
 
-// Formulários mínimos, sem design. Mensagens genéricas: nunca dizem se o e-mail existe.
+// Formulários das telas de conta (visual em tela-auth.css). Mensagens genéricas: nunca dizem se o e-mail existe.
 type Resultado = { ok: boolean; msg: string } | null;
 const MUITAS = "Muitas tentativas. Aguarde um minuto e tente de novo.";
 
@@ -28,8 +28,8 @@ function Form({ onEnviar, children, rotulo }: {
   return (
     <form onSubmit={enviar}>
       {children}
-      <button type="submit" disabled={ocupado}>{rotulo}</button>
-      {res && <p role={res.ok ? "status" : "alert"}>{res.msg}</p>}
+      <button type="submit" className="auth-bt auth-bt-claro" disabled={ocupado} aria-busy={ocupado}>{ocupado ? "Aguarde..." : rotulo}</button>
+      {res && <p className="auth-msg" role={res.ok ? "status" : "alert"}>{res.msg}</p>}
     </form>
   );
 }
@@ -74,6 +74,16 @@ const ERROS_GOOGLE: Record<string, string> = {
 
 const semAssinatura = () => () => {};
 
+// "G" do Google em cores (marca do provedor, como pede a identidade de login do Google).
+const LogoGoogle = () => (
+  <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+    <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+  </svg>
+);
+
 /** Só clientes (/login e /cadastrar); a página só mostra se GOOGLE_CLIENT_ID/SECRET existirem. O servidor recusa conta de equipe. */
 export function BotaoGoogle() {
   const [ocupado, setOcupado] = useState(false);
@@ -92,9 +102,9 @@ export function BotaoGoogle() {
     }
   }
   return (
-    <div>
-      <button type="button" onClick={entrar} disabled={ocupado}>Entrar com Google</button>
-      {erro && <p role="alert">{erro}</p>}
+    <div className="auth-alternativa">
+      <button type="button" className="auth-bt auth-bt-linha" onClick={entrar} disabled={ocupado} aria-busy={ocupado}><LogoGoogle />Entrar com Google</button>
+      {erro && <p className="auth-msg" role="alert">{erro}</p>}
     </div>
   );
 }
@@ -151,15 +161,5 @@ export function FormRedefinir({ token }: { token: string }) {
     }}>
       <Senha novo />
     </Form>
-  );
-}
-
-/** Sair do painel (só usado em /admin): volta para a entrada da equipe. */
-export function BotaoSair() {
-  const router = useRouter();
-  return (
-    <button type="button" onClick={async () => { await authClient.signOut(); router.push("/admin/login"); router.refresh(); }}>
-      Sair
-    </button>
   );
 }

@@ -1,7 +1,8 @@
-import Link from "next/link";
+import Button from "@mui/material/Button";
+import Skeleton from "@mui/material/Skeleton";
 import { notFound, redirect } from "next/navigation";
 import { situacaoDeAcesso } from "@/modules/conteudo-site/permissao";
-import { Aviso } from "./ui";
+import { Aviso, CabecalhoPagina } from "./ui";
 
 /** Acesso à área de conteúdo: sem sessão vai para /admin/login; cliente recebe 404; operador sem permissão mostra a tela "Sem permissão" (CA-LOJ-56); null = pode seguir. */
 export async function barrarSeNaoPuder() {
@@ -14,16 +15,15 @@ export async function barrarSeNaoPuder() {
 export function SemPermissao() {
   return (
     <>
-      <h1>Sem permissão</h1>
-      <p>Seu acesso não permite editar o conteúdo do site. Peça ao responsável da loja.</p>
-      <p><Link href="/admin">Voltar ao início</Link></p>
+      <CabecalhoPagina titulo="Sem permissão" subtitulo="Seu acesso não permite editar o conteúdo do site. Peça ao responsável da loja." />
+      <Button href="/admin" variant="outlined">Voltar ao início</Button>
     </>
   );
 }
 
 export function ErroAoAbrir({ o, href }: { o: string; href: string }) {
   return (
-    <Aviso tipo="erro" titulo={`Não foi possível abrir ${o} agora. Tente de novo em instantes.`} acoes={<a className="botao botao-secundario" href={href}>Tentar de novo</a>}>
+    <Aviso tipo="erro" titulo={`Não foi possível abrir ${o} agora. Tente de novo em instantes.`} acoes={<Button href={href} variant="outlined" color="inherit">Tentar de novo</Button>}>
       <p>O site continua no ar.</p>
     </Aviso>
   );
@@ -32,7 +32,7 @@ export function ErroAoAbrir({ o, href }: { o: string; href: string }) {
 export function Esqueleto({ linhas = 9 }: { linhas?: number }) {
   return (
     <div className="esqueleto" role="status" aria-label="Carregando">
-      {Array.from({ length: linhas }, (_, i) => <div key={i} className="esqueleto-bloco" />)}
+      {Array.from({ length: linhas }, (_, i) => <Skeleton key={i} variant="rounded" height={96} animation="wave" />)}
     </div>
   );
 }

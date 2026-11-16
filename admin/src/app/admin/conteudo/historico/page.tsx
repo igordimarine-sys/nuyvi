@@ -1,9 +1,16 @@
-import Link from "next/link";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import { Suspense } from "react";
 import { historico } from "@/modules/conteudo-site/leitura";
 import { BLOCOS } from "@/modules/conteudo-site/schema";
 import { barrarSeNaoPuder, ErroAoAbrir, Esqueleto } from "../estados";
-import { Etiqueta, formatarDataHora } from "../ui";
+import { CabecalhoPagina, Etiqueta, formatarDataHora } from "../ui";
 import { unstable_rethrow } from "next/navigation";
 import { descreverErro } from "@/lib/erro-log";
 
@@ -26,42 +33,43 @@ async function Tabela({ searchParams }: { searchParams: PageProps<"/admin/conteu
   } catch (e) {
     unstable_rethrow(e); // redirect/notFound do Next não são falha
     console.error(`[conteudo-site] histórico falhou: ${descreverErro(e)}`);
-    return <><h1>Histórico de publicações</h1><ErroAoAbrir o="o histórico" href="/admin/conteudo/historico" /></>;
+    return <><CabecalhoPagina titulo="Histórico de publicações" /><ErroAoAbrir o="o histórico" href="/admin/conteudo/historico" /></>;
   }
   return (
     <>
-      <h1>Histórico de publicações</h1>
-      <p className="apoio">Quem publicou, quando e qual bloco. O que mudou dentro do bloco não é guardado aqui, e não há botão para desfazer: para corrigir, edite o bloco e publique de novo.</p>
+      <CabecalhoPagina titulo="Histórico de publicações" subtitulo="Quem publicou, quando e qual bloco. O que mudou dentro do bloco não é guardado aqui, e não há botão para desfazer: para corrigir, edite o bloco e publique de novo." />
       {h.itens.length === 0 ? (
         <p>Ainda não há publicações.</p>
       ) : (
-        <table className="historico">
-          <thead>
-            <tr><th scope="col">Data e hora</th><th scope="col">Quem publicou</th><th scope="col">Bloco</th><th scope="col">Situação</th></tr>
-          </thead>
-          <tbody>
-            {h.itens.map((i) => (
-              <tr key={i.numero}>
-                <td data-rotulo="Data e hora">{formatarDataHora(i.quando)}</td>
-                <td data-rotulo="Quem publicou">{i.origem === "migracao" ? "Conteúdo inicial" : (i.autor ?? <span className="suave">Conta removida</span>)}</td>
-                <td data-rotulo="Bloco">{i.origem === "migracao" ? "Todos os blocos" : i.blocos.map((b) => BLOCOS[b].nome).join(", ")}</td>
-                <td data-rotulo="Situação">
-                  {SITUACAO[i.estado]}
-                  {i.estado === "falhou" && <span className="ajuda"> O pedido de publicação falhou e o site não mudou.</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <TableContainer component={Paper} variant="outlined" sx={{ maxWidth: 1000, mb: 2 }}>
+          <Table className="historico">
+            <TableHead>
+              <TableRow><TableCell scope="col">Data e hora</TableCell><TableCell scope="col">Quem publicou</TableCell><TableCell scope="col">Bloco</TableCell><TableCell scope="col">Situação</TableCell></TableRow>
+            </TableHead>
+            <TableBody>
+              {h.itens.map((i) => (
+                <TableRow key={i.numero} hover>
+                  <TableCell data-rotulo="Data e hora">{formatarDataHora(i.quando)}</TableCell>
+                  <TableCell data-rotulo="Quem publicou">{i.origem === "migracao" ? "Conteúdo inicial" : (i.autor ?? <span className="suave">Conta removida</span>)}</TableCell>
+                  <TableCell data-rotulo="Bloco">{i.origem === "migracao" ? "Todos os blocos" : i.blocos.map((b) => BLOCOS[b].nome).join(", ")}</TableCell>
+                  <TableCell data-rotulo="Situação">
+                    {SITUACAO[i.estado]}
+                    {i.estado === "falhou" && <span className="ajuda"> O pedido de publicação falhou e o site não mudou.</span>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-      {h.proximo !== null && <p><Link className="botao botao-secundario" href={`/admin/conteudo/historico?antes=${h.proximo}`}>Ver mais antigas</Link></p>}
+      {h.proximo !== null && <Button variant="outlined" color="inherit" href={`/admin/conteudo/historico?antes=${h.proximo}`}>Ver mais antigas</Button>}
     </>
   );
 }
 
 export default function Page(props: PageProps<"/admin/conteudo/historico">) {
   return (
-    <Suspense fallback={<><h1>Histórico de publicações</h1><Esqueleto linhas={5} /></>}>
+    <Suspense fallback={<><CabecalhoPagina titulo="Histórico de publicações" /><Esqueleto linhas={5} /></>}>
       <Tabela searchParams={props.searchParams} />
     </Suspense>
   );
