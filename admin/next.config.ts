@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   // o template da página `/` é lido com fs em runtime (modules/conteudo-site/pagina-do-site.ts)
   outputFileTracingIncludes: {
     "/": ["./src/site/index.html"],
+    "/loja": ["./src/site/index.html", "./src/site/loja.html"],
     // lista dos vídeos versionados para o seletor do painel (modules/conteudo-site/videos-do-site.ts)
     "/admin/conteudo/\\[bloco\\]": ["./public/video/**/*"],
   },

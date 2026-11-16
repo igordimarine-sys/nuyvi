@@ -363,6 +363,7 @@
     .video-card img, .video-card video, .cartao img, .produto .foto img { transition: none; }
   }
 </style>
+<link rel="stylesheet" href="/css/conta.css">
 </head>
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
@@ -389,7 +390,7 @@
       <svg class="ic-play" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>
     </button>
     <a class="bt bt-linha bt-baixar" href="#baixar">Baixar</a>
-    <a class="bt bt-claro" href="#" data-login aria-label="Entrar na NUY"><span class="rot-longo">Entrar na NUY</span><span class="rot-curto" aria-hidden="true">Entrar</span></a>
+    <div class="conta" data-conta data-estado="carregando" role="group" aria-label="Conta"><a class="bt bt-claro" href="/login" data-login aria-label="Entrar na NUY"><span class="rot-longo">Entrar na NUY</span><span class="rot-curto" aria-hidden="true">Entrar</span></a><div class="conta-logada" data-logada hidden><button type="button" class="conta-toggle" data-conta-toggle aria-expanded="false" aria-controls="conta-painel"><span class="conta-inicial" data-inicial aria-hidden="true"></span><span class="sr-only" data-conta-rotulo>Conta</span></button><div class="conta-painel" id="conta-painel" data-conta-painel><span class="sr-only">Conectado como </span><span class="conta-nome" data-nome></span><a class="bt bt-claro" href="/admin" data-painel>Painel</a><button type="button" class="bt bt-linha" data-sair>Sair</button></div></div><p class="sr-only" role="status" data-conta-aviso></p><p class="conta-erro" role="alert" data-conta-erro hidden>Não foi possível sair. Tente de novo.</p></div>
   </div>
 </header>
 
@@ -405,7 +406,7 @@
       <h1 id="hero-titulo"><span class="sr-only">N.UY</span><img class="hero-logo" src="img/logo-hero.webp" alt="" width="800" height="328" data-hero-logo></h1>
       <p class="data" data-hero-item><!--cms:textos.hero.frase-->Treine junto. Evolua conectado.<!--/cms:textos.hero.frase--></p>
       <div class="botoes" data-hero-item>
-        <a class="bt bt-claro" href="#" data-login><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2.5h5.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6M2.5 8h7M7 5l3 3-3 3"/></svg> Entrar na NUY</a>
+        <a class="bt bt-claro" href="/login" data-login><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2.5h5.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6M2.5 8h7M7 5l3 3-3 3"/></svg> Entrar na NUY</a>
         <a class="bt bt-linha" href="#baixar">Baixar o app</a>
       </div>
       <p class="plataformas" data-hero-item><!--cms:textos.hero.plataformas-->Disponível para iOS e Android<!--/cms:textos.hero.plataformas--></p>
@@ -529,8 +530,8 @@
     <span class="rotulo"><!--cms:loja.rotulo-->Loja N.UY<!--/cms:loja.rotulo--></span>
     <h2 id="loja-titulo" class="t-medio" data-titulo><span class="t-linha"><span><!--cms:loja.titulo1-->Equipado<!--/cms:loja.titulo1--></span></span><span class="t-linha"><span class="vazado"><!--cms:loja.titulo2-->sem sair do app<!--/cms:loja.titulo2--></span></span></h2>
     <div class="loja">
-      <!--cms:loja.produtos--><a class="produto" href="https://loja.exemplo.test" data-revela-card><span class="foto"><img src="img/esportes/venda.webp" alt="Vendedor mostra um tênis de corrida a uma cliente na loja" loading="lazy"></span><span class="info"><h3>Calçados</h3><p>Tênis de corrida, treino e quadra, com ajuda para escolher o seu.</p><span class="ir">Comprar no app</span></span></a>
-      <a class="produto" href="https://loja.exemplo.test" data-revela-card><span class="foto"><img src="img/esportes/variedade.webp" alt="Prateleiras com camisetas, tênis, garrafas e bolas" loading="lazy"></span><span class="info"><h3>Roupas e acessórios</h3><p>Camisetas, garrafas, bolas e mais. Assinante paga até 15% menos.</p><span class="ir">Comprar no app</span></span></a><!--/cms:loja.produtos-->
+      <!--cms:loja.produtos--><a class="produto" href="/loja" data-revela-card><span class="foto"><img src="img/esportes/venda.webp" alt="Vendedor mostra um tênis de corrida a uma cliente na loja" loading="lazy"></span><span class="info"><h3>Calçados</h3><p>Tênis de corrida, treino e quadra, com ajuda para escolher o seu.</p><span class="ir">Comprar no app</span></span></a>
+      <a class="produto" href="/loja" data-revela-card><span class="foto"><img src="img/esportes/variedade.webp" alt="Prateleiras com camisetas, tênis, garrafas e bolas" loading="lazy"></span><span class="info"><h3>Roupas e acessórios</h3><p>Camisetas, garrafas, bolas e mais. Assinante paga até 15% menos.</p><span class="ir">Comprar no app</span></span></a><!--/cms:loja.produtos-->
     </div>
   </section>
 
@@ -583,7 +584,7 @@
       </div>
     </div>
     <div>
-      <form data-news novalidate>
+      <form data-news novalidate data-ok="Pronto! Você vai receber as novidades da N.UY." data-invalido="Digite um e-mail válido, como nome@email.com.">
         <label for="email">Receba as novidades da N.UY</label>
         <input id="email" type="email" name="email" placeholder="seu@email.com" autocomplete="email" required aria-describedby="email-aviso">
         <button class="bt bt-claro" type="submit">Assinar</button>
@@ -609,6 +610,9 @@
 <script src="js/ScrollTrigger.min.js"></script>
 <script src="js/lenis.min.js"></script>
 <script src="js/ghost-fibers.js"></script>
+<script type="application/json" id="dados-lojas">{"ios":"","android":"","dica":"Em breve"}</script>
+<script src="/js/rodape.js" defer></script>
+<script src="/js/conta.js" defer></script>
 <!-- GhostFibers (React Bits, MIT) em JS puro -->
 <script>
 (() => {
@@ -616,19 +620,6 @@
   const MOV = { entra: 'power3.out', sai: 'power2.in', troca: 'power3.inOut', micro: .2, base: .4, grande: .8, passo: .06, linha: .12, desloca: 24 };
   const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Links das lojas (o cliente vai enviar)
-  const LINKS_APP = { ios: '#', android: '#' };
-  const LOGIN_URL = '#'; // link do login da N.UY (o cliente vai enviar)
-  document.querySelectorAll('[data-login]').forEach(a => {
-    a.href = LOGIN_URL;
-    if (LOGIN_URL === '#') { a.title = 'Em breve'; a.addEventListener('click', e => e.preventDefault()); }
-  });
-  document.querySelectorAll('[data-loja]').forEach(a => {
-    const u = LINKS_APP[a.dataset.loja] || '#'; a.href = u;
-    if (u !== '#') { a.target = '_blank'; a.rel = 'noopener'; }
-    else { a.setAttribute('aria-disabled', 'true'); a.title = 'Em breve'; a.addEventListener('click', e => e.preventDefault()); }
-  });
-  // links que abrem outra aba avisam o leitor de tela
   document.querySelectorAll('a[target="_blank"]').forEach(a => { const s = document.createElement('span'); s.className = 'sr-only'; s.textContent = ' (abre em nova aba)'; a.append(s); });
 
   // Pausar animações (vídeos automáticos e movimentos contínuos)
@@ -756,16 +747,6 @@
     else { visivel = true; rodar(); }
     new MutationObserver(rodar).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   })();
-
-  // Cadastro de e-mail (sem servidor ainda)
-  const form = document.querySelector('[data-news]'), aviso = document.querySelector('[data-news-aviso]');
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const email = form.email.value.trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { aviso.style.color = '#FF9454'; aviso.textContent = 'Digite um e-mail válido, como nome@email.com.'; form.email.setAttribute('aria-invalid', 'true'); form.email.focus(); return; }
-    form.email.removeAttribute('aria-invalid');
-    aviso.style.color = ''; aviso.textContent = 'Pronto! Você vai receber as novidades da N.UY.'; form.reset();
-  });
 
   if (!window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);

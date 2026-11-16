@@ -50,10 +50,8 @@ describe("montar() com os blocos novos", () => {
     expect(out).not.toContain("data-src-cel");
     expect(out).toContain('aria-label="Aqui você encontra um, dois e três"');
     expect(out).toContain('<i class="atual"></i><i></i><i></i></span>');
-    expect(out).toContain("ios: 'https://apps.apple.com/br/app/nuy/id1', android: '#'");
-    expect(out).toContain("a.title = 'Chega logo';");
-    expect(out).not.toContain("</script>';"); // texto do painel nunca fecha o <script>
-    expect(out).toContain("\\u003c/script\\u003e");
+    expect(out).toContain('{"ios":"https://apps.apple.com/br/app/nuy/id1","android":"","dica":"Chega logo"}');
+    expect(out).toContain('data-invalido="E-mail errado &lt;/script&gt;"'); // texto do painel nunca vira HTML
     expect(out).toContain('<div class="base"><span>© 2026 N.UY. Todos os direitos reservados.</span></div>');
     expect(out).toContain('aria-label="Entrar &quot;já&quot;"');
   });

@@ -1,6 +1,6 @@
-# Loja N.UY
+# N.UY: site, loja e painel
 
-Loja própria da N.UY (Next.js App Router, TypeScript, Drizzle, PostgreSQL). Decisões: `../docs/adr/ADR-0004-stack-loja.md`; estrutura: `../docs/tecnico/arquitetura.md`. Estado: esqueleto + login e papéis (veja `../docs/tecnico/autenticacao.md`).
+App único da N.UY (Next.js App Router, TypeScript, Drizzle, PostgreSQL). Rotas: `/` site (template `src/site/index.html` + conteúdo publicado), `/loja` vitrine (produtos ativos), `/login`, `/admin` painel (operador e admin; cliente recebe 404). Em `/` e `/loja` o cabeçalho mostra a sessão via `public/js/conta.js` (as páginas ficam em cache e não leem cookie). Decisões: `../docs/adr/ADR-0004-stack-loja.md` e `../docs/adr/ADR-0007-site-e-painel-num-unico-app-next.md`; estrutura: `../docs/tecnico/arquitetura.md`. Estado: esqueleto + login e papéis (veja `../docs/tecnico/autenticacao.md`).
 
 ## Rodar localmente
 

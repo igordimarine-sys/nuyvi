@@ -6,6 +6,7 @@
 // Blocos novos (ADR-0007 A1): chaves que não estão em CHAVES_ANTIGAS são opcionais. Sem o dado (versão antiga do conteúdo, tabela
 // vazia) o texto do template fica como está; com o dado, são gerados. Em ambos os casos o marcador some do HTML servido, então
 // o resultado com os valores iniciais é idêntico, byte a byte, ao do conteúdo sem os blocos novos.
+import type { ProdutoVitrine } from "@/modules/catalogo/vitrine";
 import { DESTINOS_LINK } from "./schema";
 
 // O conteúdo chega sem garantia de forma (JSON da loja): cada trecho valida em tempo de execução, como no build.mjs.
@@ -21,6 +22,11 @@ function erro(msg: string): never {
 function texto(v: unknown, onde: string): string {
   if (typeof v !== "string" || !v.trim()) erro(`${onde} está vazio`);
   return esc(v.trim());
+}
+/** Texto sem escape de HTML, para dentro de JSON (o `<` é neutralizado quando o JSON vai para a página). */
+function cru(v: unknown, onde: string): string {
+  if (typeof v !== "string" || !v.trim()) erro(`${onde} está vazio`);
+  return v.trim();
 }
 function lista(v: unknown, onde: string): Solto[] {
   if (!Array.isArray(v) || !v.length) erro(`${onde} precisa de pelo menos um item`);
@@ -78,11 +84,6 @@ function link(l: Solto, onde: string): string {
   if (!DESTINOS.has(l?.destino)) erro(`${onde}: destino "${l?.destino}" fora da lista`);
   return `<li><a href="${esc(l.destino)}">${texto(l.texto, `${onde}, texto`)}</a></li>`;
 }
-/** Texto dentro de uma string JavaScript do script da página (aspas simples); sem HTML, mas sem escapar nada que quebre o `<script>`. */
-const jsTexto = (v: unknown, onde: string): string => {
-  if (typeof v !== "string" || !v.trim()) erro(`${onde} está vazio`);
-  return `'${v.trim().replace(/[\\'<>&\n\r\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`)}'`;
-};
 // Atributos de comportamento e de layout de cada vídeo ficam fixos aqui; o conteúdo só traz caminho e imagem de espera.
 const VIDEOS: Record<string, (s: string, p: string, cel: string) => string> = {
   hero: (s, p, cel) => `<video poster="${p}" muted loop playsinline preload="none" data-auto data-video-abertura="atletas" data-src="${s}"${cel ? ` data-src-cel="${cel}"` : ""} data-deriva="19s" style="--deriva:19s"></video>`,
@@ -94,6 +95,17 @@ const VIDEOS: Record<string, (s: string, p: string, cel: string) => string> = {
   historia: (s, p) => `<video data-deriva="27s" style="--deriva:27s" src="${s}" poster="${p}" muted loop playsinline preload="none" disablepictureinpicture data-fundo-video data-hist-img></video>`,
   baixar: (s, p) => `<video data-deriva="29s" style="--deriva:29s" src="${s}" poster="${p}" muted loop playsinline preload="none" disablepictureinpicture data-fundo-video data-paralaxe></video>`,
 };
+/**
+ * Grupo de conta do cabeçalho (ADR-0007 A2). Sai sempre no estado visitante, igual para todos (a página é cacheada e nunca leva
+ * dado de ninguém); `public/js/conta.js` pergunta a sessão e troca. Textos fixos (só leitor de tela e erro de saída): PREM-15.
+ */
+export function grupoConta(longo: string, curto: string, painel: string, sair: string): string {
+  return `<div class="conta" data-conta data-estado="carregando" role="group" aria-label="Conta">`
+    + `<a class="bt bt-claro" href="/login" data-login aria-label="${longo}"><span class="rot-longo">${longo}</span><span class="rot-curto" aria-hidden="true">${curto}</span></a>`
+    + `<div class="conta-logada" data-logada hidden><button type="button" class="conta-toggle" data-conta-toggle aria-expanded="false" aria-controls="conta-painel"><span class="conta-inicial" data-inicial aria-hidden="true"></span><span class="sr-only" data-conta-rotulo>Conta</span></button>`
+    + `<div class="conta-painel" id="conta-painel" data-conta-painel><span class="sr-only">Conectado como </span><span class="conta-nome" data-nome></span><a class="bt bt-claro" href="/admin" data-painel>${painel}</a><button type="button" class="bt bt-linha" data-sair>${sair}</button></div></div>`
+    + `<p class="sr-only" role="status" data-conta-aviso></p><p class="conta-erro" role="alert" data-conta-erro hidden>Não foi possível sair. Tente de novo.</p></div>`;
+}
 /** Chaves que já existiam antes de A1: continuam obrigatórias e com o marcador no HTML. */
 const CHAVES_ANTIGAS = new Set([
   "textos.hero.frase", "textos.hero.plataformas", "textos.rede.titulo1", "textos.rede.titulo2", "textos.rede.texto",
@@ -184,6 +196,7 @@ export function montar(html: string, dados: DadosPagina, { lojaUrl = "", blobHos
   // Blocos novos: devolvem `undefined` quando o conteúdo não tem o dado (versão antiga), e o template fica como está.
   const g = dados.textos?.geral;
   const v = dados.textos?.videos;
+  const p = dados.textos?.paginaLoja;
   const video = (slot: string, caminho: Solto, posterV: Solto, celular: Solto, onde: string): string | undefined => {
     if (caminho === undefined || posterV === undefined) return undefined;
     return VIDEOS[slot]!(videoDe(caminho, onde, blobHost.toLowerCase()), imagem(posterV, `${onde}, imagem de espera`), celular ? videoDe(celular, `${onde} (celular)`, blobHost.toLowerCase()) : "");
@@ -191,14 +204,14 @@ export function montar(html: string, dados: DadosPagina, { lojaUrl = "", blobHos
   const novos: Record<string, () => string | undefined> = {
     "textos.geral.seo": () => g && `<title>${texto(g.seoTitulo, "geral: título da página")}</title>\n<meta name="description" content="${texto(g.seoDescricao, "geral: descrição")}">`,
     "textos.geral.menu": () => g && lista(g.menu, "geral: menu").map((l, i) => link(l, `geral: menu, link ${i + 1}`)).join("\n      "),
-    "textos.geral.entrar": () => g && `<a class="bt bt-claro" href="#" data-login aria-label="${texto(g.entrarLongo, "geral: entrar (completo)")}"><span class="rot-longo">${texto(g.entrarLongo, "geral: entrar (completo)")}</span><span class="rot-curto" aria-hidden="true">${texto(g.entrarCurto, "geral: entrar (curto)")}</span></a>`,
+    "textos.geral.entrar": () => g && grupoConta(texto(g.entrarLongo, "geral: entrar (completo)"), texto(g.entrarCurto, "geral: entrar (curto)"), texto(g.painel, "geral: Painel"), texto(g.sair, "geral: Sair")),
+    "textos.paginaLoja.seo": () => p && `<title>${texto(p.seoTitulo, "página da loja: título")}</title>\n<meta name="description" content="${texto(p.seoDescricao, "página da loja: descrição")}">`,
     "textos.geral.rodapeLinks": () => g && lista(g.rodapeLinks, "geral: links do rodapé").map((l, i) => link(l, `geral: rodapé, link ${i + 1}`)).join("\n        "),
     "textos.geral.rodapeBase": () => g && `<span>${texto(g.direitos, "geral: direitos")}</span>${typeof g.versao === "string" && g.versao.trim() ? `<span>${texto(g.versao, "geral: versão")}</span>` : ""}`,
     "textos.geral.newsCampo": () => g && `<input id="email" type="email" name="email" placeholder="${texto(g.newsExemplo, "geral: exemplo do e-mail")}" autocomplete="email" required aria-describedby="email-aviso">`,
-    "textos.geral.lojasApp": () => g && `{ ios: ${jsTexto(urlHttps(g.lojaIos, "geral: App Store") || "#", "geral: App Store")}, android: ${jsTexto(urlHttps(g.lojaAndroid, "geral: Google Play") || "#", "geral: Google Play")} }`,
-    "textos.geral.lojaDica": () => g && jsTexto(g.lojaDica, "geral: dica do botão desativado"),
-    "textos.geral.newsInvalido": () => g && jsTexto(g.newsInvalido, "geral: e-mail inválido"),
-    "textos.geral.newsSucesso": () => g && jsTexto(g.newsSucesso, "geral: sucesso da newsletter"),
+    "textos.geral.newsForm": () => g && `<form data-news novalidate data-ok="${texto(g.newsSucesso, "geral: sucesso da newsletter")}" data-invalido="${texto(g.newsInvalido, "geral: e-mail inválido")}">`,
+    // Endereços das lojas de apps (só https, vazio = botão desativado) e a dica; lido por public/js/rodape.js
+    "textos.geral.lojas": () => g && `<script type="application/json" id="dados-lojas">${JSON.stringify({ ios: urlHttps(g.lojaIos, "geral: App Store"), android: urlHttps(g.lojaAndroid, "geral: Google Play"), dica: cru(g.lojaDica, "geral: dica do botão desativado") }).replace(/</g, "\\u003c")}</script>`,
     "textos.hero.video": () => video("hero", dados.textos.hero.video, dados.textos.hero.poster, dados.textos.hero.videoCelular, "abertura"),
     "textos.rede.video": () => video("rede", dados.textos.rede.video, dados.textos.rede.poster, "", "rede de parceiros"),
     "textos.bonus.video": () => video("bonus", dados.textos.bonus.video, dados.textos.bonus.poster, "", "bônus"),
@@ -240,4 +253,55 @@ export function montar(html: string, dados: DadosPagina, { lojaUrl = "", blobHos
   });
   if (!usadas.size) erro("nenhum marcador <!--cms:...--> encontrado no index.html");
   return { html: novo, trechos: usadas.size };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// Página /loja (ADR-0007 A3): vitrine básica, sem carrinho nem página de produto. Cabeçalho e rodapé saem do MESMO gerador da home
+// (o `montar` do template de `/`), só adaptados à página; o resto vem do template `loja.html`, dos textos do bloco `pagina-loja`
+// e do catálogo (nome, categoria, foto, preço e estoque nunca vêm do conteúdo do site, RN-LOJ-18).
+
+const brl = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100).replace(/\u00a0/g, " ");
+/** Foto do catálogo: só https ou caminho do próprio site; qualquer outra coisa não vira `<img>`. */
+const fotoSegura = (u: string | null): string | null => (u && (/^https:\/\//i.test(u) || /^\/(?!\/)/.test(u)) ? u : null);
+
+/** Grade de produtos, ou o estado vazio com o texto do painel (CA-LOJ-79). */
+export function vitrineHtml(produtos: readonly ProdutoVitrine[], textos: Solto): string {
+  const t = (campo: string, padrao: string) => (typeof textos?.[campo] === "string" && textos[campo].trim() ? esc(textos[campo].trim()) : padrao);
+  if (!produtos.length) return `<div class="loja-vazio"><p class="loja-vazio-texto sol">${t("vazio", "Em breve")}</p></div>`;
+  const itens = produtos.map((p, i) => {
+    const foto = fotoSegura(p.fotoUrl);
+    const img = foto ? `<img src="${esc(foto)}" alt="${esc(p.fotoAlt ?? "")}"${i < 2 ? "" : ' loading="lazy"'}>` : "";
+    const etiqueta = p.esgotado ? `<span class="etiqueta-esgotado">${t("esgotado", "Esgotado")}</span>` : "";
+    const aPartirDe = p.variaPreco ? `<small>${t("aPartirDe", "a partir de")}</small>` : "";
+    return `<li><article class="produto produto-estatico${p.esgotado ? " produto-esgotado" : ""}"><div class="foto">${img}${etiqueta}</div>`
+      + `<div class="info"><span class="rotulo">${esc(p.categoria)}</span><h3>${esc(p.nome)}</h3><p class="preco-produto">${aPartirDe}${esc(brl(p.precoCentavos))}</p></div></article></li>`;
+  });
+  return `<ul class="loja loja-grade" role="list">${itens.join("\n      ")}</ul>`;
+}
+
+// Fora de `/`, os destinos de seção e os caminhos relativos do cabeçalho e do rodapé precisam ser absolutos.
+const absolutos = (h: string) => h
+  .replace(/href="#topo"/g, 'href="/"')
+  .replace(/href="#([\w-]+)"/g, 'href="/#$1"')
+  .replace(/href="(?![a-z]+:|\/|#)([^"]+)"/g, 'href="/$1"')
+  .replace(/src="img\//g, 'src="/img/');
+const trecho = (html: string, re: RegExp, nome: string): string => html.match(re)?.[0] ?? erro(`template da página inicial sem ${nome}`);
+
+/**
+ * Monta `/loja`. `dados` = conteúdo publicado (ou `null` com a tabela vazia: ficam os textos dos templates); `home` e `loja` são os
+ * templates de `/` e de `/loja`. Aceita `lojaUrl`/`blobHost` como o `montar`.
+ */
+export function montarLoja(loja: string, home: string, dados: DadosPagina | null, produtos: readonly ProdutoVitrine[], opcoes: OpcoesPagina = {}): string {
+  const inicio = dados ? montar(home, dados, opcoes).html : home;
+  const cabecalho = absolutos(trecho(inicio, /<header class="topo">[\s\S]*?<\/header>/, "cabeçalho"))
+    .replace(/<button class="pausa"[\s\S]*?<\/button>\s*/, "") // sem animação contínua, sem pausa
+    .replace(/<a href="\/loja">/g, '<a href="/loja" aria-current="page">');
+  const rodape = absolutos(trecho(inicio, /<footer class="rodape">[\s\S]*?<\/footer>/, "rodapé"));
+  const lojas = trecho(inicio, /<script type="application\/json" id="dados-lojas">[\s\S]*?<\/script>/, "endereços das lojas de apps");
+  const pagina = dados ? montar(loja, dados, opcoes).html : loja;
+  return pagina
+    .replace("<!--cabecalho-->", () => cabecalho)
+    .replace("<!--rodape-->", () => rodape)
+    .replace("<!--dados-lojas-->", () => lojas)
+    .replace("<!--vitrine-->", () => vitrineHtml(produtos, dados?.textos?.paginaLoja));
 }

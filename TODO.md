@@ -1,9 +1,11 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1 feito (todo conteúdo visível no banco e no painel, upload de vídeo); próximos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1, A2 (sessão no cabeçalho) e A3 (`/loja`) feitos; próximos: CSP por caminho, revisão e aceite, docs. Antigos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
 
 ## Pendente
+- A3: nada chama `updateTag(TAG_CATALOGO)` ainda (telas de catálogo não existem): produto alterado por fora só aparece em `/loja` após rebuild/deploy. Ordem dos produtos na vitrine (hoje categoria + nome) a definir (arquiteto-specs). CSS de `/loja` é recorte duplicado da home (`public/css/loja.css`): unificar quando a home for mexida.
+- A2/A3 (dev-qa): não vistos no navegador: painel de conta aberto em 360 px, aviso de erro ao sair, sessão logada em `/loja`.
 - A1 (dev-devops, no corte): rodar `conteudo:blocos-novos` (script idempotente da versão `migracao` com os blocos novos) depois das migrations e antes do deploy; o script não revalida o cache de `/` (reiniciar ou republicar).
 - A1 (dev-performance-seo): `og:title`/`og:description` não existem no template; adicionar muda o HTML (decidir junto com o campo de título/descrição do bloco Geral).
 - A1 (dev-react, refino): limites C1/C2/C3 nos campos antigos, `optgroup` nos selects de link e contador n/limite (UI 6.2b); vídeos de `public/video` (14 MB) entram na função do painel via tracing: avaliar alternativa se pesar.

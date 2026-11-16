@@ -13,5 +13,5 @@ export async function paginaDoSite(): Promise<string> {
   const template = await readFile(join(process.cwd(), "src/site/index.html"), "utf8");
   const publicado = await obterPublicado();
   if (!publicado) return template;
-  return montar(template, publicado.conteudo, { blobHost: process.env.NEXT_PUBLIC_BLOB_HOST ?? "", lojaUrl: "" }).html;
+  return montar(template, publicado.conteudo, { blobHost: process.env.NEXT_PUBLIC_BLOB_HOST ?? "", lojaUrl: "/loja" }).html;
 }
