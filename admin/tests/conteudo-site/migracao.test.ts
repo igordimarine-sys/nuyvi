@@ -8,7 +8,7 @@ const SCRIPT = fileURLToPath(new URL("../../scripts/migrar-conteudo.mjs", import
 const rodar = () => execFileSync(process.execPath, [SCRIPT], { env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }, encoding: "utf8" });
 
 describe("scripts/migrar-conteudo.mjs", () => {
-  it("grava a versão 1 (migração, aceita, 9 blocos) a partir de site/conteudo, e é idempotente", async () => {
+  it("grava a versão 1 (migração, aceita, 9 blocos) a partir de scripts/conteudo-inicial, e é idempotente", async () => {
     expect(rodar()).toContain("Versão 1 do conteúdo gravada");
     const [v, ...resto] = await versoes();
     expect(resto).toHaveLength(0);

@@ -7,10 +7,11 @@ import { criarUsuario } from "../fabricas";
 import { sessao, sessaoDe } from "../contas/sessao-falsa";
 import { conteudoSchema, type Conteudo } from "@/modules/conteudo-site/schema";
 
-// Conteúdo real do site (site/conteudo/*.json) + `destino` nos cartões da Loja = o que a migração grava como versão 1.
+// Conteúdo inicial do site (admin/scripts/conteudo-inicial/*.json) + `destino` nos cartões da Loja = o que a migração grava como versão 1.
 // Depois do corte para CONTEUDO_URL esses JSON saem do repositório: congelar uma cópia aqui (ver TODO.md).
 export const PASTA_SITE = new URL("../../../site/", import.meta.url);
-const ler = (nome: string) => JSON.parse(readFileSync(new URL(`conteudo/${nome}.json`, PASTA_SITE), "utf8")) as Record<string, unknown>;
+export const PASTA_CONTEUDO = new URL("../../scripts/", import.meta.url);
+const ler = (nome: string) => JSON.parse(readFileSync(new URL(`conteudo-inicial/${nome}.json`, PASTA_CONTEUDO), "utf8")) as Record<string, unknown>;
 export const HTML_SITE = readFileSync(new URL("index.html", PASTA_SITE), "utf8");
 
 export function conteudoDoSite(): Conteudo {

@@ -1,7 +1,7 @@
-// Grava a versão 1 do conteúdo do site (ADR-0006) a partir de site/conteudo/*.json: origem 'migracao', disparo 'aceito',
+// Grava a versão 1 do conteúdo do site (ADR-0006) a partir de scripts/conteudo-inicial/*.json: origem 'migracao', disparo 'aceito',
 // os 9 blocos, sem autor. Idempotente: se já existir QUALQUER versão, não grava nada. Os caminhos de imagem (img/...)
 // continuam valendo, nenhuma imagem é copiada.
-//   npm run conteudo:migrar              (usa ../site/conteudo)
+//   npm run conteudo:migrar              (usa scripts/conteudo-inicial)
 //   npm run conteudo:migrar -- <pasta>   (outra pasta com os 5 JSON)
 // O cartão da Loja ganha `destino: "inicio"` (página inicial da loja, CA-LOJ-58). Só conteúdo de vitrine; sem segredo nem dado pessoal.
 import { readFileSync } from "node:fs";
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const BLOCOS = ["abertura", "parceiros", "planos", "bonus", "historia", "explore", "loja", "novidades", "baixar"];
-const pasta = process.argv[2] ?? fileURLToPath(new URL("../../site/conteudo/", import.meta.url));
+const pasta = process.argv[2] ?? fileURLToPath(new URL("./conteudo-inicial/", import.meta.url));
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL não definida (use .env.local ou a variável do ambiente).");
   process.exit(1);

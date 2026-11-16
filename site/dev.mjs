@@ -1,7 +1,7 @@
 // Servidor local do site com recarga automática. Sem dependências: `node dev.mjs` (yarn dev / yarn dev:painel).
 // Monta o index.html em memória com o mesmo `montar` do build.mjs e NUNCA grava o index.html versionado.
 // O navegador recarrega sozinho quando:
-//   - um arquivo de site/ é salvo (HTML, CSS, JS, imagens, conteudo/*.json);
+//   - um arquivo de site/ é salvo (HTML, CSS, JS, imagens) ou admin/scripts/conteudo-inicial/*.json;
 //   - CONTEUDO_URL definida: alguém publica no painel. Sem consulta periódica: a loja local chama
 //     POST /__publicado (SITE_DEPLOY_HOOK_URL=http://127.0.0.1:8765/__publicado em admin/.env.local), como o deploy
 //     hook faz na Vercel, e só então o conteúdo é lido. Também lê uma vez ao iniciar.
@@ -9,7 +9,7 @@
 import { createServer } from 'node:http';
 import { readFileSync, watch } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize, sep } from 'node:path';
+import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { montar, urlSegura } from './build.mjs';
 
@@ -28,7 +28,7 @@ const TIPOS = {
 };
 const RECARGA = `<script>new EventSource('/__recarga').onmessage=()=>location.reload()</script>`;
 
-const ler = nome => JSON.parse(readFileSync(join(RAIZ, 'conteudo', `${nome}.json`), 'utf8'));
+const ler = nome => JSON.parse(readFileSync(join(RAIZ, '..', 'admin', 'scripts', 'conteudo-inicial', `${nome}.json`), 'utf8'));
 const dadosLocais = () => ({ textos: ler('textos'), loja: ler('loja'), explore: ler('explore'), novidades: ler('novidades'), planos: ler('planos') });
 
 let dadosPainel = null; // última versão publicada lida da loja
@@ -69,16 +69,20 @@ async function lerPainel(motivo, esperarNova = false) {
   console.error(`[site] ${motivo}: a versão publicada não mudou`);
 }
 
-// Salvou arquivo em site/: index.html ou conteudo/*.json remontam; o resto só recarrega o navegador.
+// Salvou arquivo em site/: index.html ou conteudo-inicial/*.json remontam; o resto só recarrega o navegador.
 let espera = null;
 watch(RAIZ, { recursive: true }, (_evento, arquivo) => {
   if (!arquivo || arquivo.startsWith('node_modules') || arquivo.startsWith('.')) return;
   clearTimeout(espera);
   espera = setTimeout(() => {
-    if (arquivo === 'index.html' || arquivo.startsWith(`conteudo${sep}`)) return remontar(`${arquivo} salvo`);
+    if (arquivo === 'index.html') return remontar(`${arquivo} salvo`);
     console.log(`[site] ${arquivo} salvo`);
     for (const res of clientes) res.write('data: recarregar\n\n');
   }, 100);
+});
+watch(join(RAIZ, '..', 'admin', 'scripts', 'conteudo-inicial'), (_evento, arquivo) => {
+  clearTimeout(espera);
+  espera = setTimeout(() => remontar(`conteudo-inicial/${arquivo} salvo`), 100);
 });
 
 createServer(async (req, res) => {
@@ -112,6 +116,6 @@ createServer(async (req, res) => {
     res.end('Não encontrado');
   }
 }).listen(PORTA, '127.0.0.1', () => {
-  console.log(`[site] http://127.0.0.1:${PORTA}  (conteúdo: ${CONTEUDO_URL ? `painel em ${CONTEUDO_URL.href}` : 'conteudo/*.json'})`);
+  console.log(`[site] http://127.0.0.1:${PORTA}  (conteúdo: ${CONTEUDO_URL ? `painel em ${CONTEUDO_URL.href}` : 'conteudo-inicial/*.json'})`);
   if (CONTEUDO_URL) lerPainel('início'); else remontar('início');
 });

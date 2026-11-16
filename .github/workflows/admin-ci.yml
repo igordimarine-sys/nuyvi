@@ -2,9 +2,9 @@ name: admin-ci
 
 on:
   push:
-    paths: ["admin/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/admin-ci.yml"]
+    paths: ["admin/**", "site/build.mjs", "site/index.html", ".github/workflows/admin-ci.yml"]
   pull_request:
-    paths: ["admin/**", "site/build.mjs", "site/index.html", "site/conteudo/**", ".github/workflows/admin-ci.yml"]
+    paths: ["admin/**", "site/build.mjs", "site/index.html", ".github/workflows/admin-ci.yml"]
 
 permissions:
   contents: read

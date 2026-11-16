@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // CA-LOJ-59 / RNF-14: com a loja fora do ar (ou respondendo errado), o build do site PARA e o index.html fica
 // intacto, então a Vercel mantém o deploy anterior. Roda o build.mjs como processo filho numa cópia de site/.
 const SITE = fileURLToPath(new URL("../../../site/", import.meta.url));
+const CONTEUDO = fileURLToPath(new URL("../../scripts/conteudo-inicial/", import.meta.url));
 const original = readFileSync(join(SITE, "index.html"), "utf8");
 let copia: string;
 let servidor: Server;
@@ -19,7 +20,10 @@ const urlDoServidor = () => `http://127.0.0.1:${(servidor.address() as AddressIn
 
 beforeAll(async () => {
   copia = mkdtempSync(join(tmpdir(), "site-build-"));
-  for (const f of ["build.mjs", "index.html", "conteudo"]) cpSync(join(SITE, f), join(copia, f), { recursive: true });
+  // mesma disposição do repositório (build.mjs lê ../admin/scripts/conteudo-inicial/): <copia>/site e <copia>/admin/scripts
+  mkdirSync(join(copia, "site"));
+  for (const f of ["build.mjs", "index.html"]) cpSync(join(SITE, f), join(copia, "site", f));
+  cpSync(CONTEUDO, join(copia, "admin", "scripts", "conteudo-inicial"), { recursive: true });
   servidor = createServer((_req, res) => {
     res.writeHead(status, { "content-type": "application/json" }).end(corpo);
   });
@@ -34,9 +38,9 @@ afterAll(() => {
 function rodar(conteudoUrl: string) {
   // env mínimo: nada herdado (CONTEUDO_URL/LOJA_URL do ambiente de quem roda não podem mudar o resultado)
   return new Promise<{ codigo: number | null; saida: string; html: string }>((ok) => {
-    execFile(process.execPath, [join(copia, "build.mjs")], { env: { PATH: process.env.PATH ?? "", CONTEUDO_URL: conteudoUrl } as unknown as NodeJS.ProcessEnv, encoding: "utf8", timeout: 30_000 }, (erro, stdout, stderr) => {
+    execFile(process.execPath, [join(copia, "site", "build.mjs")], { env: { PATH: process.env.PATH ?? "", CONTEUDO_URL: conteudoUrl } as unknown as NodeJS.ProcessEnv, encoding: "utf8", timeout: 30_000 }, (erro, stdout, stderr) => {
       const codigo = erro ? (typeof erro.code === "number" ? erro.code : null) : 0;
-      ok({ codigo, saida: `${stdout}${stderr}`, html: readFileSync(join(copia, "index.html"), "utf8") });
+      ok({ codigo, saida: `${stdout}${stderr}`, html: readFileSync(join(copia, "site", "index.html"), "utf8") });
     });
   });
 }
@@ -63,7 +67,7 @@ describe("site/build.mjs com a loja fora do ar (CA-LOJ-59, RNF-14)", () => {
   });
 
   it("controle: com a loja no ar e conteúdo válido o mesmo comando termina com 0 (os testes acima não passam por outro motivo)", async () => {
-    const ler = (n: string) => JSON.parse(readFileSync(join(copia, "conteudo", `${n}.json`), "utf8"));
+    const ler = (n: string) => JSON.parse(readFileSync(join(CONTEUDO, `${n}.json`), "utf8"));
     corpo = JSON.stringify({ textos: ler("textos"), loja: ler("loja"), explore: ler("explore"), novidades: ler("novidades"), planos: ler("planos") });
     status = 200;
     const r = await rodar(urlDoServidor());

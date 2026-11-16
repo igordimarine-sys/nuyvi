@@ -6,7 +6,7 @@
 //   CONTEUDO_URL definida -> busca a última versão publicada na loja (GET /api/conteudo-site). Qualquer falha
 //                            (rede, status diferente de 200, JSON ou conteúdo inválido) PARA o build, e a Vercel
 //                            mantém o deploy anterior (CA-LOJ-59).
-//   CONTEUDO_URL ausente  -> lê conteudo/*.json (fluxo anterior ao corte para o painel).
+//   CONTEUDO_URL ausente  -> lê admin/scripts/conteudo-inicial/*.json (fluxo anterior ao corte para o painel).
 // LOJA_URL (opcional): endereço da loja, para onde o botão dos cartões da seção Loja aponta (campo `destino`).
 // Sem ela o botão continua levando a #baixar. Não é segredo.
 // BLOB_PUBLIC_HOST (opcional): host do store Blob da loja (ex.: <id>.public.blob.vercel-storage.com). Sem ele só `img/...` é aceito como imagem.
@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const raiz = new URL('.', import.meta.url);
-const ler = nome => JSON.parse(readFileSync(new URL(`conteudo/${nome}.json`, raiz), 'utf8'));
+const ler = nome => JSON.parse(readFileSync(new URL(`../admin/scripts/conteudo-inicial/${nome}.json`, raiz), 'utf8'));
 const dadosLocais = () => ({ textos: ler('textos'), loja: ler('loja'), explore: ler('explore'), novidades: ler('novidades'), planos: ler('planos') });
 
 export function urlSegura(v, nome) {
@@ -126,5 +126,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const arq = new URL('index.html', raiz);
   const { html, trechos } = montar(readFileSync(arq, 'utf8'), dados, { lojaUrl, blobHost: process.env.BLOB_PUBLIC_HOST ?? '' });
   writeFileSync(arq, html);
-  console.log(`index.html atualizado (${trechos} trechos, conteúdo de ${process.env.CONTEUDO_URL ? 'CONTEUDO_URL' : 'conteudo/*.json'}).`);
+  console.log(`index.html atualizado (${trechos} trechos, conteúdo de ${process.env.CONTEUDO_URL ? 'CONTEUDO_URL' : 'conteudo-inicial/*.json'}).`);
 }
