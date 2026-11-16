@@ -4,7 +4,7 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 
 - **Ideia:** estrutura de página de lançamento de jogo grande: abertura em tela cheia com vídeo, logo real recortado em fragmentos que se monta na rolagem, grade de vídeos com tela cheia, destaques do Premium e do plano anual, história presa na tela, cartões, loja, novidades e rodapé.
 - **Regra:** só a estrutura e o estilo de animação são de referência. Fotos, logo, textos e marca são sempre da N.UY.
-- **Página:** template em `admin/src/site/index.html` (HTML + CSS próprio, GSAP 3.13 + ScrollTrigger, Lenis só no computador), servido pelo app Next em `/` com o conteúdo publicado no painel; arquivos em `admin/public/`. Na `main` (o que está no ar) ainda é `site/index.html`.
+- **Página:** template em `site/index.html` (raiz do repo, copiado para o app no dev/build) (HTML + CSS próprio, GSAP 3.13 + ScrollTrigger, Lenis só no computador), servido pelo app Next em `/` com o conteúdo publicado no painel; arquivos em `site/` (copiados para `admin/public/`). Na `main` (o que está no ar) ainda é `site/index.html`.
 - **Rodar local:** dentro de `admin/`, `npm run dev` serve tudo em http://localhost:3000: `/` site, `/admin` painel (ver `admin/README.md`). Publicar no painel atualiza `/` na hora; recarregue a aba.
 - **Idioma de movimento:** o mesmo da N.UY (`MOV`: entrada power3.out, saída power2.in, tempos .2 / .4 / .8 s).
 - **Publicado em:** https://nuyvi.vercel.app (Vercel, projeto `nuyvi`; para atualizar: `vercel deploy --prod` dentro de `site/`). Cópia também em https://claude.ai/artifact/NWugEH3pBVC1wa4ca4vvs3

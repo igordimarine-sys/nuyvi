@@ -43,3 +43,7 @@ next-env.d.ts
 
 # e-mails de desenvolvimento (links de confirmação gravados localmente)
 /.dev-outbox/
+
+# cópias geradas de ../site/ por scripts/copiar-site.mjs (edite em ../site/)
+/public/
+/src/site/

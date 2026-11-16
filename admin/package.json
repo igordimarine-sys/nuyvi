@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "site:copiar": "node scripts/copiar-site.mjs",
+    "predev": "npm run site:copiar",
     "dev": "next dev",
+    "prebuild": "npm run site:copiar",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,6 +16,7 @@
     "admin:criar": "node --env-file-if-exists=.env.local scripts/criar-admin.mjs",
     "conteudo:migrar": "node --env-file-if-exists=.env.local scripts/migrar-conteudo.mjs",
     "conteudo:blocos-novos": "node --env-file-if-exists=.env.local scripts/conteudo-blocos-novos.mjs",
+    "pretest": "npm run site:copiar",
     "test": "vitest run",
     "test:watch": "vitest"
   },

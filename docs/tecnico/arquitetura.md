@@ -34,10 +34,12 @@ Sem servidor próprio, sem fila externa, sem Redis. Monolito modular. Site, pain
 ## 2. Estrutura de `admin/`
 
 ```
+site/                          fonte versionada do site: index.html e loja.html (templates com <!--cms:CHAVE-->), img/ video/ js/ css/ e páginas .html
+                               copiada para admin/ por admin/scripts/copiar-site.mjs (predev, prebuild, pretest)
 admin/
   package.json  next.config.ts  drizzle.config.ts  .env.example   (nunca .env)
   drizzle/                     migrations geradas (dev-database)
-  public/                      img/ video/ js/ css/ e páginas .html do site, mesmos nomes de hoje; js/conta.js (sessão no site)
+  public/                      GERADO de ../site/ (ignorado pelo Git): img/ video/ js/ css/ e páginas .html; js/conta.js (sessão no site)
   scripts/conteudo-inicial/    os 5 JSON de site/conteudo/ (versão 1 do conteúdo e dados de teste)
   src/
     app/
@@ -54,7 +56,7 @@ admin/
     modules/
       catalogo/   estoque/   carrinho/   frete/   checkout/
       pedidos/    pagamentos/   contas/   conteudo-site/
-    site/index.html loja.html  templates com os trechos <!--cms:CHAVE--> (fora de public/)
+    site/index.html loja.html  GERADO de ../site/ (ignorado pelo Git); fora de public/ para não ser servido cru
     db/                        cliente do banco e schema Drizzle (um arquivo por módulo)
     lib/                       dinheiro (centavos inteiros), env (lê e valida variáveis), datas
 ```

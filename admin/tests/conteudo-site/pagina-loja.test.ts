@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { conteudoComBlocosNovos, conteudoDoSite, HTML_SITE } from "./dados";
 
 // HTML de /loja (ADR-0007 A3, CA-LOJ-67, 78 a 80, RN-LOJ-30). O template de /loja é o arquivo real.
-const LOJA = readFileSync(new URL("../../src/site/loja.html", import.meta.url), "utf8");
+const LOJA = readFileSync(new URL("../../../site/loja.html", import.meta.url), "utf8");
 const produto = (o: Partial<ProdutoVitrine> = {}): ProdutoVitrine => ({ id: "1", nome: "Tênis", categoria: "Calçados", fotoUrl: "https://abc.exemplo.test/a.jpg", fotoAlt: "Tênis azul", precoCentavos: 19990, variaPreco: false, esgotado: false, ...o });
 const loja = (produtos: ProdutoVitrine[], c = conteudoComBlocosNovos()) => montarLoja(LOJA, HTML_SITE, c, produtos, { lojaUrl: "/loja" });
 

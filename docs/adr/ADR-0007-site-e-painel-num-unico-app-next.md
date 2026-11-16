@@ -173,6 +173,10 @@ Escopo: SEO (title e description), menu, títulos das seções Vídeos, Planos, 
 - O template perde texto fixo e ganha marcadores; o teste de caracterização (passo 1) compara a saída com o HTML atual, preenchido pela versão `migracao`.
 - Mais um template (`loja.html`) e mais uma tag de cache. Ainda sem componente React no site.
 
+## Adendo B (2026-11-15): arquivos do site em `site/` na raiz
+
+Decidido pelo dono: só organização de pastas. A fonte versionada do site (templates `index.html` e `loja.html`, `img/`, `video/`, `js/`, `css/`, páginas legais) fica em `site/`, separada de `admin/`. Continua um app e um projeto Vercel; em execução nada muda: `admin/scripts/copiar-site.mjs` (antes de `dev`, `build` e `test`) copia os templates para `admin/src/site/` e o resto para `admin/public/`, ambos gerados e fora do Git. Os testes leem direto de `site/`. *Hipótese não verificada:* a Vercel com Root Directory `admin/` enxerga `../site/` no build (opção "Include files outside the root directory", ligada por padrão); conferir no primeiro deploy.
+
 ### Pendências do adendo para o `arquiteto-specs`
 
 Atualizar a spec: seção 5.9 (inventário dos blocos com `videos`, `geral` e `pagina-loja` e os campos novos), CA-LOJ-58 (`inicio` = `/loja`), uma HU/CA para a vitrine básica de `/loja` (produtos ativos, menor preço, sem carrinho) e para a sessão visível no site, e fechar PEND-07a/07b.

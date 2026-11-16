@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { montar } from "@/modules/conteudo-site/pagina";
-import { enderecoDeLogin, inicialDe, resolverSessao } from "../../public/js/conta.js";
+import { enderecoDeLogin, inicialDe, resolverSessao } from "../../../site/js/conta.js";
 import { conteudoComBlocosNovos, conteudoDoSite, HTML_SITE } from "../conteudo-site/dados";
 
-// Sessão visível no site (ADR-0007 A2, CA-LOJ-68 a 73). A lógica de decisão do `public/js/conta.js` é pura e roda aqui; o DOM não.
+// Sessão visível no site (ADR-0007 A2, CA-LOJ-68 a 73). A lógica de decisão do `site/js/conta.js` é pura e roda aqui; o DOM não.
 describe("conta.js: estado a partir da sessão", () => {
   it("visitante: sem sessão, resposta sem usuário ou inesperada", () => {
     for (const r of [null, undefined, {}, { user: null }, { user: "x" }, "texto", 42, []]) expect(resolverSessao(r), JSON.stringify(r)).toEqual({ estado: "visitante", nome: "" });

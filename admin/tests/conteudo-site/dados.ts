@@ -8,7 +8,7 @@ import { conteudoSchema, type Conteudo } from "@/modules/conteudo-site/schema";
 import { completar } from "../../scripts/conteudo-blocos-novos.mjs";
 
 // Conteúdo inicial do site (admin/scripts/conteudo-inicial/*.json) + `destino` nos cartões da Loja = o que a migração grava como versão 1.
-export const PASTA_SITE = new URL("../../src/site/", import.meta.url);
+export const PASTA_SITE = new URL("../../../site/", import.meta.url);
 export const PASTA_CONTEUDO = new URL("../../scripts/", import.meta.url);
 const ler = (nome: string) => JSON.parse(readFileSync(new URL(`conteudo-inicial/${nome}.json`, PASTA_CONTEUDO), "utf8")) as Record<string, unknown>;
 export const HTML_SITE = readFileSync(new URL("index.html", PASTA_SITE), "utf8");

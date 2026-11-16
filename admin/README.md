@@ -1,6 +1,6 @@
 # N.UY: site, loja e painel
 
-App único da N.UY (Next.js App Router, TypeScript, Drizzle, PostgreSQL). Rotas: `/` site (template `src/site/index.html` + conteúdo publicado), `/loja` vitrine (produtos ativos), `/login`, `/admin` painel (operador e admin; cliente recebe 404). Em `/` e `/loja` o cabeçalho mostra a sessão via `public/js/conta.js` (as páginas ficam em cache e não leem cookie). Decisões: `../docs/adr/ADR-0004-stack-loja.md` e `../docs/adr/ADR-0007-site-e-painel-num-unico-app-next.md`; estrutura: `../docs/tecnico/arquitetura.md`. Estado: esqueleto + login e papéis (veja `../docs/tecnico/autenticacao.md`).
+App único da N.UY (arquivos do site em `../site/`; Next.js App Router, TypeScript, Drizzle, PostgreSQL). Rotas: `/` site (template `src/site/index.html` + conteúdo publicado), `/loja` vitrine (produtos ativos), `/login`, `/admin` painel (operador e admin; cliente recebe 404). Em `/` e `/loja` o cabeçalho mostra a sessão via `public/js/conta.js` (as páginas ficam em cache e não leem cookie). Decisões: `../docs/adr/ADR-0004-stack-loja.md` e `../docs/adr/ADR-0007-site-e-painel-num-unico-app-next.md`; estrutura: `../docs/tecnico/arquitetura.md`. Estado: esqueleto + login e papéis (veja `../docs/tecnico/autenticacao.md`).
 
 ## Rodar localmente
 
@@ -72,7 +72,7 @@ npm run admin:criar -- voce@exemplo.com "Nome"
 npm run dev                                   # / = site da N.UY; entre em /login e abra /admin/conteudo
 ```
 
-O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache com a tag `conteudo-site`; arquivos estáticos em `public/`). Publicar no painel chama `updateTag` na Server Action e `/` muda na requisição seguinte, sem deploy. Sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara.
+O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache com a tag `conteudo-site`; arquivos estáticos em `public/`). **Os arquivos do site ficam em `../site/` (raiz do repo) e é lá que se edita:** `npm run site:copiar` (roda sozinho antes de `dev`, `build` e `test`) copia `index.html` e `loja.html` para `src/site/` e o resto para `public/`; as duas pastas são geradas e ignoradas pelo Git. Com o `dev` aberto, depois de editar em `../site/` rode `npm run site:copiar` e recarregue a aba. Publicar no painel chama `updateTag` na Server Action e `/` muda na requisição seguinte, sem deploy. Sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara.
 
 ## CI
 
