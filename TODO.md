@@ -1,9 +1,20 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1, A2 (sessão no cabeçalho) e A3 (`/loja`) feitos; próximos: CSP por caminho, revisão e aceite, docs. Antigos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1, A2 (sessão no cabeçalho) e A3 (`/loja`) feitos; revisão (dev-reviewer) e auditoria (dev-security) feitas, achados abaixo em Pendente; próximos: correções, aceite dev-qa, docs. [Parado em 2026-11-15 a pedido.] Antigos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
 
 ## Pendente
+- Auditoria dev-security 2026-11-15 (`docs/seguranca/2026-11-15-app-unico.md`; correção dev-react, testes dev-tests):
+  - M-01: nenhum header de segurança no app (mesma origem/cookie para site, loja e painel: XSS no site agiria no painel; clickjacking no Publicar). Aplicar a CSP da seção 6 em `headers()` (primeiro Report-Only, `poweredByHeader: false`); mover o script grande e o `<style>` do template para `public/js/site.js` e `/css/site.css` (ou hash).
+  - B-01 `fotoSegura` (`pagina.ts`) aceita qualquer host https e `/\host`; B-02 vídeo sem limpar metadados e `ftyp` aceita qualquer marca; B-03 rodar `montar` dentro de `publicar` antes de gravar (conteúdo recusado derruba `/` e `/loja` com 500); B-04 `public/versao-*.html` na mesma origem do painel.
+  - dev-infra: apagar o deploy hook e `SITE_DEPLOY_HOOK_URL` na Vercel; decidir o destino do projeto Vercel antigo do site.
+- Revisão dev-reviewer 2026-11-15 (diff ab34ac4..f7707cd, aprovar com ressalvas; antes do go-live):
+  - (dev-react + arquiteto-specs, RN-LOJ-30) vitrine `/loja` em `cacheLife('max')` com "Esgotado" calculado por saldo e reservas que expiram: pode mostrar estado errado por até 30 dias. Tirar o estoque do HTML em cache ou usar `cacheLife` curto, e `updateTag(TAG_CATALOGO)` nas actions de catálogo/estoque/reserva.
+  - (dev-react) `publicar.ts:62-65` trata `23514` (CHECK) como conflito de versão; só `23505` é conflito, o resto propaga com log.
+  - (dev-tests) faltam testes das rotas `app/route.ts` e `app/loja/route.ts`, da tag/cacheLife da vitrine e de `/loja` com banco fora.
+  - (dev-react + dev-devops) build com banco fora ou conteúdo inválido derruba o deploy (intencional): documentar no runbook e confirmar H1 em Preview.
+  - (docs-handoff) docs desatualizados: `admin/README.md:63` (GET público removido), `BRIEFING.md:10,18,20` (deploy hook, `vercel deploy` em `site/`), comentários em `leitura.ts:15-18` e cabeçalho de `pagina.ts`, itens "Substituído" deste TODO a limpar.
+  - (sugestões) `loja.css` duplicado; `pagina.ts` com listas de chaves repetidas; `ne(..., "falhou")` em `publicar.ts:82` e colunas `disparo_*` (dev-database).
 - A3: nada chama `updateTag(TAG_CATALOGO)` ainda (telas de catálogo não existem): produto alterado por fora só aparece em `/loja` após rebuild/deploy. Ordem dos produtos na vitrine (hoje categoria + nome) a definir (arquiteto-specs). CSS de `/loja` é recorte duplicado da home (`public/css/loja.css`): unificar quando a home for mexida.
 - A2/A3 (dev-qa): não vistos no navegador: painel de conta aberto em 360 px, aviso de erro ao sair, sessão logada em `/loja`.
 - A1 (dev-devops, no corte): rodar `conteudo:blocos-novos` (script idempotente da versão `migracao` com os blocos novos) depois das migrations e antes do deploy; o script não revalida o cache de `/` (reiniciar ou republicar).
