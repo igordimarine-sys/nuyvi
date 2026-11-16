@@ -24,7 +24,7 @@ As credenciais do compose são só de desenvolvimento (substituíveis por `LOCAL
 | `lint` / `typecheck` | ESLint / `next typegen` + `tsc --noEmit` (gera os tipos de rota antes, para funcionar sem `.next/`) |
 | `db:generate` / `db:migrate` | Drizzle Kit (migrations em `drizzle/`; schema em `src/db/schema`) |
 | `test` / `test:watch` | Vitest (veja "Testes"); `test:watch` reexecuta ao salvar |
-| `conteudo:migrar` | Grava a versão 1 do conteúdo do site a partir de `../site/conteudo/*.json` (ou de uma pasta passada como argumento). Idempotente: não grava se já houver qualquer versão |
+| `conteudo:migrar` | Grava a versão 1 do conteúdo do site a partir de `scripts/conteudo-inicial/*.json` (ou de uma pasta passada como argumento). Idempotente: não grava se já houver qualquer versão |
 | `admin:criar` | Cria ou promove o admin: `npm run admin:criar -- email@dominio.com "Nome"` (senha pedida no terminal, sem eco; ou via stdin) |
 
 ## Testes
@@ -74,11 +74,11 @@ npm run dev                                   # entre em /entrar e abra /admin/c
 curl -i localhost:3000/api/conteudo-site      # conteúdo publicado, cache-control: no-store
 ```
 
-Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi atualizado; sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara. Para ver o site com o conteúdo da loja: `yarn dev:painel` em `../site` (recarrega ao publicar, sem reescrever `site/index.html`), ou `CONTEUDO_URL=http://localhost:3000/api/conteudo-site node ../site/build.mjs` (reescreve `site/index.html`; `git diff` mostra a diferença). `site/build.mjs` sem `CONTEUDO_URL` continua lendo `site/conteudo/*.json`.
+Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi atualizado; sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara. Para ver o site com o conteúdo da loja: `yarn dev:painel` em `../site` (recarrega ao publicar, sem reescrever `site/index.html`), ou `CONTEUDO_URL=http://localhost:3000/api/conteudo-site node ../site/build.mjs` (reescreve `site/index.html`; `git diff` mostra a diferença). `site/build.mjs` sem `CONTEUDO_URL` continua lendo `admin/scripts/conteudo-inicial/*.json`.
 
 ## CI
 
-`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, `site/index.html` ou `site/conteudo/**` mudam (o teste de contrato do painel lê esses arquivos). O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
+`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, ou `site/index.html` mudam (o teste de contrato do painel lê esses arquivos). O job define valores fictícios de `DATABASE_URL`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` só para o build validar `env.ts` (não conecta ao banco).
 
 ## Deploy (pendente: depende das contas da N.UY)
 
