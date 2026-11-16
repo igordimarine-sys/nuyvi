@@ -37,13 +37,13 @@ Sem servidor próprio, sem fila externa, sem Redis. Monolito modular. Site, pain
 admin/
   package.json  next.config.ts  drizzle.config.ts  .env.example   (nunca .env)
   drizzle/                     migrations geradas (dev-database)
-  public/                      img/ video/ js/ css/ e páginas .html do site, mesmos nomes de hoje
+  public/                      img/ video/ js/ css/ e páginas .html do site, mesmos nomes de hoje; js/conta.js (sessão no site)
   scripts/conteudo-inicial/    os 5 JSON de site/conteudo/ (versão 1 do conteúdo e dados de teste)
   src/
     app/
       route.ts                 GET / : página do site (paginaDoSite(): 'use cache' + cacheTag + cacheLife('max'))
-      (loja)/                  páginas públicas da loja, caminho base pendente (PEND-07a, proposta /loja):
-                               início, categoria/[slug], produto/[slug], carrinho, checkout, pedido/[codigo], conta/
+      loja/route.ts            GET /loja : vitrine básica (template loja.html + catalogo/vitrine.ts, tag catalogo) (ADR-0007 A3)
+      loja/...                 fase 1b: categoria/[slug], produto/[slug], carrinho, checkout, pedido/[codigo]
       login/  cadastrar/  confirmar-email/  esqueci-senha/  redefinir-senha/  vincular-pedidos/
       admin/                   painel único: conteúdo do site (fase 1a), pedidos, produtos, estoque, frete, descontos, equipe
       api/
@@ -54,7 +54,7 @@ admin/
     modules/
       catalogo/   estoque/   carrinho/   frete/   checkout/
       pedidos/    pagamentos/   contas/   conteudo-site/
-    site/index.html            template do site com os trechos <!--cms:CHAVE--> (fora de public/)
+    site/index.html loja.html  templates com os trechos <!--cms:CHAVE--> (fora de public/)
     db/                        cliente do banco e schema Drizzle (um arquivo por módulo)
     lib/                       dinheiro (centavos inteiros), env (lê e valida variáveis), datas
 ```
@@ -70,7 +70,7 @@ admin/
 
 | Módulo | Responsabilidade | Regras da spec |
 |---|---|---|
-| `catalogo` | Produtos, variações, categorias, fotos, preço; leituras públicas | CA-LOJ-01 a 05, 40, 41 |
+| `catalogo` | Produtos, variações, categorias, fotos, preço; leituras públicas; `vitrine.ts` (produtos ativos, primeira foto, menor preço; `'use cache'` + tag `catalogo`) | CA-LOJ-01 a 05, 40, 41 |
 | `estoque` | **A única porta** para mudar saldo: entrada, ajuste, reserva, baixa, liberação, devolução; disponível = físico menos reservas ativas | RN-LOJ-09 a 11, CA-LOJ-24 a 27 |
 | `carrinho` | Itens e quantidades em cookie httpOnly; sem tabela e sem reserva | RN-LOJ-09, CA-LOJ-06 |
 | `frete` | Tabela de faixas de CEP/UF, valor, prazo, frete grátis | RN-LOJ-16, CA-LOJ-21 a 23 |
@@ -183,7 +183,10 @@ sequenceDiagram
 - **Sem versão publicada** (tabela vazia: CI, preview novo): o template sai como está; ele já traz o conteúdo do último `build.mjs` embutido.
 - **Banco fora:** o `/` em cache segue servido. Erro do banco nunca é capturado dentro de `paginaDoSite()`, para uma regeneração com falha não substituir a versão boa (hipóteses H1 a H4 do ADR-0007, verificadas antes do corte).
 - **Fotos:** as existentes em `public/img/`; as enviadas pelo painel no Blob público (prefixo `conteudo/`), aceitas só do host de `NEXT_PUBLIC_BLOB_HOST`.
-- **Botão da seção Loja:** `destino` = `inicio` ou `categoria/<slug>`, resolvido para um caminho do próprio app quando a loja pública tiver caminho (PEND-07a). Até lá, `#baixar`. Preço e estoque nunca entram no conteúdo.
+- **Botão da seção Loja:** `destino` = `inicio` (→ `/loja`) ou `categoria/<slug>` (→ `/loja/categoria/<slug>`). Preço e estoque nunca entram no conteúdo.
+- **Tudo que o visitante vê vem do banco** (ADR-0007, adendo A1): campos de seção nos blocos da seção; blocos novos `videos`, `geral` (SEO, menu, links das lojas de apps, rodapé/newsletter) e `pagina-loja`, todos dentro do documento `textos` (sem chave nova no topo). Texto em atributo ou em `<title>` é gerado com o elemento inteiro, com o marcador em volta. Links externos só `https:`; internos de lista fechada. Vídeo = `video/…` ou Blob `conteudo/` (mp4/webm, 4,5 MB, sem reencodar).
+- **Sessão no site** (A2): `/` e `/loja` não leem cookie; `public/js/conta.js` consulta `/api/auth/get-session` e troca "Entrar na NUY" por nome + Sair (+ "Painel" para `operador`/`admin`). `/login?volta=` só aceita caminho interno, validado no servidor.
+- **`/loja`** (A3): template `loja.html` + textos do bloco `pagina-loja` + `catalogo/vitrine.ts` (tag `catalogo`, invalidada por `updateTag('catalogo')` nas actions do catálogo). Sem carrinho nem checkout até a fase 1b.
 - **Fase 2:** destaques do catálogo no site seguem o mesmo caminho (lidos no `paginaDoSite()`, com tag própria do catálogo). Só quando aprovada.
 
 ## 7. Ambientes e segredos
@@ -229,21 +232,24 @@ Nenhuma credencial do GitHub é usada pela aplicação.
 - Mais de ~500 pedidos/dia ou contenção de lock medida em data de pico: revisar a reserva com o `dev-database`.
 - Trabalho em segundo plano que não cabe em função (mais de 300 s ou contínuo): worker separado (`dev-integrations`).
 
-## 10. Plano de execução do ADR-0007
+## 10. Plano de execução do ADR-0007 (com o adendo A)
 
-Um commit por passo, na ordem. Nenhum passo muda o que o visitante vê; o corte (passo 8) é o único que muda produção. Rede de segurança: os 132 testes do Vitest, mais o teste de igualdade do HTML do passo 1.
+Um commit por passo, na ordem. Rede de segurança: os 132 testes do Vitest, mais o teste de caracterização do HTML do passo 1. Nada vai para produção nesta etapa: H1 a H4, o corte e a remoção do `nuyvi` ficam para depois do passo 13.
 
 | # | Passo | Pronto quando | Teste antes | Dono |
 |---|---|---|---|---|
-| 0 | CI: `working-directory: loja` → `admin` (ficou para trás no rename) | `admin-ci` verde na branch | — | dev-devops |
-| 1 | `git mv site/conteudo admin/scripts/conteudo-inicial`; `conteudo:migrar` e os testes leem dali; teste de caracterização: `montar(site/index.html, conteúdo inicial)` igual ao `site/index.html` versionado | 132+ testes verdes; nenhum teste lê `site/conteudo/` | — (é a rede) | dev-tests (dev-react ajusta o script) |
-| 2 | `montar` em TypeScript em `modules/conteudo-site/pagina.ts`, mesma lógica; testes de `build-site`/`contrato` passam a importar dali; `site/build.mjs` ainda existe | Mesmos testes verdes contra o módulo novo; saída idêntica à do `build.mjs` | Passo 1 | dev-react + dev-tests |
-| 3 | CI: build contra o Postgres do service depois do `db:migrate`; tirar `site/**` dos `paths` quando o passo 5 sair | Build do CI conecta ao banco e passa | — | dev-devops |
-| 4 | `app/route.ts` + `paginaDoSite()`; template em `src/site/index.html` e arquivos em `public/` (`git mv`); `outputFileTracingIncludes`; redirect `/index.html` → `/`; sai `app/page.tsx` | `localhost:3000/` igual a `127.0.0.1:8765` lado a lado (visual, animações, carrosséis, troca mensal/anual dos planos, links das páginas legais); teste: HTML de `paginaDoSite()` = saída de `montar` | Passos 1 e 2 | dev-react; dev-tests (teste do handler) |
-| 5 | Publicar com `updateTag` na action; remover `deploy-hook.ts`, `SITE_DEPLOY_HOOK_URL`, `GET /api/conteudo-site`, `SITE_PUBLIC_URL`; remover `site/` (`build.mjs`, `dev.mjs`, `package.json`, `vercel.json`); textos de sucesso do painel | Publicar e recarregar `/` mostra o novo; testes do hook e do endpoint removidos; teste de que a action chama `updateTag` | Passo 4 | dev-react; dev-tests; dev-uiux (texto) |
-| 6 | `/entrar` → `/login` com redirect permanente; `callbackURL` e `redirect` atualizados | Fluxos de entrar, sair, confirmar e-mail e sessão expirada levam a `/login` | Testes de `exigirPapel` e das actions ajustados antes | dev-react; dev-tests |
-| 7 | Verificação em Preview das hipóteses H1 a H4 (publicar atualiza `/`; `next build && next start` local com o banco parado depois do build serve `/`; regeneração com o banco fora mantém a versão boa; template no bundle) | Resultado registrado no ADR-0007 (vira "Aceito" ou aciona "Quando revisitar") | — | dev-devops (+ dev-react) |
-| 8 | Corte: migrations + `conteudo:migrar` no Neon de produção, deploy do projeto único, `/` igual ao site no ar, domínio do site para o projeto único, `nuyvi` parado para rollback, merge na `main` | Domínio servindo o app; rollback testado (apontar de volta) | Passo 7 | dev-devops + dev-infra + desenvolvedor |
-| 9 | Remover o projeto `nuyvi` depois do período de rollback | Projeto removido; inventário atualizado | — | dev-infra |
-
-Docs junto de cada passo: `admin/README.md` (variáveis, scripts, rotas, CI; seção "No projeto do site" sai) nos passos 4 a 6; `BRIEFING.md` (onde o site mora, URLs, painel) no passo 8 (`docs-handoff`); `TODO.md` em todos.
+| 0 | CI: `working-directory` → `admin` | Feito em `ab34ac4` | — | dev-devops |
+| 1 | `git mv site/conteudo admin/scripts/conteudo-inicial`; `conteudo:migrar` e testes leem dali; teste de caracterização: `montar(site/index.html, conteúdo inicial)` = `site/index.html` versionado | 132+ verdes; nenhum teste lê `site/conteudo/` | — (é a rede) | dev-tests (dev-react ajusta o script) |
+| 2 | `montar` em TypeScript em `modules/conteudo-site/pagina.ts`, mesma lógica | Mesmos testes verdes; saída idêntica à do `build.mjs` | Passo 1 | dev-react + dev-tests |
+| 3 | CI: build contra o Postgres do service depois do `db:migrate`; `site/**` sai dos `paths` com o passo 5 | Build do CI conecta ao banco e passa | — | dev-devops |
+| 4 | `app/route.ts` + `paginaDoSite()`; template em `src/site/index.html`, arquivos em `public/`; `outputFileTracingIncludes`; redirect `/index.html` → `/`; sai `app/page.tsx` | `localhost:3000/` igual a `127.0.0.1:8765` lado a lado; teste do handler | Passos 1 e 2 | dev-react; dev-tests |
+| 5 | `updateTag` ao publicar; saem `deploy-hook.ts`, `SITE_DEPLOY_HOOK_URL`, `GET /api/conteudo-site`, `SITE_PUBLIC_URL` e `site/` | Publicar e recarregar `/` mostra o novo; teste de que a action chama `updateTag` | Passo 4 | dev-react; dev-tests; dev-uiux (texto) |
+| 6 | `/entrar` → `/login` com redirect permanente | Entrar, sair, confirmar e-mail e sessão expirada levam a `/login` | Testes de `exigirPapel` e das actions ajustados antes | dev-react; dev-tests |
+| 7 | **A1, schema:** migration de `conteudo_versoes_blocos_ck` (+`videos`, `geral`, `pagina-loja`; `1..12`) e `CONTEUDO_BLOCOS` | Migration aplica sobre as versões existentes; teste de CHECK com bloco novo e com bloco inválido | — | dev-database; dev-tests |
+| 8 | **A1, conteúdo:** campos novos no zod e nos 3 blocos novos; funções de bloco que geram `<title>`/`<meta>`, menu, links das lojas de apps, `<video>`; marcadores no template; validação de links (`https:` / lista interna) e de vídeo; script idempotente da versão `migracao` com o texto atual do HTML | Saída de `montar` com a versão `migracao` = HTML atual (teste de caracterização); testes de link e vídeo inválidos | Passos 1, 2 e 7 | dev-react; dev-tests |
+| 9 | **A1, painel e upload:** telas dos campos e blocos novos (campo de vídeo, lista de links); rota de upload aceita mp4/webm sem reencodar, 4,5 MB, tipo pelo conteúdo | Editar e publicar cada campo novo aparece em `/`; testes da rota com vídeo válido, falso e grande | Passo 8 | dev-uiux (especifica); dev-react; dev-tests |
+| 10 | **A2, sessão:** `public/js/conta.js` nos templates; `volta` validado no servidor de `/login`; destino padrão por papel | Cliente, operador e admin veem nome + Sair em `/` e `/loja`; "Painel" só para a equipe; `volta=//x`, `volta=https://x` e `volta=/\x` caem no padrão (teste) | Passo 6 | dev-react; dev-tests; dev-auth (revisa) |
+| 11 | **A3, vitrine:** `modules/catalogo/vitrine.ts` (`'use cache'` + tag `catalogo`), `app/loja/route.ts`, template `loja.html`, texto de "em breve"; `lojaUrl` = `/loja` no `montar` | `/loja` com o visual do site lista os produtos ativos (primeira foto, menor preço das variações ativas); inativos e variações inativas não aparecem; botões da seção Loja levam a `/loja` | Testes de `vitrine.ts` contra o Postgres de teste antes da rota | dev-react; dev-tests |
+| 12 | **Headers e CSP por caminho** em `next.config.ts` (`/`, `/loja`, páginas legais com scripts e `<style>` embutidos; app com M-02; `img-src`/`media-src` do Blob) | Headers conferidos por caminho; site sem erro de CSP no console | Passos 4, 9 e 11 | dev-react + dev-security |
+| 13 | **Revisão e docs:** dev-reviewer no conjunto; dev-security (upload de vídeo, links, `volta`, `conta.js`, CSP); `admin/README.md` (rotas, variáveis, scripts, CI); `BRIEFING.md` (onde o site mora, painel com todos os campos) | Revisões sem bloqueio; docs atualizados | — | dev-reviewer, dev-security, docs-handoff |
+| depois | Verificar H1 a H4 em Preview; corte (migrations + `conteudo:migrar` + versão `migracao` em produção, domínio, merge na `main`); remover o `nuyvi` após o período de rollback | — | — | dev-devops, dev-infra, desenvolvedor |

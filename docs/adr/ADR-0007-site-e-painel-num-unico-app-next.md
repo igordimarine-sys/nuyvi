@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | **Proposto** em 2026-11-15. A direção ("tudo em Next", um projeto Vercel, `/` = site, `/admin` = painel, `/login` = login) é **decisão do dono** e não está em aberto; este ADR registra o **como** |
+| Status | **Aceito** em 2026-11-15 pelo desenvolvedor, com o adendo A (três ampliações decididas por ele no mesmo dia). As hipóteses H1 a H4 continuam a verificar antes do corte |
 | Data | 2026-11-15 |
 | Decisores | Desenvolvedor (direção); proposta técnica do dev-arquitetura |
 | Tipo | Técnico |
@@ -125,7 +125,54 @@ Fontes (documentação local do Next 16.4.6 em `admin/node_modules/next/dist/doc
 
 ## Pendências de escopo (arquiteto-specs)
 
-- **PEND-07a:** onde fica a loja pública (proposta técnica: prefixo `/loja`, ex.: `/loja`, `/loja/categoria/<slug>`, porque `/` é o site) e o que o destino `inicio` dos cartões da Loja significa (CA-LOJ-58). Até decidir, o botão continua em `#baixar`.
-- **PEND-07b:** se as páginas de cliente mudam de caminho (ex.: `/conta/...` ou `/loja/...`). Tecnicamente podem ficar onde estão.
+- ~~**PEND-07a**~~ **Resolvida pelo dono (adendo A3):** a loja pública fica em `/loja`; o destino `inicio` dos cartões = `/loja`, e `categoria/<slug>` = `/loja/categoria/<slug>`.
+- ~~**PEND-07b**~~ **Resolvida pelo dono:** as páginas de cliente ficam onde estão.
 - Reescrever RNF-14 ("site no ar com o banco fora", com o que é garantido e as hipóteses H2/H3), CA-LOJ-59 (não existe mais "build disparado pela publicação"), RNF-15 (imediato), RISCO-15 e RISCO-16, a integração "Publicação do conteúdo" e as menções a subdomínio da loja.
 - Página 404 para quem visita (hoje seria a do app, com o título "Loja N.UY"): decidir se precisa do visual do site.
+
+## Adendo A (2026-11-15): três ampliações decididas pelo dono
+
+Decisões de escopo do dono, registradas aqui porque mudam o desenho técnico. A spec precisa ser atualizada pelo `arquiteto-specs` (ver o fim do adendo).
+
+### A1. Todo conteúdo que quem visita vê fica no banco e é editável no painel
+
+Escopo: SEO (title e description), menu, títulos das seções Vídeos, Planos, Explore e Novidades, as palavras que trocam no título da abertura, os vídeos, os links da App Store e do Google Play, o rodapé e a newsletter, e os textos da página `/loja`. **Estrutura, classes, cores e animações continuam no código** (template e CSS).
+
+| Item | Decisão | Por quê |
+|---|---|---|
+| Onde cada campo mora | **Campos de seção ficam dentro do bloco da seção**: títulos de Planos, Explore e Novidades nos blocos `planos`, `explore` e `novidades`; palavras do título e vídeos da abertura em `abertura` e `parceiros`; o vídeo de cada seção no bloco dela (`bonus`, `historia`, `baixar`). **Três blocos novos no painel** para o que não tem seção dona: `videos` (seção Vídeos: títulos e os 3 vídeos), `geral` (SEO, menu, links das lojas de apps, rodapé e newsletter) e `pagina-loja` (textos da página `/loja`) | Quem edita acha o campo onde o vê na página; o painel continua organizado por seção, como a UI atual (`BLOCOS` em `schema.ts`) |
+| Formato do JSON | Os três blocos novos ficam **dentro do documento `textos`** (`ref: ["textos", "videos" \| "geral" \| "paginaLoja"]`), como `abertura`, `bonus` e `historia` já ficam. **Nenhuma chave nova no topo** | A CHECK `conteudo_versoes_conteudo_ck` (exige as 5 chaves de topo) não muda. Uma chave nova no topo obrigaria a CHECK a aceitar versões antigas sem ela (as linhas são imutáveis), o que deixa a regra frouxa de qualquer jeito |
+| Migration (`dev-database`) | Só `conteudo_versoes_blocos_ck`: incluir `videos`, `geral` e `pagina-loja` na lista e trocar `between 1 and 9` por `between 1 and 12`. Versões antigas continuam válidas (a lista só cresce). `CONTEUDO_BLOCOS` no schema Drizzle acompanha | Menor mudança de schema que comporta os blocos novos |
+| Versão `migracao` | Script idempotente (roda só se a última versão aceita não tiver `textos.geral`) grava a versão N+1 com origem `migracao`, autor nulo, `blocos_alterados` = blocos que ganharam campos, preenchida com o **texto atual do HTML**. Roda no mesmo momento das migrations, **antes** do deploy do código que exige os campos novos (senão `obterPublicado()` falha na validação e o build para) | Mesmo caminho da versão 1; `autor_ck` já aceita `migracao` sem autor |
+| Template | Texto que fica dentro de **atributo** ou de `<title>` não pode ter marcador `<!--cms:-->` (em `<title>` o comentário viraria texto da aba; em atributo não existe comentário). Regra: esses itens são **gerados inteiros** por uma função de bloco, com o marcador **em volta do elemento** (ex.: `<!--cms:textos.geral.seo-->` envolvendo `<title>` e `<meta name="description">`; idem para links do menu, botões das lojas de apps, `<video>` com `src`/`data-src`/`data-src-cel`/`poster`), como `loja.produtos` já faz. Os atributos de comportamento (`data-*`, `muted`, `loop`, `preload`) ficam fixos na função, não no conteúdo | Preserva a estrutura e o comportamento dos scripts; o conteúdo só traz texto, URL e caminho |
+| Links | Externos: só `https:` (validado no zod e no `montar`). Internos: âncoras da lista fechada atual (`LINKS`) ou caminhos internos de uma lista fechada (`/`, `/loja`, `/login`, `politica-de-privacidade.html`, `termos-de-uso.html`). Nada de `javascript:`, `data:`, `http:` | Mesmo princípio de origens permitidas das imagens |
+| Vídeos | Valor = caminho `video/…\.(mp4\|webm)` (versionado em `public/video/`) **ou** URL do host do Blob com prefixo `conteudo/` e extensão `mp4`/`webm`. Cada vídeo tem pôster (imagem, mesmas regras da foto) e variante de celular opcional. Upload: a rota `POST /api/conteudo-site/foto` passa a aceitar vídeo **sem reencodar**, com tipo conferido pelo conteúdo (assinatura `ftyp` do MP4 e EBML do WebM) e **o mesmo limite de 4,5 MB do upload pelo servidor** (o maior vídeo atual tem 2,6 MB). `dev-security` revisa | Sem dependência nova. Vídeo maior que o limite: gatilho para *client upload* do `@vercel/blob` (`@vercel/blob/client`, já no pacote instalado), não antes |
+| Escape | Continua valendo: todo texto escapado por `montar`; nenhum campo aceita HTML | — |
+
+### A2. Sessão visível no site
+
+- Cliente, operador e admin podem estar logados em `/` e em `/loja`. Só operador e admin entram em `/admin`; o cliente continua recebendo 404 (`exigirPapel`, sem mudança).
+- `/` e `/loja` **continuam em cache**: os handlers não leem cookie. O estado de login é do navegador: `public/js/conta.js` chama `GET /api/auth/get-session` (rota do Better Auth, presente no pacote instalado) com `credentials: 'same-origin'` e troca os botões `[data-login]` por nome + "Sair"; mostra "Painel" só se `user.role` for `operador` ou `admin` (o campo é `role`, `additionalFields` em `lib/auth.ts`). Sem sessão ou com erro, fica o botão "Entrar na NUY", que leva a `/login?volta=<caminho atual>`.
+- O link "Painel" é só conveniência: a autorização continua no servidor.
+- `volta` só aceita caminho relativo interno: começa com `/`, não começa com `//` nem com `/\`, e resolvido contra a origem do app continua na mesma origem. Fora disso, o destino padrão por papel (equipe → `/admin`, cliente → `/`). Validado no servidor da página `/login`, não só no script.
+- O nome do usuário é inserido com `textContent`, nunca `innerHTML`.
+- A resposta de `get-session` não pode ficar em cache compartilhado (*hipótese não verificada* sobre os headers que o Better Auth envia; conferir no passo de revisão).
+
+### A3. `/loja` com vitrine básica
+
+- `/loja` usa o mesmo visual do site e mostra os produtos `ativo` (primeira foto pela `ordem`, menor preço entre as variações ativas). Não tem carrinho nem checkout (fase 1b). O preço vem do catálogo, nunca do conteúdo do site (RN-LOJ-18 continua valendo).
+- Mesmo padrão do `/`: `app/loja/route.ts` devolve o template `src/site/loja.html` montado. Os textos vêm do bloco `pagina-loja` (tag `conteudo-site`) e a lista vem de `modules/catalogo/vitrine.ts` (`'use cache'` + `cacheTag('catalogo')` + `cacheLife('max')`). O handler não lê cookie.
+- Invalidação: quem salvar produto, foto, variação ou o campo `ativo` no painel chama `updateTag('catalogo')` na Server Action. Até as telas de catálogo existirem, mudança feita fora do painel (script ou SQL) exige um deploy, ou passa a valer na revalidação de 30 dias do perfil `max`.
+- Sem produto ativo: a página mostra o texto de "em breve" do bloco `pagina-loja`, não um erro.
+- Rotas futuras da loja (`/loja/categoria/[slug]`, `/loja/produto/[slug]`) são segmentos próprios e não colidem com `app/loja/route.ts`. Se a fase 1b precisar de `/loja` como página React (carrinho no cabeçalho, por exemplo), troca-se o handler por uma `page.tsx` nesse momento.
+- O destino `inicio` dos cartões da seção Loja = `/loja` e `categoria/<slug>` = `/loja/categoria/<slug>`, com o mesmo `montar` (`lojaUrl` = `/loja`).
+
+### Consequências do adendo
+
+- O painel ganha 3 blocos e cerca de 30 campos. O formulário genérico do painel precisa de campo de vídeo e de lista de links (`dev-uiux` especifica, `dev-react` implementa).
+- O template perde texto fixo e ganha marcadores; o teste de caracterização (passo 1) compara a saída com o HTML atual, preenchido pela versão `migracao`.
+- Mais um template (`loja.html`) e mais uma tag de cache. Ainda sem componente React no site.
+
+### Pendências do adendo para o `arquiteto-specs`
+
+Atualizar a spec: seção 5.9 (inventário dos blocos com `videos`, `geral` e `pagina-loja` e os campos novos), CA-LOJ-58 (`inicio` = `/loja`), uma HU/CA para a vitrine básica de `/loja` (produtos ativos, menor preço, sem carrinho) e para a sessão visível no site, e fechar PEND-07a/07b.
