@@ -70,11 +70,11 @@ Para testar localmente:
 npm run db:migrate
 npm run conteudo:migrar                       # versão 1 (9 blocos)
 npm run admin:criar -- voce@exemplo.com "Nome"
-npm run dev                                   # entre em /entrar e abra /admin/conteudo
+npm run dev                                   # / = site da N.UY; entre em /entrar e abra /admin/conteudo
 curl -i localhost:3000/api/conteudo-site      # conteúdo publicado, cache-control: no-store
 ```
 
-Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi atualizado; sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara. Para ver o site com o conteúdo da loja: `yarn dev:painel` em `../site` (recarrega ao publicar, sem reescrever `site/index.html`), ou `CONTEUDO_URL=http://localhost:3000/api/conteudo-site node ../site/build.mjs` (reescreve `site/index.html`; `git diff` mostra a diferença). `site/build.mjs` sem `CONTEUDO_URL` continua lendo `admin/scripts/conteudo-inicial/*.json`.
+O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache; arquivos estáticos em `public/`). Até o passo 5 do ADR-0007, publicar ainda não atualiza `/` sozinho, e `npm run build` falha se `SITE_DEPLOY_HOOK_URL` em `.env.local` for http (rode com a variável vazia ou https). Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi atualizado; sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara. Para ver o site com o conteúdo da loja: `yarn dev:painel` em `../site` (recarrega ao publicar, sem reescrever `site/index.html`), ou `CONTEUDO_URL=http://localhost:3000/api/conteudo-site node ../site/build.mjs` (reescreve `site/index.html`; `git diff` mostra a diferença). `site/build.mjs` sem `CONTEUDO_URL` continua lendo `admin/scripts/conteudo-inicial/*.json`.
 
 ## CI
 

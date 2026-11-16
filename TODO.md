@@ -1,7 +1,7 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 e 1; em curso: 2 (`montar` em TS) e 3 (CI com banco no build).
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 3; em curso: 4 (`/` servido pelo Next).
 
 ## Pendente
 - Spec v0.6 (desenvolvedor): PEND-10 contradição de fase (carrinho/checkout no MVP fase 1 da spec × "fase 1b" na decisão de 2026-11-15); confirmar PREM-15 (logos, selos das lojas de app, rótulos de leitor de tela, páginas legais e `versao-*.html` fora da edição) e PREM-16 ("Sair" mantém na página; equipe com `volta` dentro de `/admin` volta para lá; produto esgotado aparece como "Esgotado"; vitrine sem página de produto).

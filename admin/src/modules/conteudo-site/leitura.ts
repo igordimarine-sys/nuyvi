@@ -10,6 +10,9 @@ import { conteudoSchema, SLUGS, type Bloco, type Conteudo } from "./schema";
 export const PENDENTE_EXPIRA_MIN = 2;
 const PAGINA = 50;
 
+/** Tag do cache da página pública `/`: quem publica conteúdo revalida esta tag (ADR-0007). */
+export const TAG_CONTEUDO_SITE = "conteudo-site";
+
 /**
  * Última versão publicada (disparo aceito). Pública de propósito: é o que o endpoint /api/conteudo-site entrega ao build
  * do site, só conteúdo de vitrine, sem autor nem qualquer dado da equipe. Versão pendente ou que falhou nunca é devolvida.
