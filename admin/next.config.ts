@@ -6,7 +6,11 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // o template da página `/` é lido com fs em runtime (modules/conteudo-site/pagina-do-site.ts)
   outputFileTracingIncludes: { "/": ["./src/site/index.html"] },
-  redirects: async () => [{ source: "/index.html", destination: "/", permanent: true }],
+  // a query string passa para o destino (doc de redirects), então /entrar?volta=/loja vira /login?volta=/loja
+  redirects: async () => [
+    { source: "/index.html", destination: "/", permanent: true },
+    { source: "/entrar", destination: "/login", permanent: true },
+  ],
 };
 
 export default nextConfig;

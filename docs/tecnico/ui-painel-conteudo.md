@@ -49,7 +49,7 @@ Itens de navegação (a loja entra depois, sem desenhá-la agora):
 Regras de navegação:
 - A casca renderiza **só os itens que o papel pode usar**. O operador (se um dia entrar no painel pelos pedidos) **não vê** "Conteúdo do site" no menu. A checagem real é no servidor (CA-LOJ-56); esconder o menu é só cortesia.
 - Tentar abrir `/admin/conteudo...` sem permissão (URL direta): tela "Sem permissão" (seção 7.8), dentro da casca, sem revelar nada do conteúdo.
-- Usuário sem login vai para `/entrar` (já existe) e volta ao destino depois.
+- Usuário sem login vai para `/login` (já existe) e volta ao destino depois.
 - Item atual marcado com `aria-current="page"`.
 - Rodapé da barra: nome do usuário e botão "Sair" (reaproveita `BotaoSair`).
 - Migalhas na edição: `Conteúdo do site > Planos e preços`. O "Conteúdo do site" é link.
@@ -318,7 +318,7 @@ Tabela no desktop, lista de cartões no celular. Colunas: **Data e hora** (fuso 
 
 ### 7.8 Sem permissão — CA-LOJ-56
 Tela dentro da casca, `role` normal (h1): **"Sem permissão"**. Texto: "Seu acesso não permite editar o conteúdo do site. Peça ao responsável da loja." Link "Voltar ao início". Nenhum dado do conteúdo é enviado ao navegador. Quando a tentativa é uma ação de publicar (por qualquer caminho), a resposta é a mesma mensagem e nada é alterado. Operador: o item sequer aparece no menu (seção 2).
-Sessão expirada (não é falta de permissão): "Sua sessão expirou. Entre de novo." com link para `/entrar`; **a edição digitada não se perde só pelo redirecionamento** `[o dev-react decide: guardar no navegador (sessionStorage) por conta e restaurar após o login, ou avisar antes]`; no mínimo, a tela de sessão expirada deve aparecer sem apagar o formulário e permitir reentrar numa nova aba.
+Sessão expirada (não é falta de permissão): "Sua sessão expirou. Entre de novo." com link para `/login`; **a edição digitada não se perde só pelo redirecionamento** `[o dev-react decide: guardar no navegador (sessionStorage) por conta e restaurar após o login, ou avisar antes]`; no mínimo, a tela de sessão expirada deve aparecer sem apagar o formulário e permitir reentrar numa nova aba.
 
 ### 7.9 Saída com edição não publicada
 Se há alteração e a pessoa tenta sair (link do menu, migalha, botão voltar, fechar a aba): aviso nativo `beforeunload` ao fechar/recarregar e `Modal` ao navegar dentro do painel: "Você tem alterações não publicadas neste bloco. Se sair, elas se perdem." Botões: "Continuar editando" (foco inicial) e "Sair sem publicar" (perigo).

@@ -6,18 +6,18 @@ import { sessao, sessaoDe } from "./sessao-falsa";
 describe("exigirPapel", () => {
   beforeEach(() => sessaoDe(null));
 
-  it("sem sessão, manda para /entrar", async () => {
-    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/entrar");
+  it("sem sessão, manda para /login", async () => {
+    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/login");
   });
 
   it("com e-mail não confirmado, trata como sem sessão", async () => {
     sessaoDe(sessao({ emailVerified: false }));
-    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/entrar");
+    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/login");
   });
 
   it("com papel desconhecido, trata como sem acesso", async () => {
     sessaoDe(sessao({ role: "superadmin" }));
-    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/entrar");
+    await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/login");
   });
 
   it.each([

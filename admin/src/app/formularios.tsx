@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
+import { destinoDepoisDeEntrar } from "@/modules/contas/volta";
 
 // Formulários mínimos, sem design. Mensagens genéricas: nunca dizem se o e-mail existe.
 type Resultado = { ok: boolean; msg: string } | null;
@@ -47,7 +48,7 @@ export function FormEntrar() {
       if (!error) {
         // Equipe vai para o painel; o papel aqui só escolhe o destino, /admin confere no servidor.
         const equipe = data?.user.role === "operador" || data?.user.role === "admin";
-        router.push(equipe ? "/admin" : "/");
+        router.push(destinoDepoisDeEntrar(equipe, new URLSearchParams(window.location.search).get("volta")));
         router.refresh();
         return { ok: true, msg: "Entrando..." };
       }
@@ -62,7 +63,7 @@ export function FormCadastrar() {
   return (
     <Form rotulo="Criar conta" onEnviar={async (d) => {
       const { error } = await authClient.signUp.email({
-        name: campo(d, "nome"), email: campo(d, "email"), password: campo(d, "senha"), callbackURL: "/entrar",
+        name: campo(d, "nome"), email: campo(d, "email"), password: campo(d, "senha"), callbackURL: "/login",
       });
       if (error?.status === 429) return { ok: false, msg: MUITAS };
       if (error?.status === 400 || error?.status === 422) return { ok: false, msg: "Confira os dados: a senha precisa ter de 10 a 128 caracteres." };
@@ -78,7 +79,7 @@ export function FormCadastrar() {
 export function FormReenviar() {
   return (
     <Form rotulo="Reenviar link de confirmação" onEnviar={async (d) => {
-      const { error } = await authClient.sendVerificationEmail({ email: campo(d, "email"), callbackURL: "/entrar" });
+      const { error } = await authClient.sendVerificationEmail({ email: campo(d, "email"), callbackURL: "/login" });
       return error?.status === 429
         ? { ok: false, msg: MUITAS }
         : { ok: true, msg: "Se houver um cadastro pendente para este e-mail, enviamos um novo link." };
@@ -116,7 +117,7 @@ export function FormRedefinir({ token }: { token: string }) {
 export function BotaoSair() {
   const router = useRouter();
   return (
-    <button type="button" onClick={async () => { await authClient.signOut(); router.push("/entrar"); router.refresh(); }}>
+    <button type="button" onClick={async () => { await authClient.signOut(); router.push("/login"); router.refresh(); }}>
       Sair
     </button>
   );

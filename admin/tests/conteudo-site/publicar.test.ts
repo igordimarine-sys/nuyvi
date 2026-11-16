@@ -128,10 +128,10 @@ describe("publicar", () => {
       expect(await versoes()).toHaveLength(1);
     });
 
-    it("sem sessão vai para /entrar", async () => {
+    it("sem sessão vai para /login", async () => {
       await semearVersao();
       sessaoDe(null);
-      await expect(publicar(nova())).rejects.toThrow("REDIRECT:/entrar");
+      await expect(publicar(nova())).rejects.toThrow("REDIRECT:/login");
       expect(await db.select().from(conteudoVersoes)).toHaveLength(1);
     });
   });

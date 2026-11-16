@@ -8,7 +8,7 @@ export default function Page() {
     <main>
       <h1>Criar conta</h1>
       <FormCadastrar />
-      <p><Link href="/entrar">Já tenho conta</Link></p>
+      <p><Link href="/login">Já tenho conta</Link></p>
     </main>
   );
 }

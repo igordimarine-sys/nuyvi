@@ -7,7 +7,7 @@ Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme
 - **Cadastro:** `/cadastrar`. Senha de 10 a 128 caracteres (hash scrypt, padrão da lib), recusada se constar de vazamento: plugin `haveIBeenPwned` envia só os 5 primeiros caracteres do SHA-1 (k-anonimato) a `api.pwnedpasswords.com`; se esse serviço estiver fora, o cadastro/redefinição falha em vez de aceitar sem checar. Resposta idêntica para e-mail novo e já existente; o dono de um e-mail já cadastrado recebe um aviso. Sem e-mail confirmado não existe sessão.
 - **Confirmação:** link por e-mail (token assinado, 1 hora); `/confirmar-email` reenvia. Confirmar o e-mail **não** vincula pedidos de visitante (auditoria A-01: quem cadastra conhece a senha mas pode não ser o dono da caixa postal).
 - **Vínculo de pedidos de visitante (CA-LOJ-47, premissa revisada):** ação explícita em `/vincular-pedidos` (`vincular-pedidos.ts`). Logado e com e-mail confirmado, o usuário pede o vínculo; o link vai ao e-mail da conta, assinado (HMAC com o segredo da lib), preso a usuário + sessão + e-mail, válido por 30 minutos e só funciona na mesma sessão que pediu; a confirmação é um POST (Server Action). Sem estado no banco (repetir é idempotente). Falta limite próprio de envio (o link só vai ao e-mail da própria conta). O CA-LOJ-47 da spec ainda diz "aparecem após criar conta e confirmar o e-mail": precisa de atualização pelo arquiteto-specs.
-- **Login / sair:** `/entrar`; mensagem única para credencial errada ou e-mail não confirmado. Sessão de 7 dias, cookie `HttpOnly`, `SameSite=Lax`, `Secure` (e prefixo `__Secure-`) em produção.
+- **Login / sair:** `/login`; mensagem única para credencial errada ou e-mail não confirmado. Sessão de 7 dias, cookie `HttpOnly`, `SameSite=Lax`, `Secure` (e prefixo `__Secure-`) em produção.
 - **Recuperação:** `/esqueci-senha` (resposta sempre igual) e `/redefinir-senha?token=`. Token de uso único, 30 minutos, guardado com hash no banco; ao redefinir, todas as sessões da conta são revogadas.
 
 ## Papéis
@@ -16,7 +16,7 @@ Biblioteca: **Better Auth 1.7.25** (`better-auth` + adaptador Drizzle), conforme
 
 ## Onde a checagem acontece
 
-`exigirPapel(minimo)` em `modules/contas/papeis.ts`: lê a sessão no banco a cada chamada (mudança de papel vale na hora) e exige e-mail confirmado. Sem sessão redireciona para `/entrar`; papel insuficiente dá 404. **Deve ser chamada em toda página, Server Action e Route Handler protegido**, no ponto de acesso aos dados; não há `proxy.ts` e ele não substituiria isso. Com `cacheComponents`, a leitura da sessão fica dentro de `<Suspense>`, então a resposta HTTP de `/admin` é 200 e o redirecionamento/404 chega no fluxo de streaming (nenhum dado do painel é renderizado antes da checagem).
+`exigirPapel(minimo)` em `modules/contas/papeis.ts`: lê a sessão no banco a cada chamada (mudança de papel vale na hora) e exige e-mail confirmado. Sem sessão redireciona para `/login`; papel insuficiente dá 404. **Deve ser chamada em toda página, Server Action e Route Handler protegido**, no ponto de acesso aos dados; não há `proxy.ts` e ele não substituiria isso. Com `cacheComponents`, a leitura da sessão fica dentro de `<Suspense>`, então a resposta HTTP de `/admin` é 200 e o redirecionamento/404 chega no fluxo de streaming (nenhum dado do painel é renderizado antes da checagem).
 
 ## Rate limit
 

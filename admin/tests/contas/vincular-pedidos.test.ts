@@ -120,11 +120,11 @@ describe("vínculo de pedidos de visitante à conta (CA-LOJ-47)", () => {
     const token = criarTokenVinculo({ u: "u1", s: "s1", e: EMAIL, x: Date.now() + 30 * MIN });
 
     sessaoDe(null);
-    await expect(solicitarVinculoPedidos()).rejects.toThrow("REDIRECT:/entrar");
-    await expect(confirmarVinculoPedidos(token)).rejects.toThrow("REDIRECT:/entrar");
+    await expect(solicitarVinculoPedidos()).rejects.toThrow("REDIRECT:/login");
+    await expect(confirmarVinculoPedidos(token)).rejects.toThrow("REDIRECT:/login");
 
     sessaoDe(sessao({ id: "u1", email: EMAIL, emailVerified: false }));
-    await expect(confirmarVinculoPedidos(token)).rejects.toThrow("REDIRECT:/entrar");
+    await expect(confirmarVinculoPedidos(token)).rejects.toThrow("REDIRECT:/login");
 
     expect(enviados).toHaveLength(0);
     expect(await usuarioIdDoPedido(pedido.id)).toBeNull();

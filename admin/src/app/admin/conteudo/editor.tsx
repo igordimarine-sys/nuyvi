@@ -586,7 +586,7 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
         {resultado?.tipo === "sem_permissao" && <Aviso tipo="erro" titulo="Sem permissão." refEl={avisoRef}><p>Seu acesso não permite editar o conteúdo do site. Peça ao responsável da loja.</p></Aviso>}
         {resultado?.tipo === "sessao_expirada" && (
           <Aviso tipo="erro" titulo="Sua sessão expirou. Entre de novo." refEl={avisoRef}>
-            <p>O que você digitou continua nesta tela. <a href="/entrar" target="_blank" rel="noopener">Entrar em uma nova aba</a>, volte aqui e publique de novo.</p>
+            <p>O que você digitou continua nesta tela. <a href="/login" target="_blank" rel="noopener">Entrar em uma nova aba</a>, volte aqui e publique de novo.</p>
           </Aviso>
         )}
         {resultado?.tipo === "sem_conteudo" && <Aviso tipo="erro" titulo="O conteúdo inicial ainda não foi carregado." refEl={avisoRef}><p>Avise o responsável técnico.</p></Aviso>}

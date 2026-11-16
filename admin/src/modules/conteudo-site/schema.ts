@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { ConteudoBloco } from "@/db/schema";
 
-// Validação do conteúdo do site. Espelha as regras de site/build.mjs (texto não vazio, lista com pelo menos um item,
-// desconto 0 a 99, imagem em img/ ou no Blob, link do Explore entre as seções): o que passa aqui TEM que passar no
-// build, senão o site falha depois de "publicado" (RISCO-16). O teste de contrato (tests/conteudo-site) cobre isso.
+// Validação do conteúdo do site. Espelha as regras de `montar` (pagina.ts) (texto não vazio, lista com pelo menos um item,
+// desconto 0 a 99, imagem em img/ ou no Blob, link do Explore entre as seções): o que passa aqui TEM que passar em
+// `montar`, senão a página `/` falha depois de "publicado" (RISCO-16). O teste de contrato (tests/conteudo-site) cobre isso.
 // Sem `server-only`: o formulário do painel usa os mesmos schemas para validar no navegador.
 
 const VAZIO = "Preencha este campo.";
@@ -54,7 +54,7 @@ export const LINKS_EXPLORE = [
 ] as const;
 
 /** Destinos do botão dos cartões da Loja (CA-LOJ-58). Hoje só a página inicial; categorias entram com o catálogo (fase 1b).
- *  O valor guardado vira URL no build (`LOJA_URL` + valor), nunca é URL livre. */
+ *  O valor guardado nunca é URL livre; `montar` o transforma no endereço da loja. */
 export const DESTINOS_LOJA = [{ valor: "inicio", rotulo: "Página inicial da loja" }] as const;
 
 const posicao = z
@@ -102,7 +102,7 @@ const loja = z.object({
 });
 const novidades = z.object({ noticias: lista(z.object({ data: texto, titulo: texto, imagem })) });
 
-/** O conteúdo completo: os 5 documentos no formato de site/conteudo/*.json (+ `destino` nos cartões da Loja). */
+/** O conteúdo completo: os 5 documentos no formato de scripts/conteudo-inicial/*.json (+ `destino` nos cartões da Loja). */
 export const conteudoSchema = z.object({ textos: z.object({ hero, rede, bonus, historia, baixar }), loja, explore, novidades, planos });
 export type Conteudo = z.infer<typeof conteudoSchema>;
 

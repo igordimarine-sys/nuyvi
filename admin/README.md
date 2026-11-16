@@ -67,7 +67,7 @@ Para testar localmente:
 npm run db:migrate
 npm run conteudo:migrar                       # versão 1 (9 blocos)
 npm run admin:criar -- voce@exemplo.com "Nome"
-npm run dev                                   # / = site da N.UY; entre em /entrar e abra /admin/conteudo
+npm run dev                                   # / = site da N.UY; entre em /login e abra /admin/conteudo
 ```
 
 O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache com a tag `conteudo-site`; arquivos estáticos em `public/`). Publicar no painel chama `updateTag` na Server Action e `/` muda na requisição seguinte, sem deploy. Sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara.

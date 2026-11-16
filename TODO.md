@@ -1,7 +1,7 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 5 (publicar atualiza `/` na hora; hook e `site/` removidos); próximo: 6 (`/entrar` → `/login`).
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); próximos: conteúdo visível no banco (A1), sessão no site (A2), /loja (A3), CSP, revisão e docs.
 
 ## Pendente
 - ADR-0007 passo 5 (dev-uiux): validar os textos novos do painel ("Publicado." / "A mudança já está no site."; "Alterações não publicadas. Ao publicar, a mudança já aparece no site.") e reescrever as seções 7.2, 7.6, 7.7 e a tabela da 12 de `docs/tecnico/ui-painel-conteudo.md` (sem estados de disparo/pendente).
