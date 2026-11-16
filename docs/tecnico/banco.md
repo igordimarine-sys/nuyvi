@@ -55,17 +55,19 @@ Na transação do webhook: `INSERT INTO gateway_eventos (gateway, evento_id, tip
 
 ## Conteúdo do site (`conteudo_versoes`, ADR-0006, CA-LOJ-50 a 59)
 
-Schema `schema/conteudo.ts`; migration `drizzle/0002_conteudo_versoes.sql` (DDL gerado + SQL manual de triggers no fim). Uma linha = uma versão **completa** do conteúdo.
+Schema `schema/conteudo.ts`; migration `drizzle/0002_conteudo_versoes.sql` (DDL gerado + SQL manual de triggers no fim) e `drizzle/0003_conteudo_blocos_12.sql` (SQL manual, `--custom`: troca a CHECK dos blocos). Uma linha = uma versão **completa** do conteúdo.
 
 | Coluna | Decisão |
 |---|---|
 | `numero` (PK, int) | Sequencial sem buracos, preenchido pela aplicação (`versaoBase + 1`). É o controle de concorrência: a PK + o trigger impedem duas versões com o mesmo número ou um salto |
 | `conteudo` (jsonb) | Os 5 documentos (`textos`, `loja`, `explore`, `novidades`, `planos`) no formato de `site/conteudo/*.json`, mais `destino` nos cartões da Loja. CHECK: objeto com as 5 chaves. O formato interno é validado pelo zod (e pelo `build.mjs`), não pelo banco |
-| `blocos_alterados` (text[]) | 1 a 9 itens, de `abertura, parceiros, planos, bonus, historia, explore, loja, novidades, baixar` (CHECK). Versão 1 da migração: os 9 |
+| `blocos_alterados` (text[]) | 1 a 12 itens, de `abertura, parceiros, planos, bonus, historia, explore, loja, novidades, baixar` + `videos, geral, pagina-loja` (CHECK, migration 0003; ADR-0007 A1). Os 3 novos ficam dentro de `conteudo.textos`, sem chave nova no topo, então `conteudo_versoes_conteudo_ck` não muda. Versão 1 da migração: os 9 originais; versões antigas continuam válidas |
 | `origem` | `painel` ou `migracao`. Distingue "autor removido" de "versão 1 sem autor" |
 | `autor_id` | FK `user.id` **ON DELETE SET NULL** (decisão abaixo) |
-| `disparo_estado` / `disparo_em` / `disparo_erro` | `pendente` (nasce assim), `aceito` ou `falhou`. `disparo_em` nulo só em `pendente` (CHECK). `disparo_erro`: motivo curto, nunca a URL do hook |
+| `disparo_estado` / `disparo_em` / `disparo_erro` | **Legado do deploy hook (ADR-0007, passo 5):** `publicar()` grava direto `aceito` com `disparo_em = now()`; `pendente`/`falhou` só existem em versões antigas. Mantidos como histórico (recomendação abaixo). Valores originais: `pendente` (nasce assim), `aceito` ou `falhou`. `disparo_em` nulo só em `pendente` (CHECK). `disparo_erro`: motivo curto, nunca a URL do hook |
 | `criado_em` | Instante da gravação (publicação pedida) |
+
+**Estado após o passo 5 e recomendação (disparo\_\*).** Sem hook, nada mais fica `pendente`: o índice `conteudo_versoes_uma_pendente_uk`, o trecho "pendente presa" e as queries 0 e 3 abaixo são código morto. Recomendação: **manter** colunas, CHECKs e trigger como estão (custo zero, tabela pequena, versões antigas têm `pendente`/`falhou`, e a leitura pública continua em `disparo_estado = 'aceito'` com o índice parcial). Remover só se o disparo nunca voltar, numa migration futura em expand/contract: (1) parar de ler `disparo_estado` (ler a maior `numero`); (2) trocar a trigger e dropar `uma_pendente_uk`, `aceitas_idx`, `disparo_coerente_ck`, `disparo_estado_ck` e as 3 colunas, perdendo o registro de quais versões antigas falharam (aceitável, mas é decisão do dono). Rollback: recriar colunas (dado perdido não volta; restore). Não fazer agora.
 
 **Garantias no banco**
 - **Imutável:** trigger `conteudo_versoes_guarda` recusa `DELETE` e qualquer `UPDATE` que mude `numero`, `conteudo`, `blocos_alterados`, `origem`, `criado_em`. O disparo só vai de `pendente` para `aceito` ou `falhou`, **uma vez**; o autor só pode virar NULL. Violação = SQLSTATE 23514. `TRUNCATE` não tem trigger (o setup dos testes trunca tudo): em produção a role da aplicação **não recebe `TRUNCATE`** nem DDL (`app_rw` só `SELECT/INSERT/UPDATE`; o `UPDATE` poderia ser restrito às colunas `disparo_*` com `GRANT UPDATE (disparo_estado, disparo_em, disparo_erro)`, recomendado quando as roles existirem).

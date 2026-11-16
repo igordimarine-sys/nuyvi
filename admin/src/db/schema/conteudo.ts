@@ -18,7 +18,7 @@ export const CONTEUDO_BLOCOS = [
   "loja",
   "novidades",
   "baixar",
-] as const;
+] as const; // 9 do editor atual; o CHECK do banco já aceita também videos, geral, pagina-loja (migration 0003): o dev-react estende aqui
 export type ConteudoBloco = (typeof CONTEUDO_BLOCOS)[number];
 
 export const CONTEUDO_DOCUMENTOS = ["textos", "loja", "explore", "novidades", "planos"] as const;
@@ -50,7 +50,7 @@ export const conteudoVersoes = pgTable(
     ),
     check(
       "conteudo_versoes_blocos_ck",
-      sql`cardinality(${t.blocosAlterados}) between 1 and 9 and ${t.blocosAlterados} <@ array['abertura','parceiros','planos','bonus','historia','explore','loja','novidades','baixar']::text[]`,
+      sql`cardinality(${t.blocosAlterados}) between 1 and 12 and ${t.blocosAlterados} <@ array['abertura','parceiros','planos','bonus','historia','explore','loja','novidades','baixar','videos','geral','pagina-loja']::text[]`,
     ),
     check("conteudo_versoes_origem_ck", emLista("origem", CONTEUDO_ORIGENS)),
     check("conteudo_versoes_disparo_estado_ck", emLista("disparo_estado", DISPARO_ESTADOS)),
