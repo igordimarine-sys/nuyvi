@@ -15,18 +15,8 @@ const schema = z.object({
     .min(32, "BETTER_AUTH_SECRET deve ter pelo menos 32 caracteres"),
   // URL pública da loja (origem dos links de e-mail e das checagens de origem/CSRF).
   BETTER_AUTH_URL: z.url({ error: "BETTER_AUTH_URL deve ser uma URL (ex.: http://localhost:3000)" }),
-  // Deploy hook do projeto Vercel do site (ADR-0006). É SEGREDO: quem tem a URL dispara builds. Só em Production.
-  // Sem ela (local, Preview) publicar grava a versão e avisa que o site não foi atualizado; em produção sem ela a publicação falha.
-  // Local: pode apontar para o `yarn dev:painel` do site (http://127.0.0.1:8765/__publicado); http só para localhost e fora de produção.
-  SITE_DEPLOY_HOOK_URL: opcional(z.url({ protocol: /^https?$/, error: "SITE_DEPLOY_HOOK_URL deve ser uma URL https" })),
-  // Endereço público do site: só para mostrar a miniatura das fotos que já estão em site/img/ no painel de conteúdo.
-  SITE_PUBLIC_URL: opcional(z.url({ error: "SITE_PUBLIC_URL deve ser uma URL (ex.: https://nuyvi.vercel.app)" })),
   // Definida pela Vercel (production | preview | development); distingue Production de Preview, que têm NODE_ENV igual.
   VERCEL_ENV: opcional(z.enum(["production", "preview", "development"])),
-}).refine((e) => !e.SITE_DEPLOY_HOOK_URL || e.SITE_DEPLOY_HOOK_URL.startsWith("https://") ||
-  ((e.VERCEL_ENV ?? process.env.NODE_ENV) !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(e.SITE_DEPLOY_HOOK_URL)), {
-  path: ["SITE_DEPLOY_HOOK_URL"],
-  message: "SITE_DEPLOY_HOOK_URL deve ser uma URL https (http só para localhost, fora de produção)",
 }).refine((e) => process.env.NODE_ENV !== "production" || /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:|\/|$))/.test(e.BETTER_AUTH_URL), {
   path: ["BETTER_AUTH_URL"],
   message: "BETTER_AUTH_URL deve começar com https:// em produção (http só para localhost)",

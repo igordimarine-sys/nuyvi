@@ -1,29 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { conteudoVersoes } from "@/db/schema";
 import { obterPublicado } from "@/modules/conteudo-site/leitura";
 import { publicar } from "@/modules/conteudo-site/publicar";
 import { sessaoDe } from "../contas/sessao-falsa";
-import { conteudoDoSite, configurarHook, entrarComo, HOOK, semearVersao, versao, versoes } from "./dados";
+import { conteudoDoSite, entrarComo, semearVersao, versao, versoes } from "./dados";
 
-const hook = vi.fn<typeof fetch>();
-beforeEach(() => {
-  hook.mockReset();
-  hook.mockResolvedValue(new Response(null, { status: 201 }));
-  vi.stubGlobal("fetch", hook);
-  configurarHook({ SITE_DEPLOY_HOOK_URL: HOOK });
-});
-afterEach(() => {
-  vi.unstubAllGlobals();
-  configurarHook({});
-  sessaoDe(null);
-});
+afterEach(() => sessaoDe(null));
 
 const historia = (texto: string) => ({ ...conteudoDoSite().textos.historia, texto });
 const nova = (texto = "Texto novo da história.", versaoBase = 1) => ({ bloco: "historia", dados: historia(texto), versaoBase });
 
 describe("publicar", () => {
-  it("publica um bloco: só ele muda, o disparo é aceito e a versão fica registrada (CA-LOJ-51, RN-LOJ-26)", async () => {
+  it("publica um bloco: só ele muda, a versão já nasce aceita (CA-LOJ-51, RN-LOJ-26)", async () => {
     const admin = await entrarComo("admin");
     await semearVersao();
     const r = await publicar(nova());
@@ -36,11 +25,7 @@ describe("publicar", () => {
 
     const v = (await versao(2))!;
     expect(v).toMatchObject({ origem: "painel", autorId: admin.id, blocosAlterados: ["historia"], disparoEstado: "aceito", disparoErro: null });
-    expect(hook).toHaveBeenCalledTimes(1);
-    expect(hook.mock.calls[0]?.[0]).toBe(HOOK);
-    expect(hook.mock.calls[0]?.[1]).toMatchObject({ method: "POST" });
-    // a URL do hook (segredo) não vai a lugar nenhum do banco
-    expect(JSON.stringify(await versoes())).not.toContain("segredo-falso");
+    expect(v.disparoEm).toBeInstanceOf(Date);
   });
 
   it("lista: adicionar, remover e reordenar valem na versão publicada (CA-LOJ-53)", async () => {
@@ -64,7 +49,6 @@ describe("publicar", () => {
       const r = await publicar({ bloco: "explore", dados: { cartoes: [{ ...c[0]!, titulo: "   " }, ...c.slice(1)] }, versaoBase: 1 });
       expect(r).toEqual({ tipo: "invalido", erros: [{ caminho: "cartoes.0.titulo", mensagem: "Preencha este campo." }] });
       expect(await versoes()).toHaveLength(1);
-      expect(hook).not.toHaveBeenCalled();
     });
 
     it("desconto fora da faixa (95%) é recusado; 90 passa", async () => {
@@ -104,7 +88,6 @@ describe("publicar", () => {
       const r = await publicar(nova("Minha", 1));
       expect(r).toMatchObject({ tipo: "conflito", versaoBase: 2, blocosAlterados: ["abertura"], mesmoBloco: false });
       expect(await versoes()).toHaveLength(2);
-      expect(hook).not.toHaveBeenCalled();
       // reenviando com a base nova (o "publicar o meu bloco" da tela) dá certo
       expect((await publicar(nova("Minha", 2))).tipo).toBe("publicado");
     });
@@ -120,86 +103,14 @@ describe("publicar", () => {
       expect(r.tipo === "conflito" && (r.atual as { texto: string }).texto).toBe("Texto da outra pessoa");
     });
 
-    it("duas publicações ao mesmo tempo sobre a mesma base: uma passa, a outra recebe conflito ou 'em andamento'", async () => {
+    it("duas publicações ao mesmo tempo sobre a mesma base: uma passa, a outra recebe conflito", async () => {
       await entrarComo("admin");
       await semearVersao();
       const [a, b] = await Promise.all([publicar(nova("A")), publicar(nova("B"))]);
       const tipos = [a.tipo, b.tipo].sort();
       expect(tipos[1]).toBe("publicado");
-      expect(["conflito", "em_andamento"]).toContain(tipos[0]);
+      expect(tipos[0]).toBe("conflito");
       expect(await versoes()).toHaveLength(2);
-    });
-  });
-
-  describe("falha do disparo (CA-LOJ-55)", () => {
-    it("hook responde erro: nada é servido, a versão fica 'falhou' sem a URL, e a nova tentativa parte do publicado", async () => {
-      await entrarComo("admin");
-      await semearVersao();
-      hook.mockResolvedValue(new Response(null, { status: 500 }));
-      const consola = vi.spyOn(console, "error").mockImplementation(() => {});
-      const r = await publicar(nova("Texto que não chegou"));
-      expect(r).toEqual({ tipo: "falha_disparo", versaoBase: 2 });
-
-      expect((await obterPublicado())!.numero).toBe(1);
-      expect((await obterPublicado())!.conteudo.textos.historia.texto).toBe(conteudoDoSite().textos.historia.texto);
-      expect(await versao(2)).toMatchObject({ disparoEstado: "falhou", disparoErro: "hook respondeu 500" });
-      expect(JSON.stringify(consola.mock.calls)).not.toContain("segredo-falso");
-      expect(JSON.stringify(await versoes())).not.toContain("segredo-falso");
-
-      // nova tentativa com a base devolvida (2), mexendo em OUTRO bloco: o texto da tentativa que falhou não vaza
-      hook.mockResolvedValue(new Response(null, { status: 201 }));
-      const ab = { ...conteudoDoSite().textos.hero, frase: "Frase nova" };
-      expect(await publicar({ bloco: "abertura", dados: ab, versaoBase: 2 })).toEqual({ tipo: "publicado", numero: 3 });
-      const atual = (await obterPublicado())!.conteudo;
-      expect(atual.textos.hero.frase).toBe("Frase nova");
-      expect(atual.textos.historia.texto).toBe(conteudoDoSite().textos.historia.texto);
-      consola.mockRestore();
-    });
-
-    it("hook sem resposta (rede ou tempo esgotado) também é falha", async () => {
-      await entrarComo("admin");
-      await semearVersao();
-      const consola = vi.spyOn(console, "error").mockImplementation(() => {});
-      hook.mockRejectedValue(Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" }));
-      expect((await publicar(nova())).tipo).toBe("falha_disparo");
-      expect((await versao(2))!.disparoErro).toBe("hook: tempo esgotado");
-      consola.mockRestore();
-    });
-
-    it("sem hook: fora de produção grava como aceito com a nota; em produção é falha", async () => {
-      await entrarComo("admin");
-      await semearVersao();
-      configurarHook({});
-      const r = await publicar(nova("Sem hook"));
-      expect(r).toMatchObject({ tipo: "publicado", numero: 2 });
-      expect(r.tipo === "publicado" && r.aviso).toContain("não foi atualizado");
-      expect(await versao(2)).toMatchObject({ disparoEstado: "aceito", disparoErro: "sem hook configurado" });
-      expect(hook).not.toHaveBeenCalled();
-
-      configurarHook({ VERCEL_ENV: "production" });
-      const consola = vi.spyOn(console, "error").mockImplementation(() => {});
-      expect((await publicar(nova("Em produção", 2))).tipo).toBe("falha_disparo");
-      expect(await versao(3)).toMatchObject({ disparoEstado: "falhou", disparoErro: "hook não configurado" });
-      consola.mockRestore();
-    });
-  });
-
-  describe("publicação pendente", () => {
-    it("em andamento bloqueia a próxima", async () => {
-      await entrarComo("admin");
-      await semearVersao();
-      await semearVersao(2, conteudoDoSite(), { disparoEstado: "pendente", disparoEm: null });
-      expect(await publicar(nova("X", 2))).toEqual({ tipo: "em_andamento" });
-      expect(await versoes()).toHaveLength(2);
-    });
-
-    it("pendente presa (> 2 min) é liberada como 'falhou' e a publicação segue", async () => {
-      await entrarComo("admin");
-      await semearVersao();
-      await semearVersao(2, conteudoDoSite(), { disparoEstado: "pendente", disparoEm: null, criadoEm: new Date(Date.now() - 3 * 60_000) });
-      expect(await publicar(nova("Depois da presa", 2))).toEqual({ tipo: "publicado", numero: 3 });
-      expect(await versao(2)).toMatchObject({ disparoEstado: "falhou", disparoErro: "expirada sem disparo" });
-      expect((await obterPublicado())!.conteudo.textos.historia.texto).toBe("Depois da presa");
     });
   });
 
@@ -215,7 +126,6 @@ describe("publicar", () => {
       await semearVersao();
       await expect(publicar(nova())).rejects.toThrow("NOT_FOUND");
       expect(await versoes()).toHaveLength(1);
-      expect(hook).not.toHaveBeenCalled();
     });
 
     it("sem sessão vai para /entrar", async () => {

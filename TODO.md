@@ -1,9 +1,11 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 3; em curso: 4 (`/` servido pelo Next).
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 5 (publicar atualiza `/` na hora; hook e `site/` removidos); próximo: 6 (`/entrar` → `/login`).
 
 ## Pendente
+- ADR-0007 passo 5 (dev-uiux): validar os textos novos do painel ("Publicado." / "A mudança já está no site."; "Alterações não publicadas. Ao publicar, a mudança já aparece no site.") e reescrever as seções 7.2, 7.6, 7.7 e a tabela da 12 de `docs/tecnico/ui-painel-conteudo.md` (sem estados de disparo/pendente).
+- ADR-0007 passo 5: conferir à mão que publicar no painel muda `/` na requisição seguinte em `next start` (só coberto por teste da action + mesma tag no build; dev-qa no passo de aceite).
 - Spec v0.6 (desenvolvedor): PEND-10 contradição de fase (carrinho/checkout no MVP fase 1 da spec × "fase 1b" na decisão de 2026-11-15); confirmar PREM-15 (logos, selos das lojas de app, rótulos de leitor de tela, páginas legais e `versao-*.html` fora da edição) e PREM-16 ("Sair" mantém na página; equipe com `volta` dentro de `/admin` volta para lá; produto esgotado aparece como "Esgotado"; vitrine sem página de produto).
 - Spec v0.6: PEND-08 visual da 404 para visitantes (dev-uiux); PEND-09 newsletter do rodapé não grava nada e promete envio (decidir gravar ou remover; lgpd-specialist + copywriter); botão "Entrar na NUY" sugere a conta do app (copywriter, tarefa 22).
 - ADR-0007 adendo A1 (dev-database): migration da CHECK `conteudo_versoes_blocos_ck` com os blocos `videos`, `geral`, `pagina-loja` (1..12) e script idempotente da versão `migracao` com o texto atual do HTML, rodando antes do deploy do código novo.

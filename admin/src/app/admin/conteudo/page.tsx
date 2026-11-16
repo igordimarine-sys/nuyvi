@@ -32,7 +32,6 @@ async function Lista() {
           <Link href="/admin/conteudo/historico">Ver histórico</Link>
         </p>
       )}
-      {painel.pendente && <Aviso tipo="informacao" titulo="Há uma publicação em andamento. Aguarde alguns instantes para publicar." />}
       {!publicado ? (
         <Aviso tipo="erro" titulo="O conteúdo inicial ainda não foi carregado.">
           <p>Avise o responsável técnico.</p>

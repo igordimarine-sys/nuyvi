@@ -49,12 +49,9 @@ npm test
 | `DATABASE_URL` | Conexão PostgreSQL |
 | `BETTER_AUTH_SECRET` | Segredo do Better Auth, mínimo 32 caracteres; um por ambiente, só em `.env.local`/Vercel |
 | `BETTER_AUTH_URL` | URL pública da loja (links de e-mail e checagem de origem); local: `http://localhost:3000` |
-| `SITE_DEPLOY_HOOK_URL` | Opcional. Deploy hook do projeto Vercel do site; **segredo**, só em Production. Sem ela, fora de produção a publicação é gravada como aceita com a nota "sem hook configurado" e o painel avisa que o site não foi atualizado; em produção sem ela a publicação falha. Local: `http://127.0.0.1:8765/__publicado` avisa o `yarn dev:painel` do site (http só para localhost, fora de produção; com ela, publicar com o site parado falha). Nunca é logada |
 | `BLOB_READ_WRITE_TOKEN` | Opcional. Token do Vercel Blob para o upload de fotos (na Vercel basta o store conectado). Sem ele o envio de foto responde "armazenamento não configurado" e o resto do painel segue |
 | `NEXT_PUBLIC_BLOB_HOST` | Host do store Blob da loja (`<id>.public.blob.vercel-storage.com`; público, não é segredo). Sem ele o upload é recusado e só `img/...` é aceito como imagem. As fotos são reencodadas no servidor (`sharp`: sem EXIF/GPS, rotação aplicada, recusa o que não decodifica) |
-| `SITE_PUBLIC_URL` | Opcional. Endereço do site, só para a miniatura das fotos de `site/img/` no painel |
 
-No projeto do site (`site/`, não é desta pasta): `CONTEUDO_URL` (URL de `/api/conteudo-site`; quando definida o build do site busca o conteúdo ali) e `BLOB_PUBLIC_HOST` (o mesmo host do store; sem ele o build só aceita `img/...`) e `LOJA_URL` (endereço da loja, destino dos botões dos cartões da Loja; sem ela o botão continua em `#baixar`). Nenhuma das duas é segredo.
 
 Em desenvolvimento, os e-mails de conta (confirmação, recuperação) não são enviados: ficam em `.dev-outbox/` (ignorado pelo Git).
 
@@ -71,15 +68,14 @@ npm run db:migrate
 npm run conteudo:migrar                       # versão 1 (9 blocos)
 npm run admin:criar -- voce@exemplo.com "Nome"
 npm run dev                                   # / = site da N.UY; entre em /entrar e abra /admin/conteudo
-curl -i localhost:3000/api/conteudo-site      # conteúdo publicado, cache-control: no-store
 ```
 
-O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache; arquivos estáticos em `public/`). Até o passo 5 do ADR-0007, publicar ainda não atualiza `/` sozinho, e `npm run build` falha se `SITE_DEPLOY_HOOK_URL` em `.env.local` for http (rode com a variável vazia ou https). Sem `SITE_DEPLOY_HOOK_URL` o painel publica no banco e avisa que o site não foi atualizado; sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara. Para ver o site com o conteúdo da loja: `yarn dev:painel` em `../site` (recarrega ao publicar, sem reescrever `site/index.html`), ou `CONTEUDO_URL=http://localhost:3000/api/conteudo-site node ../site/build.mjs` (reescreve `site/index.html`; `git diff` mostra a diferença). `site/build.mjs` sem `CONTEUDO_URL` continua lendo `admin/scripts/conteudo-inicial/*.json`.
+O site é servido pelo app em `/` (`src/app/route.ts` monta `src/site/index.html` com a última versão publicada, em cache com a tag `conteudo-site`; arquivos estáticos em `public/`). Publicar no painel chama `updateTag` na Server Action e `/` muda na requisição seguinte, sem deploy. Sem `BLOB_READ_WRITE_TOKEN` o envio de foto é recusado com mensagem clara.
 
 ## CI
 
-`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**`, `site/build.mjs`, ou `site/index.html` mudam (o teste de contrato do painel lê esses arquivos). Antes do build o job roda `npm run db:migrate` no database `ci` do service, porque o build prerenderiza `/` lendo `conteudo_versoes` (tabela vazia = conteúdo embutido no template). `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` são valores fictícios.
+`.github/workflows/admin-ci.yml` roda lint, typecheck, testes (service container Postgres 17, `TEST_DATABASE_URL`) e build quando `admin/**` muda. Antes do build o job roda `npm run db:migrate` no database `ci` do service, porque o build prerenderiza `/` lendo `conteudo_versoes` (tabela vazia = conteúdo embutido no template). `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` são valores fictícios.
 
 ## Deploy (pendente: depende das contas da N.UY)
 
-Ainda não configurado. Quando as contas existirem: projeto Vercel próprio com Root Directory `admin/` (independente do projeto do site estático em `site/`); Neon Postgres em aws-sa-east-1, branch `main` para Production e uma branch por preview (nunca a produção); `DATABASE_URL` e demais segredos como variáveis da Vercel por ambiente (Preview/Production), nunca no Git; migrations como etapa controlada do deploy, não no build.
+Ainda não configurado. Quando as contas existirem: projeto Vercel próprio com Root Directory `admin/` (site, painel e loja no mesmo projeto, ADR-0007); Neon Postgres em aws-sa-east-1, branch `main` para Production e uma branch por preview (nunca a produção); `DATABASE_URL` e demais segredos como variáveis da Vercel por ambiente (Preview/Production), nunca no Git; migrations como etapa controlada do deploy, não no build.

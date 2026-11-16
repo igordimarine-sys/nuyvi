@@ -1,36 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { montar } from "@/modules/conteudo-site/pagina";
-import { GET } from "@/app/api/conteudo-site/route";
 import { obterPublicado } from "@/modules/conteudo-site/leitura";
 import { publicar } from "@/modules/conteudo-site/publicar";
 import { conteudoSchema, type Conteudo } from "@/modules/conteudo-site/schema";
-import { sessaoDe } from "../contas/sessao-falsa";
-import { conteudoDoSite, configurarHook, entrarComo, HOOK, HTML_SITE, semearVersao } from "./dados";
+import { conteudoDoSite, entrarComo, HTML_SITE, semearVersao } from "./dados";
 
-// Contrato painel x site (ADR-0006, RISCO-16): o conteúdo que o painel aceita e a loja entrega PRECISA gerar o mesmo HTML no
-// site/build.mjs, e o que o painel recusa o build também recusa. Se as regras divergirem, o site falha DEPOIS de "publicado".
+// Contrato painel x página (ADR-0007): o conteúdo que o painel aceita PRECISA gerar HTML em `montar` (pagina.ts), e o que o
+// painel recusa o `montar` também recusa. Se as regras divergirem, `/` quebra DEPOIS de "publicado".
 const LOJA = "https://loja.exemplo.test";
 const HOST = "abc123.public.blob.vercel-storage.com"; // = NEXT_PUBLIC_BLOB_HOST do vitest.config
 const BLOB = `https://${HOST}/conteudo/foto-Xy12.webp`;
 const clonar = <T,>(x: T): T => structuredClone(x);
 
-describe("contrato build.mjs x conteúdo da loja", () => {
+describe("contrato painel x pagina.ts", () => {
   it("o index.html atual é reproduzido sem nenhuma diferença a partir do conteúdo do site", () => {
     const { html, trechos } = montar(HTML_SITE, conteudoDoSite());
     expect(trechos).toBeGreaterThan(20);
     expect(html).toBe(HTML_SITE);
   });
 
-  it("o conteúdo servido pelo endpoint (passando pelo JSON) gera o mesmo HTML que o conteúdo direto", async () => {
+  it("o conteúdo gravado no banco (passando pelo JSON) gera o mesmo HTML que o conteúdo direto", async () => {
     await semearVersao();
-    sessaoDe(null);
-    const pelaApi = (await (await GET()).json()) as Conteudo;
     const direto = montar(HTML_SITE, conteudoDoSite()).html;
-    expect(montar(HTML_SITE, pelaApi).html).toBe(direto);
     expect(montar(HTML_SITE, (await obterPublicado())!.conteudo).html).toBe(direto);
   });
 
-  it("o destino do botão da Loja vira a URL da loja (LOJA_URL); sem ela continua em #baixar", () => {
+  it("o destino do botão da Loja vira a URL da loja (lojaUrl); sem ela continua em #baixar", () => {
     const sem = montar(HTML_SITE, conteudoDoSite()).html;
     const com = montar(HTML_SITE, conteudoDoSite(), { lojaUrl: LOJA }).html;
     expect(sem.match(/class="produto" href="#baixar"/g)).toHaveLength(2);
@@ -40,20 +35,12 @@ describe("contrato build.mjs x conteúdo da loja", () => {
   it("o que o painel publica de verdade (foto do Blob, texto com HTML) gera HTML válido e escapado", async () => {
     await entrarComo("admin");
     await semearVersao();
-    configurarHook({ SITE_DEPLOY_HOOK_URL: HOOK });
-    const fetchOriginal = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 201 });
-    try {
-      const planos = conteudoDoSite().planos;
-      planos.planos[0] = { ...planos.planos[0]!, capa: BLOB, selo: "<b>Novo</b> & \"melhor\"", mensal: 19.9 };
-      expect((await publicar({ bloco: "planos", dados: planos, versaoBase: 1 })).tipo).toBe("publicado");
-      const n = conteudoDoSite().novidades;
-      n.noticias[0] = { ...n.noticias[0]!, titulo: "<script>alert(1)</script>", imagem: BLOB };
-      expect((await publicar({ bloco: "novidades", dados: n, versaoBase: 2 })).tipo).toBe("publicado");
-    } finally {
-      globalThis.fetch = fetchOriginal;
-      configurarHook({});
-    }
+    const planos = conteudoDoSite().planos;
+    planos.planos[0] = { ...planos.planos[0]!, capa: BLOB, selo: "<b>Novo</b> & \"melhor\"", mensal: 19.9 };
+    expect((await publicar({ bloco: "planos", dados: planos, versaoBase: 1 })).tipo).toBe("publicado");
+    const n = conteudoDoSite().novidades;
+    n.noticias[0] = { ...n.noticias[0]!, titulo: "<script>alert(1)</script>", imagem: BLOB };
+    expect((await publicar({ bloco: "novidades", dados: n, versaoBase: 2 })).tipo).toBe("publicado");
     const { html } = montar(HTML_SITE, (await obterPublicado())!.conteudo, { blobHost: HOST });
     expect(html).toContain(`src="${BLOB}"`);
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");

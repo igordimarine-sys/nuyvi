@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { BLOCOS, errosDe, type Bloco } from "@/modules/conteudo-site/schema";
-import { consultarSituacao, publicarBloco, type RespostaPublicar } from "./actions";
+import { publicarBloco, type RespostaPublicar } from "./actions";
 import type { Campo } from "./campos";
 import { definir, descreverCaminho, idDe, paraEnvio, paraEstado, type Caminho, type Valor } from "./estado";
 import { Aviso, Etiqueta } from "./ui";
@@ -17,18 +17,16 @@ const FORMATOS = ["image/jpeg", "image/png", "image/webp"];
 type Confirmacao = { titulo: string; texto: string; ok: string; perigo?: boolean; cancelar?: string; aoConfirmar: () => void };
 
 type Resultado =
-  | { tipo: "publicado"; aviso?: string }
+  | { tipo: "publicado" }
   | { tipo: "falha"; repetida: boolean }
   | { tipo: "rede" }
   | { tipo: "conflito"; versaoBase: number; blocos: Bloco[]; mesmoBloco: boolean; atual: unknown }
-  | { tipo: "em_andamento" }
   | { tipo: "sem_permissao" }
   | { tipo: "sessao_expirada" }
   | { tipo: "sem_conteudo" };
 
 type Ctx = {
   erros: Record<string, string>;
-  siteUrl: string;
   alterar: (caminho: Caminho, v: unknown) => void;
   aoSair: (caminho: Caminho) => void;
   limparErros: () => void;
@@ -124,7 +122,7 @@ function CampoFoto({ campo, valor, caminho, contexto }: { campo: Extract<Campo, 
   const [enviando, setEnviando] = useState(false);
   const [erroLocal, setErroLocal] = useState<string | null>(null);
   const erro = erroLocal ?? ed.erros[caminho.join(".")];
-  const miniatura = valor.startsWith("http") ? valor : valor.startsWith("img/") && ed.siteUrl ? `${ed.siteUrl}/${valor}` : null;
+  const miniatura = valor.startsWith("http") ? valor : valor.startsWith("img/") ? `/${valor}` : null;
   const nome = `${campo.rotulo}${contexto ? ` de ${contexto}` : ""}`;
 
   async function enviar(f: File) {
@@ -339,14 +337,12 @@ function Dialogo({ confirmacao, aoFechar }: { confirmacao: Confirmacao | null; a
 
 // ---------- Editor ----------
 
-export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente: pendenteInicial, siteUrl }: {
+export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
   slug: Bloco;
   nome: string;
   campos: Campo[];
   inicial: unknown;
   versaoBase: number;
-  pendente: boolean;
-  siteUrl: string;
 }) {
   const router = useRouter();
   const schema = BLOCOS[slug].schema;
@@ -361,8 +357,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [falhas, setFalhas] = useState(0);
   const [fotosEnviando, setFotosEnviando] = useState(0);
-  const [pendente, setPendente] = useState(pendenteInicial);
-  const [esperaRetry, setEsperaRetry] = useState(false);
   const [confirmacao, setConfirmacao] = useState<Confirmacao | null>(null);
   const [anuncio, setAnuncio] = useState("");
   const avisoRef = useRef<HTMLDivElement>(null);
@@ -388,18 +382,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
       if (el && !(el as HTMLButtonElement).disabled) { el.focus(); break; }
     }
   });
-
-  // publicação em andamento (de qualquer pessoa): consulta a cada 5 s, até ~2,5 min (a pendente expira em 2 no banco)
-  useEffect(() => {
-    if (!pendente) return;
-    let tentativas = 0;
-    const t = setInterval(async () => {
-      tentativas++;
-      const s = await consultarSituacao();
-      if ((s && !s.pendente) || tentativas >= 30) { clearInterval(t); setPendente(false); }
-    }, 5000);
-    return () => clearInterval(t);
-  }, [pendente]);
 
   // aviso antes de perder a edição: fechar/recarregar (nativo) e links do painel (diálogo)
   useEffect(() => {
@@ -436,7 +418,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
 
   const ctx: Ctx = {
     erros,
-    siteUrl,
     alterar,
     aoSair,
     limparErros: () => { setErros({}); setResumoAberto(false); },
@@ -489,7 +470,7 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
         setGeracao((g) => g + 1); // remonta: some a etiqueta "Nova, ainda não publicada"
         setBase(r.numero);
         setFalhas(0);
-        setResultado({ tipo: "publicado", aviso: r.aviso });
+        setResultado({ tipo: "publicado" });
         requestAnimationFrame(() => avisoRef.current?.focus());
         break;
       case "invalido": {
@@ -502,17 +483,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
       }
       case "conflito":
         mostrar({ tipo: "conflito", versaoBase: r.versaoBase, blocos: r.blocosAlterados, mesmoBloco: r.mesmoBloco, atual: r.atual });
-        break;
-      case "em_andamento":
-        setPendente(true);
-        setEsperaRetry(true);
-        setTimeout(() => setEsperaRetry(false), 5000);
-        mostrar({ tipo: "em_andamento" });
-        break;
-      case "falha_disparo":
-        setBase(r.versaoBase);
-        setFalhas((f) => f + 1);
-        mostrar({ tipo: "falha", repetida: falhas + 1 >= 2 });
         break;
       case "erro":
         setFalhas((f) => f + 1);
@@ -527,11 +497,10 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
   }
 
   const bloqueado = publicando;
-  const podePublicar = alterado && !publicando && fotosEnviando === 0 && !pendente;
+  const podePublicar = alterado && !publicando && fotosEnviando === 0;
   const situacao = publicando ? "Publicando..."
-    : pendente ? "Há uma publicação em andamento. Aguarde alguns instantes para publicar."
     : fotosEnviando > 0 ? "Aguarde o envio da foto terminar."
-    : alterado ? "Alterações não publicadas. Ao publicar, o site mostra a mudança em até alguns minutos."
+    : alterado ? "Alterações não publicadas. Ao publicar, a mudança já aparece no site."
     : "Nenhuma alteração para publicar.";
   const nErros = Object.keys(erros).length;
 
@@ -566,8 +535,7 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
 
         {resultado?.tipo === "publicado" && (
           <Aviso tipo="sucesso" titulo="Publicado." refEl={avisoRef}>
-            <p>O site mostra a mudança em até alguns minutos (normalmente até 5). Se não mudar depois disso, avise o responsável técnico.</p>
-            {resultado.aviso && <p><strong>Atenção:</strong> {resultado.aviso}</p>}
+            <p>A mudança já está no site.</p>
             <p className="aviso-links"><Link href="/admin/conteudo">Voltar à lista de blocos</Link> · <button type="button" className="botao botao-link" onClick={() => setResultado(null)}>Continuar editando</button></p>
           </Aviso>
         )}
@@ -615,12 +583,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
             </p>
           </Aviso>
         )}
-        {resultado?.tipo === "em_andamento" && (
-          <Aviso tipo="informacao" titulo="Há uma publicação em andamento. Tente de novo em instantes." refEl={avisoRef}
-            acoes={<button type="button" className="botao botao-secundario" disabled={esperaRetry || pendente || !alterado} onClick={() => void publicar(base)}>Tentar de novo</button>}>
-            <p>O que você digitou está aqui, nada foi perdido.</p>
-          </Aviso>
-        )}
         {resultado?.tipo === "sem_permissao" && <Aviso tipo="erro" titulo="Sem permissão." refEl={avisoRef}><p>Seu acesso não permite editar o conteúdo do site. Peça ao responsável da loja.</p></Aviso>}
         {resultado?.tipo === "sessao_expirada" && (
           <Aviso tipo="erro" titulo="Sua sessão expirou. Entre de novo." refEl={avisoRef}>
@@ -628,9 +590,6 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, pendente:
           </Aviso>
         )}
         {resultado?.tipo === "sem_conteudo" && <Aviso tipo="erro" titulo="O conteúdo inicial ainda não foi carregado." refEl={avisoRef}><p>Avise o responsável técnico.</p></Aviso>}
-        {pendente && resultado?.tipo !== "em_andamento" && (
-          <Aviso tipo="informacao" titulo="Há uma publicação em andamento. Aguarde alguns instantes para publicar." />
-        )}
 
         <form className="cartao" noValidate onSubmit={(e) => e.preventDefault() /* Enter num campo não publica: só o botão Publicar */}>
           <fieldset disabled={bloqueado} className="form-bloco">

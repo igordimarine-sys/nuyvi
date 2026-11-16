@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { env } from "@/lib/env";
 import { lerPainel } from "@/modules/conteudo-site/leitura";
 import { BLOCOS, ehBloco, fatia } from "@/modules/conteudo-site/schema";
 import { CAMPOS } from "../campos";
@@ -47,8 +46,6 @@ async function Edicao({ params }: { params: PageProps<"/admin/conteudo/[bloco]">
         campos={CAMPOS[bloco]}
         inicial={fatia(painel.publicado.conteudo, bloco)}
         versaoBase={painel.versaoBase}
-        pendente={painel.pendente}
-        siteUrl={env.SITE_PUBLIC_URL?.replace(/\/$/, "") ?? ""}
       />
     </>
   );

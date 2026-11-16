@@ -1,33 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { GET } from "@/app/api/conteudo-site/route";
 import { db } from "@/db";
 import { conteudoVersoes } from "@/db/schema";
 import { historico, lerPainel, obterPublicado } from "@/modules/conteudo-site/leitura";
 import { sessaoDe } from "../contas/sessao-falsa";
-import { criarUsuario } from "../fabricas";
 import { conteudoDoSite, entrarComo, semearVersao } from "./dados";
 
 afterEach(() => sessaoDe(null));
 
-describe("GET /api/conteudo-site (público)", () => {
-  it("devolve só o conteúdo da última versão publicada, sem nenhum dado da equipe, e sem cache", async () => {
-    const autor = await criarUsuario({ name: "Pessoa Secreta da Equipe", email: "segredo@equipe.exemplo.test" });
-    await semearVersao();
-    const novo = conteudoDoSite();
-    novo.textos.historia.texto = "Versão 2";
-    await semearVersao(2, novo, { origem: "painel", autorId: autor.id });
-
-    sessaoDe(null); // sem login
-    const res = await GET();
-    expect(res.status).toBe(200);
-    expect(res.headers.get("cache-control")).toBe("no-store");
-    const texto = await res.text();
-    const corpo = JSON.parse(texto) as Record<string, unknown>;
-    expect(Object.keys(corpo).sort()).toEqual(["explore", "loja", "novidades", "planos", "textos"]);
-    expect(corpo).toEqual(novo);
-    for (const proibido of [autor.id, autor.email, "Pessoa Secreta", "autor", "disparo", "criado"]) expect(texto).not.toContain(proibido);
-  });
-
+describe("versão servida", () => {
   it("versão pendente ou que falhou nunca é servida", async () => {
     await semearVersao();
     const rascunho = conteudoDoSite();
@@ -35,13 +15,10 @@ describe("GET /api/conteudo-site (público)", () => {
     await semearVersao(2, rascunho, { disparoEstado: "falhou", disparoErro: "x" });
     await db.insert(conteudoVersoes).values({ numero: 3, conteudo: rascunho, blocosAlterados: ["historia"], origem: "painel" }); // pendente
     expect((await obterPublicado())!.numero).toBe(1);
-    expect(JSON.stringify(await (await GET()).json())).not.toContain("Ainda não publicada");
   });
 
-  it("sem nenhuma versão: 404 (o build do site falha e o deploy anterior continua)", async () => {
-    const res = await GET();
-    expect(res.status).toBe(404);
-    expect(res.headers.get("cache-control")).toBe("no-store");
+  it("sem nenhuma versão: null (a página `/` serve o template como está)", async () => {
+    expect(await obterPublicado()).toBeNull();
   });
 });
 
@@ -81,7 +58,6 @@ describe("painel e histórico (admin)", () => {
     await semearVersao(3, conteudoDoSite(), { disparoEstado: "falhou", disparoErro: "x" });
     const p = await lerPainel();
     expect(p.versaoBase).toBe(3);
-    expect(p.pendente).toBe(false);
     expect(p.publicado!.numero).toBe(2);
     expect(p.porBloco.historia).toMatchObject({ numero: 2, autor: "Ana" });
     expect(p.porBloco.abertura).toMatchObject({ numero: 1, origem: "migracao" });

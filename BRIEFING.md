@@ -4,8 +4,8 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 
 - **Ideia:** estrutura de página de lançamento de jogo grande: abertura em tela cheia com vídeo, logo real recortado em fragmentos que se monta na rolagem, grade de vídeos com tela cheia, destaques do Premium e do plano anual, história presa na tela, cartões, loja, novidades e rodapé.
 - **Regra:** só a estrutura e o estilo de animação são de referência. Fotos, logo, textos e marca são sempre da N.UY.
-- **Página:** `site/index.html` (HTML + CSS próprio, GSAP 3.13 + ScrollTrigger, Lenis só no computador).
-- **Rodar local:** dentro de `site/`, `yarn dev` serve em http://127.0.0.1:8765 com o conteúdo de `admin/scripts/conteudo-inicial/*.json` e recarrega o navegador ao salvar arquivo do site. `yarn dev:painel` usa o conteúdo publicado no painel da loja local (`localhost:3000`) e recarrega só quando alguém publica: a loja chama `POST /__publicado` (`SITE_DEPLOY_HOOK_URL=http://127.0.0.1:8765/__publicado` em `admin/.env.local`), como o deploy hook na Vercel; sem consulta periódica. Com essa variável, publicar com o site parado falha (como em produção com o hook fora). O `index.html` versionado não é alterado (`site/dev.mjs`, só Node). `yarn build` remonta os trechos editáveis do `index.html` (`node build.mjs`).
+- **Página:** template em `admin/src/site/index.html` (HTML + CSS próprio, GSAP 3.13 + ScrollTrigger, Lenis só no computador), servido pelo app Next em `/` com o conteúdo publicado no painel; arquivos em `admin/public/`. Na `main` (o que está no ar) ainda é `site/index.html`.
+- **Rodar local:** dentro de `admin/`, `npm run dev` serve tudo em http://localhost:3000: `/` site, `/admin` painel (ver `admin/README.md`). Publicar no painel atualiza `/` na hora; recarregue a aba.
 - **Idioma de movimento:** o mesmo da N.UY (`MOV`: entrada power3.out, saída power2.in, tempos .2 / .4 / .8 s).
 - **Publicado em:** https://nuyvi.vercel.app (Vercel, projeto `nuyvi`; para atualizar: `vercel deploy --prod` dentro de `site/`). Cópia também em https://claude.ai/artifact/NWugEH3pBVC1wa4ca4vvs3
 - **Pendente:** fotos reais do cliente em alta resolução (1600 e 2400 px + corte vertical), notícias reais, links das lojas.
@@ -22,4 +22,4 @@ Variante experimental da landing da N.UY. O projeto oficial continua em `projeto
 
 ## Loja e painel (`admin/`)
 
-- Aplicação Next.js (TypeScript, Drizzle, PostgreSQL) separada de `site/`; em construção: login e papéis da equipe, modelo de dados, tabela de versões do conteúdo do site e testes de integração prontos; painel e vendas ainda não. Stack em `docs/adr/ADR-0004-stack-loja.md`, estrutura em `docs/tecnico/arquitetura.md`, como rodar em `admin/README.md`.
+- Aplicação Next.js (TypeScript, Drizzle, PostgreSQL) que também serve o site em `/` (ADR-0007); em construção: login e papéis da equipe, modelo de dados, tabela de versões do conteúdo do site e testes de integração prontos; painel e vendas ainda não. Stack em `docs/adr/ADR-0004-stack-loja.md`, estrutura em `docs/tecnico/arquitetura.md`, como rodar em `admin/README.md`.

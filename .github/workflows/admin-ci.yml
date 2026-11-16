@@ -1,11 +1,10 @@
 name: admin-ci
 
-# site/build.mjs e site/index.html ainda são lidos pelos testes; saem dos paths no passo 5.
 on:
   push:
-    paths: ["admin/**", "site/build.mjs", "site/index.html", ".github/workflows/admin-ci.yml"]
+    paths: ["admin/**", ".github/workflows/admin-ci.yml"]
   pull_request:
-    paths: ["admin/**", "site/build.mjs", "site/index.html", ".github/workflows/admin-ci.yml"]
+    paths: ["admin/**", ".github/workflows/admin-ci.yml"]
 
 permissions:
   contents: read

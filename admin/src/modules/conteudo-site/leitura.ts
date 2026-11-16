@@ -6,8 +6,6 @@ import { exigirPapel } from "@/modules/contas/papeis";
 import { PAPEL_CONTEUDO } from "./permissao";
 import { conteudoSchema, SLUGS, type Bloco, type Conteudo } from "./schema";
 
-/** Depois deste tempo uma versão "pendente" (processo morreu entre o COMMIT e o hook) deixa de bloquear a próxima publicação. */
-export const PENDENTE_EXPIRA_MIN = 2;
 const PAGINA = 50;
 
 /** Tag do cache da página pública `/`: quem publica conteúdo revalida esta tag (ADR-0007). */
@@ -33,27 +31,21 @@ export type Painel = {
   publicado: { numero: number; conteudo: Conteudo } | null;
   /** Maior número de todas as versões (inclusive as que falharam): é a `versaoBase` que a tela devolve ao publicar. */
   versaoBase: number;
-  /** Há publicação em andamento (pendente que ainda não expirou). */
-  pendente: boolean;
   /** Por bloco: a última versão publicada que o alterou. */
   porBloco: Partial<Record<Bloco, UltimaPublicacao>>;
   /** A publicação mais recente e os blocos que ela mudou. */
   ultima: (UltimaPublicacao & { blocos: Bloco[] }) | null;
 };
 
-async function lerSituacao(): Promise<{ versaoBase: number; pendente: boolean }> {
-  const r = await db.execute<{ versao_base: number; pendente: boolean }>(sql`
-    select coalesce(max(numero), 0)::int as versao_base,
-           coalesce(bool_or(disparo_estado = 'pendente' and criado_em > now() - make_interval(mins => ${PENDENTE_EXPIRA_MIN})), false) as pendente
-      from conteudo_versoes`);
-  const l = r.rows[0];
-  return { versaoBase: l?.versao_base ?? 0, pendente: l?.pendente ?? false };
-}
-
-/** Para a tela consultar sozinha se a publicação em andamento terminou (admin). */
-export async function situacao() {
+/** Maior número de versão (a base que a tela devolve ao publicar e o conflito usa). */
+export async function situacao(): Promise<{ versaoBase: number }> {
   await exigirPapel(PAPEL_CONTEUDO);
   return lerSituacao();
+}
+
+async function lerSituacao(): Promise<{ versaoBase: number }> {
+  const r = await db.execute<{ versao_base: number }>(sql`select coalesce(max(numero), 0)::int as versao_base from conteudo_versoes`);
+  return { versaoBase: r.rows[0]?.versao_base ?? 0 };
 }
 
 /** Dados da lista de blocos e da edição (admin). */
