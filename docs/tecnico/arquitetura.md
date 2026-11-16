@@ -7,7 +7,7 @@ Desenho macro do app único `admin/`: site da N.UY em `/`, painel único em `/ad
 ```mermaid
 flowchart LR
   subgraph Vercel
-    L[Projeto único<br/>admin/ Next.js<br/>/ site · /admin painel · /login · loja · webhooks · cron]
+    L[Projeto único<br/>admin/ Next.js<br/>/ site · /admin painel · /admin/login equipe · /login cliente · loja · webhooks · cron]
     B[(Vercel Blob público<br/>fotos de produto e do conteúdo)]
   end
   N[(Neon Postgres<br/>aws-sa-east-1)]
@@ -47,6 +47,7 @@ admin/
       loja/route.ts            GET /loja : vitrine básica (template loja.html + catalogo/vitrine.ts, tag catalogo) (ADR-0007 A3)
       loja/...                 fase 1b: categoria/[slug], produto/[slug], carrinho, checkout, pedido/[codigo]
       login/  cadastrar/  confirmar-email/  esqueci-senha/  redefinir-senha/  vincular-pedidos/
+      admin/login/             entrada da equipe (cliente que entra tem a sessão encerrada); sem sessão em /admin vem para cá
       admin/                   painel único: conteúdo do site (fase 1a), pedidos, produtos, estoque, frete, descontos, equipe
       api/
         auth/...               rota da biblioteca de auth (dev-auth)

@@ -25,12 +25,13 @@ export async function obterUsuario(): Promise<UsuarioAutenticado | null> {
 
 /**
  * Autorização no servidor: chamar no início de TODA página, Server Action e Route Handler protegido, e antes de
- * acessar dados. Sem sessão (ou e-mail não confirmado): vai para /login. Com papel insuficiente: 404.
+ * acessar dados. Sem sessão (ou e-mail não confirmado): vai para /admin/login se o papel mínimo for da equipe, senão /login.
+ * Com papel insuficiente: 404.
  * O proxy/middleware não substitui esta chamada.
  */
 export async function exigirPapel(minimo: Papel): Promise<UsuarioAutenticado> {
   const usuario = await obterUsuario();
-  if (!usuario) redirect("/login");
+  if (!usuario) redirect(atende({ papel: minimo }, "operador") ? "/admin/login" : "/login");
   if (!atende(usuario, minimo)) notFound();
   return usuario;
 }

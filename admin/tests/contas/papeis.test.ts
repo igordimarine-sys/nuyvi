@@ -10,6 +10,10 @@ describe("exigirPapel", () => {
     await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/login");
   });
 
+  it.each(["operador", "admin"] as const)("sem sessão, papel %s (equipe) manda para /admin/login", async (papel) => {
+    await expect(exigirPapel(papel)).rejects.toThrow("REDIRECT:/admin/login");
+  });
+
   it("com e-mail não confirmado, trata como sem sessão", async () => {
     sessaoDe(sessao({ emailVerified: false }));
     await expect(exigirPapel("cliente")).rejects.toThrow("REDIRECT:/login");

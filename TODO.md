@@ -4,6 +4,7 @@
 - ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1, A2 (sessão no cabeçalho) e A3 (`/loja`) feitos; revisão (dev-reviewer) e auditoria (dev-security) feitas, achados abaixo em Pendente; próximos: correções, aceite dev-qa, docs. [Parado em 2026-11-15 a pedido.] Antigos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
 
 ## Pendente
+- "Esqueci a senha" em `/admin/login` usa o fluxo do cliente: depois de redefinir, a pessoa da equipe cai em `/login` (funciona, mas não volta ao painel). Decidir se a redefinição deve voltar para `/admin/login` (spec CA-LOJ-74, arquiteto-specs + dev-auth).
 - Primeiro deploy na Vercel (Root Directory `admin/`): conferir que o `prebuild` acha `../site/` (opção "Include files outside the root directory"). Se não achar, o build falha com "copiar-site: não achei". (ADR-0007 adendo B)
 - Auditoria dev-security 2026-11-15 (`docs/seguranca/2026-11-15-app-unico.md`; correção dev-react, testes dev-tests):
   - M-01: nenhum header de segurança no app (mesma origem/cookie para site, loja e painel: XSS no site agiria no painel; clickjacking no Publicar). Aplicar a CSP da seção 6 em `headers()` (primeiro Report-Only, `poweredByHeader: false`); mover o script grande e o `<style>` do template para `public/js/site.js` e `/css/site.css` (ou hash).
@@ -83,6 +84,7 @@
 - Loja: quando a loja tiver URL, trocar o botão "Comprar no app" da seção Loja pelo link da categoria (campo do cartão editável no painel único, CA-LOJ-58) e revisar o título "Equipado sem sair do app" (copywriter); manter preços e estoque fora do conteúdo do site (RN-LOJ-18).
 
 ## Feito
+- 2026-11-15: Login separado: `/admin/login` para a equipe e `/login` para o cliente (spec v0.7). Sem sessão em `/admin` (e `exigirPapel` de operador/admin) vai para `/admin/login`; "Sair" do painel e o link de sessão expirada do editor também; a volta ignora `/admin/login`; cliente que entra pelo login do painel tem a sessão encerrada. lint, typecheck, 190 testes e build ok.
 - 2026-11-15: Arquivos do site movidos para `site/` na raiz (ADR-0007 adendo B). `admin/public/` e `admin/src/site/` agora são gerados por `npm run site:copiar` (predev/prebuild/pretest); testes leem de `site/`; CI também dispara em `site/**`. lint, typecheck, 185 testes e build ok.
 - 2026-11-15: Pasta do app `loja/` renomeada para `admin/` (CI agora `admin-ci.yml`; compose fixado em `name: loja` para manter container e volume do banco local). ADRs, spec, relatórios de segurança e entradas antigas citam `loja/` como registro histórico.
 - 2026-11-15: `site/dev.mjs` + `site/package.json` (`dev`, `dev:painel`, `build`): servidor local com recarga automática ao salvar arquivo do site ou ao publicar no painel (a loja chama `POST /__publicado` via `SITE_DEPLOY_HOOK_URL`, que passa a aceitar http só para localhost fora de produção; sem consulta periódica), montando a página em memória (não grava o `index.html`).

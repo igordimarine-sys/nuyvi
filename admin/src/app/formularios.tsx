@@ -40,7 +40,8 @@ const Senha = ({ nome = "senha", novo = false }: { nome?: string; novo?: boolean
   <label>Senha <input name={nome} type="password" autoComplete={novo ? "new-password" : "current-password"} required minLength={novo ? 10 : 1} maxLength={128} /></label>
 );
 
-export function FormEntrar() {
+/** `painel`: entrada da equipe (/admin/login). Cliente que entrar por ela tem a sessão encerrada na hora; /admin confere no servidor de qualquer forma. */
+export function FormEntrar({ painel = false }: { painel?: boolean }) {
   const router = useRouter();
   return (
     <Form rotulo="Entrar" onEnviar={async (d) => {
@@ -48,6 +49,10 @@ export function FormEntrar() {
       if (!error) {
         // Equipe vai para o painel; o papel aqui só escolhe o destino, /admin confere no servidor.
         const equipe = data?.user.role === "operador" || data?.user.role === "admin";
+        if (painel && !equipe) {
+          await authClient.signOut();
+          return { ok: false, msg: "Esta entrada é só para a equipe da N.UY. Clientes entram em /login." };
+        }
         router.push(destinoDepoisDeEntrar(equipe, new URLSearchParams(window.location.search).get("volta")));
         router.refresh();
         return { ok: true, msg: "Entrando..." };
@@ -114,10 +119,11 @@ export function FormRedefinir({ token }: { token: string }) {
   );
 }
 
+/** Sair do painel (só usado em /admin): volta para a entrada da equipe. */
 export function BotaoSair() {
   const router = useRouter();
   return (
-    <button type="button" onClick={async () => { await authClient.signOut(); router.push("/login"); router.refresh(); }}>
+    <button type="button" onClick={async () => { await authClient.signOut(); router.push("/admin/login"); router.refresh(); }}>
       Sair
     </button>
   );
