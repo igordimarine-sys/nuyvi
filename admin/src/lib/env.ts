@@ -17,6 +17,12 @@ const schema = z.object({
   BETTER_AUTH_URL: z.url({ error: "BETTER_AUTH_URL deve ser uma URL (ex.: http://localhost:3000)" }),
   // Definida pela Vercel (production | preview | development); distingue Production de Preview, que têm NODE_ENV igual.
   VERCEL_ENV: opcional(z.enum(["production", "preview", "development"])),
+  // Login com Google (só clientes). As duas vazias = botão "Entrar com Google" escondido.
+  GOOGLE_CLIENT_ID: opcional(z.string()),
+  GOOGLE_CLIENT_SECRET: opcional(z.string()),
+}).refine((e) => !e.GOOGLE_CLIENT_ID === !e.GOOGLE_CLIENT_SECRET, {
+  path: ["GOOGLE_CLIENT_SECRET"],
+  message: "GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET vão juntas: preencha as duas ou nenhuma",
 }).refine((e) => process.env.NODE_ENV !== "production" || /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:|\/|$))/.test(e.BETTER_AUTH_URL), {
   path: ["BETTER_AUTH_URL"],
   message: "BETTER_AUTH_URL deve começar com https:// em produção (http só para localhost)",
@@ -30,6 +36,8 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+export const googleConfigurado = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
 /** Produção de verdade: na Vercel só `VERCEL_ENV=production` (Preview também roda com NODE_ENV=production); fora dela, NODE_ENV. */
 export const emProducao = () => (env.VERCEL_ENV ?? process.env.NODE_ENV) === "production";

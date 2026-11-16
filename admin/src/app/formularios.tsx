@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
-import { destinoDepoisDeEntrar } from "@/modules/contas/volta";
+import { destinoDepoisDeEntrar, voltaSegura } from "@/modules/contas/volta";
 
 // Formulários mínimos, sem design. Mensagens genéricas: nunca dizem se o e-mail existe.
 type Resultado = { ok: boolean; msg: string } | null;
@@ -61,6 +61,41 @@ export function FormEntrar({ painel = false }: { painel?: boolean }) {
     }}>
       <Email /><Senha />
     </Form>
+  );
+}
+
+// Códigos que o Better Auth põe em /login?error= quando o retorno do Google falha.
+const ERROS_GOOGLE: Record<string, string> = {
+  access_denied: "Entrada com o Google cancelada.",
+  account_not_linked: "Já existe uma conta com este e-mail, ainda não confirmada. Confirme o e-mail (ou use \"Esqueci a senha\") e depois entre com o Google.",
+  email_not_verified: "O Google não confirmou este e-mail. Use outra conta Google ou crie a conta com e-mail e senha.",
+  CONTA_EQUIPE: "Contas da equipe entram em /admin/login, com e-mail e senha.",
+};
+
+const semAssinatura = () => () => {};
+
+/** Só clientes (/login e /cadastrar); a página só mostra se GOOGLE_CLIENT_ID/SECRET existirem. O servidor recusa conta de equipe. */
+export function BotaoGoogle() {
+  const [ocupado, setOcupado] = useState(false);
+  const [erroClique, setErro] = useState<string | null>(null);
+  // ?error= da URL: no servidor (e na hidratação) vale vazio; no navegador, o da barra de endereço.
+  const codigo = useSyncExternalStore(semAssinatura, () => new URLSearchParams(window.location.search).get("error"), () => null);
+  const erro = erroClique ?? (codigo ? ERROS_GOOGLE[codigo] ?? "Não foi possível entrar com o Google. Tente de novo." : null);
+  async function entrar() {
+    setOcupado(true);
+    const volta = voltaSegura(new URLSearchParams(window.location.search).get("volta"));
+    // Sucesso redireciona para o Google; em falha no retorno, o Better Auth volta para /login?error=<código>.
+    const { error } = await authClient.signIn.social({ provider: "google", callbackURL: volta ?? "/", errorCallbackURL: "/login" });
+    if (error) {
+      setErro(error.status === 429 ? MUITAS : "Não foi possível entrar com o Google. Tente de novo.");
+      setOcupado(false);
+    }
+  }
+  return (
+    <div>
+      <button type="button" onClick={entrar} disabled={ocupado}>Entrar com Google</button>
+      {erro && <p role="alert">{erro}</p>}
+    </div>
   );
 }
 

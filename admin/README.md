@@ -50,6 +50,7 @@ npm test
 | `DATABASE_URL` | Conexão PostgreSQL |
 | `BETTER_AUTH_SECRET` | Segredo do Better Auth, mínimo 32 caracteres; um por ambiente, só em `.env.local`/Vercel |
 | `BETTER_AUTH_URL` | URL pública da loja (links de e-mail e checagem de origem); local: `http://localhost:3000` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Opcionais, as duas juntas. Cliente OAuth "Aplicativo da Web" do Google Cloud Console, com a URI de redirecionamento `<BETTER_AUTH_URL>/api/auth/callback/google` (local: `http://localhost:3000/api/auth/callback/google`). Sem elas o botão "Entrar com Google" não aparece. O secret é segredo: só `.env.local`/Vercel |
 | `BLOB_READ_WRITE_TOKEN` | Opcional. Token do Vercel Blob para o upload de fotos (na Vercel basta o store conectado). Sem ele o envio de foto responde "armazenamento não configurado" e o resto do painel segue |
 | `NEXT_PUBLIC_BLOB_HOST` | Host do store Blob da loja (`<id>.public.blob.vercel-storage.com`; público, não é segredo). Sem ele o upload é recusado e só `img/...` é aceito como imagem. As fotos são reencodadas no servidor (`sharp`: sem EXIF/GPS, rotação aplicada, recusa o que não decodifica) |
 
