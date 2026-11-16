@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceito (decisão de escopo) |
+| Status | Aceito (decisão de escopo). O item 5 da decisão ("site independente da loja") passa a ser "site no ar com o banco fora", no mesmo app: ver [ADR-0007](ADR-0007-site-e-painel-num-unico-app-next.md) (proposto em 2026-11-15) |
 | Data | 2026-11-15 |
 | Decisores | Desenvolvedor, pela N.UY |
 | Tipo | Escopo / negócio. O "como" técnico fica com o `dev-arquitetura` (ver "Decisões que este ADR não toma") |

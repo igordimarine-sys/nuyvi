@@ -11,3 +11,4 @@ _t_inject*.js
 # sistema
 Thumbs.db
 .DS_Store
+.claude/settings.local.json

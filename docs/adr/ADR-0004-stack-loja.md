@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aprovado em 2026-11-14. Contas (Vercel, Neon, gateway) em nome da N.UY. Linhas "Painel" e "Ligação com o site" a serem **substituídas por [ADR-0006](ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md)** (aceito em 2026-11-15) |
+| Status | Aprovado em 2026-11-14. Contas (Vercel, Neon, gateway) em nome da N.UY. Linhas "Painel" e "Ligação com o site" a serem **substituídas por [ADR-0006](ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md)** (aceito em 2026-11-15). Linhas "Hospedagem" (dois projetos) e "Ligação com o site" (subdomínio da loja) **substituídas por [ADR-0007](ADR-0007-site-e-painel-num-unico-app-next.md)** (proposto em 2026-11-15): um app e um projeto Vercel, `/` = site |
 | Data | 2026-11-14 |
 | Decisores | Desenvolvedor; proposta do dev-arquitetura |
 | Tipo | Técnico |

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | **Aceito** em 2026-11-15 pelo desenvolvedor |
+| Status | **Aceito** em 2026-11-15 pelo desenvolvedor. **Parcialmente substituído por [ADR-0007](ADR-0007-site-e-painel-num-unico-app-next.md)** (proposto em 2026-11-15): saem o deploy hook, o build do site estático e o `GET /api/conteudo-site` (linhas "Leitura pelo site", "Build do site", "Disparo", "Ligação com o GitHub" e "`site/` depois da migração"); continuam a fonte da verdade em versões no banco, a publicação por bloco, o histórico e as fotos no Blob |
 | Data | 2026-11-15 |
 | Decisores | Desenvolvedor; proposta do dev-arquitetura |
 | Tipo | Técnico |

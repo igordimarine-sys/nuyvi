@@ -1,24 +1,19 @@
 # Arquitetura: loja N.UY
 
-Desenho macro da loja (`admin/`) e do painel único. Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Conteúdo do site e publicação: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
+Desenho macro do app único `admin/`: site da N.UY em `/`, painel único em `/admin` e loja. Decisão de stack e alternativas: [ADR-0004](../adr/ADR-0004-stack-loja.md). Conteúdo do site: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (versões no banco) e [ADR-0007](../adr/ADR-0007-site-e-painel-num-unico-app-next.md) (um app só; `/` montado do template com cache invalidado ao publicar; substitui o deploy hook). Até o corte do ADR-0007, `site/` e o projeto `nuyvi` continuam no ar como hoje. Requisitos: [spec](../specs/loja.md). Este documento diz **onde cada coisa mora e quem fala com quem**. Schema físico, mecanismo de jobs e telas são dos especialistas indicados.
 
 ## 1. Visão geral
 
 ```mermaid
 flowchart LR
   subgraph Vercel
-    S[Projeto nuyvi<br/>site/ estático<br/>build.mjs gera o HTML]
-    L[Projeto nuy-loja<br/>admin/ Next.js<br/>loja pública + painel /admin + webhooks + cron]
+    L[Projeto único<br/>admin/ Next.js<br/>/ site · /admin painel · /login · loja · webhooks · cron]
     B[(Vercel Blob público<br/>fotos de produto e do conteúdo)]
   end
   N[(Neon Postgres<br/>aws-sa-east-1)]
   G[Gateway de pagamento<br/>Pix + cartão]
   E[E-mail transacional]
   APP[App N.UY - Base44<br/>abre a loja em webview]
-  S -- link por categoria --> L
-  L -- publicar: deploy hook --> S
-  S -. no build: GET /api/conteudo-site .-> L
-  S -. imagens enviadas pelo painel .-> B
   APP -- abre URL --> L
   L --> N
   L --> B
@@ -29,13 +24,12 @@ flowchart LR
 
 | Onde roda | O quê |
 |---|---|
-| Projeto Vercel `nuyvi` (ligado ao GitHub, Root Directory `site`) | Site estático. No build, o `build.mjs` busca a última versão publicada do conteúdo na loja e gera o HTML. Sem preço nem estoque (RN-LOJ-18) |
-| Projeto Vercel da loja (Root Directory `admin/`) | Páginas da loja, painel único `/admin` (loja e conteúdo do site), leitura pública do conteúdo publicado, Route Handlers de webhook e de cron, Server Actions |
-| Neon | Única fonte da verdade de catálogo, estoque, pedidos, pagamentos, contas da loja, auditoria e **versões do conteúdo do site** |
+| Projeto Vercel único (Root Directory `admin/`) | `/`: página do site montada do template com o conteúdo publicado (prerender, regenerado ao publicar). `public/`: imagens, vídeos, JS, CSS e páginas legais do site. `/admin`: painel único (conteúdo do site e loja). `/login` e páginas de cliente. Route Handlers de webhook, cron e upload; Server Actions |
+| Neon | Única fonte da verdade de catálogo, estoque, pedidos, pagamentos, contas, auditoria e **versões do conteúdo do site** |
 | Vercel Blob (público) | Fotos de produto e fotos do conteúdo do site enviadas pelo painel |
 | Gateway | Dados de cartão (nunca passam pela loja, RNF-08), cobranças, estornos |
 
-Sem servidor próprio, sem fila externa, sem Redis. Monolito modular.
+Sem servidor próprio, sem fila externa, sem Redis. Monolito modular. Site, painel e loja sobem no mesmo deploy (consequência aceita no ADR-0007).
 
 ## 2. Estrutura de `admin/`
 
@@ -43,19 +37,24 @@ Sem servidor próprio, sem fila externa, sem Redis. Monolito modular.
 admin/
   package.json  next.config.ts  drizzle.config.ts  .env.example   (nunca .env)
   drizzle/                     migrations geradas (dev-database)
+  public/                      img/ video/ js/ css/ e páginas .html do site, mesmos nomes de hoje
+  scripts/conteudo-inicial/    os 5 JSON de site/conteudo/ (versão 1 do conteúdo e dados de teste)
   src/
     app/
-      (loja)/                  páginas públicas: início, categoria/[slug], produto/[slug],
-                               carrinho, checkout, pedido/[codigo], conta/
+      route.ts                 GET / : página do site (paginaDoSite(): 'use cache' + cacheTag + cacheLife('max'))
+      (loja)/                  páginas públicas da loja, caminho base pendente (PEND-07a, proposta /loja):
+                               início, categoria/[slug], produto/[slug], carrinho, checkout, pedido/[codigo], conta/
+      login/  cadastrar/  confirmar-email/  esqueci-senha/  redefinir-senha/  vincular-pedidos/
       admin/                   painel único: conteúdo do site (fase 1a), pedidos, produtos, estoque, frete, descontos, equipe
       api/
         auth/...               rota da biblioteca de auth (dev-auth)
-        conteudo-site/         GET público: última versão publicada do conteúdo (lida pelo build do site)
+        conteudo-site/foto/    POST: upload de foto do conteúdo (o GET público sai no ADR-0007)
         webhooks/pagamento/    entrada do gateway
         cron/                  expiração de pedidos e reenvio de e-mails
     modules/
       catalogo/   estoque/   carrinho/   frete/   checkout/
       pedidos/    pagamentos/   contas/   conteudo-site/
+    site/index.html            template do site com os trechos <!--cms:CHAVE--> (fora de public/)
     db/                        cliente do banco e schema Drizzle (um arquivo por módulo)
     lib/                       dinheiro (centavos inteiros), env (lê e valida variáveis), datas
 ```
@@ -65,8 +64,9 @@ admin/
 1. `app/` (páginas, Server Actions e Route Handlers) só valida a entrada, chama **uma** função de módulo e monta a resposta. Regra de negócio não fica em `app/`.
 2. Cada módulo expõe funções no seu `index.ts`. Outro módulo não lê nem grava tabela alheia diretamente: chama a função do dono.
 3. As funções que participam de uma transação recebem o executor do banco (`tx`) como parâmetro. É assim que o checkout reserva estoque e cria o pedido numa transação só, sem camada extra.
-4. Fornecedor externo (gateway, e-mail, deploy hook da Vercel, e no futuro o Base44) só é importado dentro do seu módulo. Nenhum tipo do SDK sai dele.
+4. Fornecedor externo (gateway, e-mail, e no futuro o Base44) só é importado dentro do seu módulo. Nenhum tipo do SDK sai dele.
 5. "Admin" não é módulo: é a UI em `app/admin/`, que chama os mesmos módulos com o papel checado.
+6. Nenhuma rota do app com nome de pasta de `public/` (`img`, `video`, `js`, `css`) e nenhum arquivo em `public/` com nome de rota (`admin`, `api`, `login`, `loja`, `_next`).
 
 | Módulo | Responsabilidade | Regras da spec |
 |---|---|---|
@@ -78,7 +78,7 @@ admin/
 | `pedidos` | Tabela de transições permitidas, histórico, "meus pedidos", acesso por link de visitante | Seção 8 da spec, CA-LOJ-28 a 39 |
 | `pagamentos` | Adaptador do gateway (criar cobrança, consultar, estornar, validar webhook) e registro de pagamentos e eventos | CA-LOJ-14, 18, 36, 37 |
 | `contas` | Sessão, papéis, dados do cliente, **ponto de extensão do plano** (seção 5) | CA-LOJ-28, 29, 43 |
-| `conteudo-site` | Versões publicadas do conteúdo do site (9 blocos), validação, publicar (grava a versão e chama o deploy hook do site), histórico, upload de fotos para o Blob. Não conhece produto, preço nem pedido (RN-LOJ-18) | CA-LOJ-50 a 59, RN-LOJ-24 a 26 |
+| `conteudo-site` | Versões publicadas do conteúdo do site (9 blocos), validação, publicar (grava a versão), histórico, upload de fotos para o Blob, `montar()` (template + conteúdo → HTML, com escape) e a tag de cache do site. Não conhece produto, preço nem pedido (RN-LOJ-18) | CA-LOJ-50 a 59, RN-LOJ-24 a 26 |
 
 Sem interface com uma implementação só: `pagamentos/gateway.ts` é um módulo com funções que falam com **um** gateway. Uma interface só entra se aparecer um segundo gateway de verdade.
 
@@ -149,38 +149,42 @@ export async function obterPlanoVigente(clienteId: string | null): Promise<Plano
   Falha na consulta: retorna `null`, e o checkout segue RN-LOJ-07 (nunca há desconto sem verificação).
 - **Onde vive o percentual** (P-05): fica no painel da loja (premissa da spec) até o cliente responder. Se passar a vir do app, muda só esta função.
 
-## 6. Conteúdo do site e ligação site → loja
+## 6. Conteúdo do site e página `/`
 
-Decisão: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (aceito). O Sveltia foi descartado (D-04).
+Decisões: [ADR-0006](../adr/ADR-0006-conteudo-do-site-no-banco-da-loja-com-rebuild.md) (versões no banco, publicação por bloco) e [ADR-0007](../adr/ADR-0007-site-e-painel-num-unico-app-next.md) (página montada no próprio app, sem deploy hook). O Sveltia foi descartado (D-04).
 
 ```mermaid
 sequenceDiagram
   actor A as Admin (painel)
+  participant S as Server Action (app/admin/conteudo)
   participant P as conteudo-site.publicar
   participant DB as Postgres
-  participant H as Deploy hook (projeto nuyvi)
-  participant V as Build do site (build.mjs)
-  A->>P: bloco editado + versaoBase
-  P->>P: exigirPapel + valida (mesmas regras do build.mjs)
+  participant C as Cache do Next (tag conteudo-site)
+  actor V as Visitante
+  A->>S: bloco editado + versaoBase
+  S->>P: publicar(...)
+  P->>P: exigirPapel + valida (mesmas regras do montar)
   P->>DB: BEGIN; confere versaoBase; grava versão completa N+1 (autor, blocos alterados); COMMIT
-  P->>H: POST (timeout curto)
-  alt hook aceitou
-    P-->>A: Publicado (aparece no site em poucos minutos)
-    H->>V: build da branch de produção
-    V->>P: GET /api/conteudo-site (última versão publicada)
-    V->>V: valida, gera index.html; erro para o build e o deploy anterior continua
-  else hook falhou
-    P->>DB: marca a versão N+1 como não publicada (nunca servida)
-    P-->>A: Não foi possível publicar, tente de novo (edição mantida)
+  P-->>S: publicado
+  S->>C: updateTag(conteudo-site)
+  S-->>A: Publicado (já está no site)
+  V->>C: GET /
+  alt entrada válida
+    C-->>V: HTML em cache (não toca o banco)
+  else tag expirada
+    C->>DB: obterPublicado()
+    C->>C: montar(template, versão N+1)
+    C-->>V: HTML novo (fica em cache)
   end
 ```
 
-- **Fonte da verdade:** tabela de versões no Neon; cada versão é o conteúdo **inteiro** (os 5 documentos no formato de `site/conteudo/*.json` + `destino` dos cartões da Loja). Nunca há metade nova e metade antiga (CA-LOJ-55). Histórico de CA-LOJ-57 vem da mesma tabela; quem publicou fica só no banco (dado pessoal fora do Git, RNF-13).
-- **Site para quem visita:** HTML estático na Vercel, sem chamada à loja em tempo de execução (RNF-14). Loja fora do ar impede apenas um build novo.
-- **Fotos:** as já existentes continuam em `site/img/`; as enviadas pelo painel vão ao Blob público (prefixo `conteudo/`) e entram no site por URL absoluta, só do host configurado.
-- **Botão da seção Loja:** o campo `destino` do cartão aponta para `https://<subdomínio da loja>/categoria/<slug>` (CA-LOJ-58). Preço e estoque nunca entram no conteúdo.
-- **`site/` depois do corte:** `index.html`, `build.mjs` (busca o conteúdo em `CONTEUDO_URL`), `vercel.json`, CSS, JS e `img/`. `site/conteudo/` e `site/admin/` saem do repositório.
-- **Fase 2:** se o site mostrar destaques do catálogo, eles seguem o mesmo caminho (lidos da loja no build). Fica para quando a fase 2 for aprovada.
+- **Fonte da verdade:** tabela de versões no Neon; cada versão é o conteúdo **inteiro** (os 5 documentos + `destino` dos cartões da Loja). Nunca há metade nova e metade antiga (CA-LOJ-55). Histórico (CA-LOJ-57) da mesma tabela; quem publicou fica só no banco (RNF-13).
+- **Página `/`:** `app/route.ts` devolve `paginaDoSite()`: template `src/site/index.html` + `obterPublicado()` + `montar()`, em função com `'use cache'`, `cacheTag` e `cacheLife('max')`. Prerenderizada no build; regenerada só quando a tag é expirada. Root layout do Next não se aplica (Route Handler), então o documento é o do site, com os mesmos scripts.
+- **Sem versão publicada** (tabela vazia: CI, preview novo): o template sai como está; ele já traz o conteúdo do último `build.mjs` embutido.
+- **Banco fora:** o `/` em cache segue servido. Erro do banco nunca é capturado dentro de `paginaDoSite()`, para uma regeneração com falha não substituir a versão boa (hipóteses H1 a H4 do ADR-0007, verificadas antes do corte).
+- **Fotos:** as existentes em `public/img/`; as enviadas pelo painel no Blob público (prefixo `conteudo/`), aceitas só do host de `NEXT_PUBLIC_BLOB_HOST`.
+- **Botão da seção Loja:** `destino` = `inicio` ou `categoria/<slug>`, resolvido para um caminho do próprio app quando a loja pública tiver caminho (PEND-07a). Até lá, `#baixar`. Preço e estoque nunca entram no conteúdo.
+- **Fase 2:** destaques do catálogo no site seguem o mesmo caminho (lidos no `paginaDoSite()`, com tag própria do catálogo). Só quando aprovada.
 
 ## 7. Ambientes e segredos
 
@@ -192,20 +196,17 @@ sequenceDiagram
 
 O repositório é público: somente `.env.example` com nomes e sem valores. Os segredos de webhook e de cron também ficam fora do Git.
 
-Conteúdo do site (ADR-0006):
+Conteúdo do site (ADR-0006 e ADR-0007):
 
-| Variável | Projeto | Ambiente | Segredo? |
-|---|---|---|---|
-| `SITE_DEPLOY_HOOK_URL` | loja | **só Production** (em Preview, publicar não atualiza o site) | Sim: quem tem a URL dispara builds do site |
-| Credencial do Blob (OIDC da Vercel; `BLOB_READ_WRITE_TOKEN` só se precisar) | loja | Production e Preview (prefixo ou store separado) | Sim |
-| `CONTEUDO_URL` | nuyvi | Production e Preview | Não (aponta para a leitura pública da loja) |
-| `BLOB_PUBLIC_HOST` | nuyvi | Production e Preview | Não (host do store Blob; sem ele o build só aceita `img/...`) |
-| `NEXT_PUBLIC_BLOB_HOST` | loja | todos | Não (o mesmo host, para validar as imagens do conteúdo) |
-| `LOJA_URL` | nuyvi | Production e Preview | Não (destino dos botões da seção Loja; sem ela, `#baixar`) |
-| `SITE_PUBLIC_URL` | loja | todos | Não (só miniaturas no painel; opcional) |
-| `VERCEL_ENV` | loja | automática (Vercel) | Não; distingue Production de Preview para o hook |
+| Variável | Ambiente | Segredo? |
+|---|---|---|
+| Credencial do Blob (OIDC da Vercel; `BLOB_READ_WRITE_TOKEN` só se precisar) | Production e Preview (prefixo ou store separado) | Sim |
+| `NEXT_PUBLIC_BLOB_HOST` | todos | Não (host do store; valida as imagens do conteúdo no painel e no `montar`) |
+| `BETTER_AUTH_URL` | todos | Não; em produção passa a ser o domínio do site |
 
-Sem `SITE_DEPLOY_HOOK_URL`: fora de produção a versão é gravada como aceita com `disparo_erro = 'sem hook configurado'` e o painel avisa que o site não foi atualizado; em produção a publicação falha. O upload de foto é um Route Handler (`POST /api/conteudo-site/foto`), não Server Action, para não elevar o limite de corpo (1 MB) de todas as actions. O valor guardado em `destino` dos cartões da Loja é `inicio` (futuro `categoria/<slug>`); o build monta `LOJA_URL` + valor.
+Saem com o ADR-0007: `SITE_DEPLOY_HOOK_URL`, `CONTEUDO_URL`, `LOJA_URL`, `BLOB_PUBLIC_HOST` e `SITE_PUBLIC_URL`. O upload de foto continua num Route Handler (`POST /api/conteudo-site/foto`), não em Server Action, para não elevar o limite de corpo (1 MB) de todas as actions.
+
+Como `next build` prerenderiza `/` lendo o banco, as migrations rodam **antes** do deploy, e o build do CI usa o Postgres do service depois do `db:migrate`.
 
 Nenhuma credencial do GitHub é usada pela aplicação.
 
@@ -216,10 +217,10 @@ Nenhuma credencial do GitHub é usada pela aplicação.
 | Gateway fora do ar | Catálogo e carrinho | Confirmação de pedido (mensagem clara; nada cobrado; nada duplicado) |
 | Webhook atrasado ou perdido | Pedido em AguardandoPagamento | Resolvido pelo cron, que consulta o gateway antes de expirar |
 | Provedor de e-mail fora do ar | Pedido e pagamento | E-mail, reenviado pelo cron; a falha aparece para o operador |
-| Neon fora do ar | Nada da loja (o site estático segue no ar) | Tudo; o RTO depende do Neon |
-| Loja ou Neon fora do ar (conteúdo) | Site no ar com o último conteúdo publicado | Edição e publicação do conteúdo; qualquer build novo do site falha e o deploy anterior continua |
-| Deploy hook ou build da Vercel falhando | Site com a versão anterior | Publicação: o painel mostra o erro; versão não servida |
-| Vercel Blob fora do ar | Site e imagens de `site/img/` | Imagens enviadas pelo painel e fotos de produto |
+| Neon fora do ar | `/` em cache com o último conteúdo publicado; arquivos de `public/` | Loja, login, painel e publicação; qualquer deploy novo (o build lê o banco) falha e o anterior continua. Risco residual: banco cair logo depois de uma publicação, antes da primeira visita (ADR-0007, opção 2A); entrada fria no cache com o banco fora depende de H2/H3 |
+| Build da Vercel falhando | Deploy anterior inteiro (site, painel e loja) | Mudanças de código e de qualquer parte do app |
+| Erro de runtime em código compartilhado (`next.config.ts`, headers) | Depende do erro | Pode atingir `/` junto com o app (destino comum, ADR-0007) |
+| Vercel Blob fora do ar | Site e imagens de `public/img/` | Imagens enviadas pelo painel e fotos de produto |
 | Base44 (futuro) | Compra pelo preço cheio | Desconto (RN-LOJ-07) |
 
 ## 9. Gatilhos de crescimento
@@ -227,3 +228,22 @@ Nenhuma credencial do GitHub é usada pela aplicação.
 - Consulta de catálogo lenta medida (RNF-02 acima de 2,5 s): cache das páginas públicas pelo Next.js com invalidação ao salvar no `/admin` (`dev-performance-seo`). Não antes de medir.
 - Mais de ~500 pedidos/dia ou contenção de lock medida em data de pico: revisar a reserva com o `dev-database`.
 - Trabalho em segundo plano que não cabe em função (mais de 300 s ou contínuo): worker separado (`dev-integrations`).
+
+## 10. Plano de execução do ADR-0007
+
+Um commit por passo, na ordem. Nenhum passo muda o que o visitante vê; o corte (passo 8) é o único que muda produção. Rede de segurança: os 132 testes do Vitest, mais o teste de igualdade do HTML do passo 1.
+
+| # | Passo | Pronto quando | Teste antes | Dono |
+|---|---|---|---|---|
+| 0 | CI: `working-directory: loja` → `admin` (ficou para trás no rename) | `admin-ci` verde na branch | — | dev-devops |
+| 1 | `git mv site/conteudo admin/scripts/conteudo-inicial`; `conteudo:migrar` e os testes leem dali; teste de caracterização: `montar(site/index.html, conteúdo inicial)` igual ao `site/index.html` versionado | 132+ testes verdes; nenhum teste lê `site/conteudo/` | — (é a rede) | dev-tests (dev-react ajusta o script) |
+| 2 | `montar` em TypeScript em `modules/conteudo-site/pagina.ts`, mesma lógica; testes de `build-site`/`contrato` passam a importar dali; `site/build.mjs` ainda existe | Mesmos testes verdes contra o módulo novo; saída idêntica à do `build.mjs` | Passo 1 | dev-react + dev-tests |
+| 3 | CI: build contra o Postgres do service depois do `db:migrate`; tirar `site/**` dos `paths` quando o passo 5 sair | Build do CI conecta ao banco e passa | — | dev-devops |
+| 4 | `app/route.ts` + `paginaDoSite()`; template em `src/site/index.html` e arquivos em `public/` (`git mv`); `outputFileTracingIncludes`; redirect `/index.html` → `/`; sai `app/page.tsx` | `localhost:3000/` igual a `127.0.0.1:8765` lado a lado (visual, animações, carrosséis, troca mensal/anual dos planos, links das páginas legais); teste: HTML de `paginaDoSite()` = saída de `montar` | Passos 1 e 2 | dev-react; dev-tests (teste do handler) |
+| 5 | Publicar com `updateTag` na action; remover `deploy-hook.ts`, `SITE_DEPLOY_HOOK_URL`, `GET /api/conteudo-site`, `SITE_PUBLIC_URL`; remover `site/` (`build.mjs`, `dev.mjs`, `package.json`, `vercel.json`); textos de sucesso do painel | Publicar e recarregar `/` mostra o novo; testes do hook e do endpoint removidos; teste de que a action chama `updateTag` | Passo 4 | dev-react; dev-tests; dev-uiux (texto) |
+| 6 | `/entrar` → `/login` com redirect permanente; `callbackURL` e `redirect` atualizados | Fluxos de entrar, sair, confirmar e-mail e sessão expirada levam a `/login` | Testes de `exigirPapel` e das actions ajustados antes | dev-react; dev-tests |
+| 7 | Verificação em Preview das hipóteses H1 a H4 (publicar atualiza `/`; `next build && next start` local com o banco parado depois do build serve `/`; regeneração com o banco fora mantém a versão boa; template no bundle) | Resultado registrado no ADR-0007 (vira "Aceito" ou aciona "Quando revisitar") | — | dev-devops (+ dev-react) |
+| 8 | Corte: migrations + `conteudo:migrar` no Neon de produção, deploy do projeto único, `/` igual ao site no ar, domínio do site para o projeto único, `nuyvi` parado para rollback, merge na `main` | Domínio servindo o app; rollback testado (apontar de volta) | Passo 7 | dev-devops + dev-infra + desenvolvedor |
+| 9 | Remover o projeto `nuyvi` depois do período de rollback | Projeto removido; inventário atualizado | — | dev-infra |
+
+Docs junto de cada passo: `admin/README.md` (variáveis, scripts, rotas, CI; seção "No projeto do site" sai) nos passos 4 a 6; `BRIEFING.md` (onde o site mora, URLs, painel) no passo 8 (`docs-handoff`); `TODO.md` em todos.
