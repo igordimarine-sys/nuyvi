@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montar } from "../../../site/build.mjs";
+import { montar } from "@/modules/conteudo-site/pagina";
 import { GET } from "@/app/api/conteudo-site/route";
 import { obterPublicado } from "@/modules/conteudo-site/leitura";
 import { publicar } from "@/modules/conteudo-site/publicar";

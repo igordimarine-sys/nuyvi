@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montar } from "../../../site/build.mjs";
+import { montar } from "@/modules/conteudo-site/pagina";
 import { readFileSync } from "node:fs";
 import { HTML_SITE, PASTA_CONTEUDO, conteudoDoSite } from "./dados";
 
@@ -10,7 +10,7 @@ const bruto = () => Object.fromEntries(["textos", "loja", "explore", "novidades"
 const LOJA_URL = "https://loja.exemplo.test";
 const BLOB_HOST = "abc123.public.blob.vercel-storage.com";
 
-describe("montar() de site/build.mjs (caracterização)", () => {
+describe("montar() de pagina.ts (caracterização)", () => {
   it("index.html + conteúdo inicial, sem lojaUrl nem blobHost", async () => {
     const { html, trechos } = montar(HTML_SITE, bruto(), {});
     expect(trechos).toBeGreaterThan(0);
