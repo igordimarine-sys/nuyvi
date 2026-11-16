@@ -5,6 +5,11 @@ import type { Campo } from "./campos";
 export type Valor = Record<string, unknown>;
 export type Caminho = (string | number)[];
 
+/** Os campos com dado, sem os grupos (que só organizam a tela). */
+export function folhas(campos: Campo[]): Exclude<Campo, { tipo: "grupo" }>[] {
+  return campos.flatMap((c) => (c.tipo === "grupo" ? folhas(c.campos) : [c]));
+}
+
 let contador = 0;
 const nova = () => `k${++contador}`;
 const texto = (v: unknown) => (typeof v === "string" ? v : "");
@@ -13,9 +18,9 @@ const texto = (v: unknown) => (typeof v === "string" ? v : "");
 export function paraEstado(dados: unknown, campos: Campo[], novo = false): Valor {
   const d = (dados ?? {}) as Valor;
   const o: Valor = {};
-  for (const c of campos) {
+  for (const c of folhas(campos)) {
     const v = d[c.chave];
-    if (c.tipo === "texto" || c.tipo === "selecao" || c.tipo === "foto") o[c.chave] = texto(v);
+    if (c.tipo === "texto" || c.tipo === "selecao" || c.tipo === "foto" || c.tipo === "video") o[c.chave] = texto(v);
     else if (c.tipo === "inteiro") o[c.chave] = typeof v === "number" ? String(v) : "";
     else if (c.tipo === "preco") o[c.chave] = typeof v === "number" ? String(v).replace(".", ",") : "";
     else if (c.tipo === "sim_nao") o[c.chave] = v === true;
@@ -39,7 +44,7 @@ const numero = (s: unknown, inteiro: boolean) => {
 /** Estado do formulário -> dados do bloco (o que vai ao servidor e ao zod). */
 export function paraEnvio(estado: Valor, campos: Campo[]): Valor {
   const o: Valor = {};
-  for (const c of campos) {
+  for (const c of folhas(campos)) {
     const v = estado[c.chave];
     if (c.tipo === "inteiro" || c.tipo === "preco") o[c.chave] = numero(v, c.tipo === "inteiro");
     else if (c.tipo === "lista") o[c.chave] = (v as Valor[]).map((i) => paraEnvio(i, c.campos));
@@ -63,7 +68,7 @@ export const idDe = (caminho: Caminho) => `c-${caminho.join("-")}`;
 /** Nome legível do campo de um caminho, para o resumo de erros ("Plano 2: Nome"). */
 export function descreverCaminho(campos: Campo[], caminho: Caminho): string {
   const [k, i, ...resto] = caminho;
-  const c = campos.find((x) => x.chave === k);
+  const c = folhas(campos).find((x) => x.chave === k);
   if (!c) return caminho.join(".");
   if (c.tipo === "lista" && typeof i === "number") {
     const sub = resto.length ? descreverCaminho(c.campos, resto) : "";

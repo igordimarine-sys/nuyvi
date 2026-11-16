@@ -18,7 +18,10 @@ export const CONTEUDO_BLOCOS = [
   "loja",
   "novidades",
   "baixar",
-] as const; // 9 do editor atual; o CHECK do banco já aceita também videos, geral, pagina-loja (migration 0003): o dev-react estende aqui
+  "videos",
+  "geral",
+  "pagina-loja",
+] as const; // 12, como na CHECK do banco (migration 0003)
 export type ConteudoBloco = (typeof CONTEUDO_BLOCOS)[number];
 
 export const CONTEUDO_DOCUMENTOS = ["textos", "loja", "explore", "novidades", "planos"] as const;

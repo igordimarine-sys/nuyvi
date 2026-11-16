@@ -35,7 +35,16 @@ async function reencodar(bytes: Uint8Array, formato: keyof typeof FORMATOS): Pro
   }
 }
 
-const mb = (n: number) => (n / 1_000_000).toFixed(1).replace(".", ",");
+/** Variável que falta para enviar ao Blob, ou null se está tudo configurado. */
+export function armazenamentoFaltando(): string | null {
+  // O host do store é configuração (NEXT_PUBLIC_BLOB_HOST): sem ele a URL devolvida não passaria na validação do conteúdo.
+  if (!process.env.NEXT_PUBLIC_BLOB_HOST) return "NEXT_PUBLIC_BLOB_HOST";
+  // Fora da Vercel (dev) o SDK só funciona com token; na Vercel vale o OIDC do store conectado, que o SDK resolve sozinho.
+  if (!process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) return "BLOB_READ_WRITE_TOKEN";
+  return null;
+}
+
+export const mb = (n: number) => (n / 1_000_000).toFixed(1).replace(".", ",");
 
 /**
  * Envia uma foto do conteúdo ao Vercel Blob público (prefixo `conteudo/`, sufixo aleatório; o nome do arquivo do
@@ -53,14 +62,8 @@ export async function enviarFoto(arquivo: unknown): Promise<ResultadoFoto> {
   const limpa = await reencodar(bytes, formato);
   if (!limpa) return { ok: false, motivo: "formato", mensagem: "Formato não aceito. Envie JPEG, PNG ou WebP." };
 
-  // O host do store é configuração (NEXT_PUBLIC_BLOB_HOST): sem ele a URL devolvida não passaria na validação do conteúdo.
-  if (!process.env.NEXT_PUBLIC_BLOB_HOST) {
-    return { ok: false, motivo: "nao_configurado", mensagem: "O armazenamento de fotos não está configurado neste ambiente (falta NEXT_PUBLIC_BLOB_HOST)." };
-  }
-  // Fora da Vercel (dev) o SDK só funciona com token; na Vercel vale o OIDC do store conectado, que o SDK resolve sozinho.
-  if (!process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
-    return { ok: false, motivo: "nao_configurado", mensagem: "O armazenamento de fotos não está configurado neste ambiente (falta BLOB_READ_WRITE_TOKEN)." };
-  }
+  const falta = armazenamentoFaltando();
+  if (falta) return { ok: false, motivo: "nao_configurado", mensagem: `O armazenamento de fotos não está configurado neste ambiente (falta ${falta}).` };
   try {
     const f = FORMATOS[formato];
     const blob = await put(`conteudo/foto.${f.ext}`, limpa, { access: "public", addRandomSuffix: true, contentType: f.tipo, abortSignal: AbortSignal.timeout(30_000) });

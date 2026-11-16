@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { lerPainel } from "@/modules/conteudo-site/leitura";
+import { videosDoSite } from "@/modules/conteudo-site/videos-do-site";
 import { BLOCOS, ehBloco, fatia } from "@/modules/conteudo-site/schema";
 import { CAMPOS } from "../campos";
 import { BlocoEditor } from "../editor";
@@ -46,6 +47,7 @@ async function Edicao({ params }: { params: PageProps<"/admin/conteudo/[bloco]">
         campos={CAMPOS[bloco]}
         inicial={fatia(painel.publicado.conteudo, bloco)}
         versaoBase={painel.versaoBase}
+        videos={await videosDoSite()}
       />
     </>
   );

@@ -24,6 +24,7 @@ As credenciais do compose são só de desenvolvimento (substituíveis por `LOCAL
 | `lint` / `typecheck` | ESLint / `next typegen` + `tsc --noEmit` (gera os tipos de rota antes, para funcionar sem `.next/`) |
 | `db:generate` / `db:migrate` | Drizzle Kit (migrations em `drizzle/`; schema em `src/db/schema`) |
 | `test` / `test:watch` | Vitest (veja "Testes"); `test:watch` reexecuta ao salvar |
+| `conteudo:blocos-novos` | Grava a versão `migracao` com os campos editáveis acrescentados (ADR-0007 A1: blocos `geral`, `videos`, `pagina-loja` e campos novos nos demais), preenchidos com o texto atual do template. Idempotente: não grava se a última versão aceita já tem `textos.geral`. Rodar depois de `conteudo:migrar` e **antes** do deploy do código que lê esses campos (o script não revalida o cache de `/`) |
 | `conteudo:migrar` | Grava a versão 1 do conteúdo do site a partir de `scripts/conteudo-inicial/*.json` (ou de uma pasta passada como argumento). Idempotente: não grava se já houver qualquer versão |
 | `admin:criar` | Cria ou promove o admin: `npm run admin:criar -- email@dominio.com "Nome"` (senha pedida no terminal, sem eco; ou via stdin) |
 
@@ -66,6 +67,7 @@ Para testar localmente:
 ```bash
 npm run db:migrate
 npm run conteudo:migrar                       # versão 1 (9 blocos)
+npm run conteudo:blocos-novos                 # versão 2: campos novos (geral, videos, pagina-loja)
 npm run admin:criar -- voce@exemplo.com "Nome"
 npm run dev                                   # / = site da N.UY; entre em /login e abra /admin/conteudo
 ```

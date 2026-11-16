@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { lerPainel } from "@/modules/conteudo-site/leitura";
 import { BLOCOS, resumo, SLUGS } from "@/modules/conteudo-site/schema";
 import { barrarSeNaoPuder, ErroAoAbrir, Esqueleto } from "./estados";
-import { Aviso, formatarDataHora } from "./ui";
+import { Aviso, Etiqueta, formatarDataHora } from "./ui";
 import { unstable_rethrow } from "next/navigation";
 import { descreverErro } from "@/lib/erro-log";
 
@@ -41,7 +41,7 @@ async function Lista() {
           {SLUGS.map((slug) => (
             <li key={slug}>
               <Link className="cartao cartao-bloco" href={`/admin/conteudo/${slug}`}>
-                <span className="cartao-titulo">{BLOCOS[slug].nome}</span>
+                <span className="cartao-titulo">{BLOCOS[slug].nome}{slug === "pagina-loja" && <> <Etiqueta>Outra página</Etiqueta></>}</span>
                 <span className="cartao-resumo">{resumo(publicado.conteudo, slug)}</span>
                 <span className="cartao-meta">{quando(porBloco[slug]) ?? "Sem registro de publicação"}</span>
                 <span className="botao botao-secundario" aria-hidden="true">Editar</span>

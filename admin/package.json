@@ -12,6 +12,7 @@
     "db:migrate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs migrate",
     "admin:criar": "node --env-file-if-exists=.env.local scripts/criar-admin.mjs",
     "conteudo:migrar": "node --env-file-if-exists=.env.local scripts/migrar-conteudo.mjs",
+    "conteudo:blocos-novos": "node --env-file-if-exists=.env.local scripts/conteudo-blocos-novos.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

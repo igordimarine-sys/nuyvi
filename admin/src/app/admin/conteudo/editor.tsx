@@ -6,13 +6,14 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { BLOCOS, errosDe, type Bloco } from "@/modules/conteudo-site/schema";
 import { publicarBloco, type RespostaPublicar } from "./actions";
 import type { Campo } from "./campos";
-import { definir, descreverCaminho, idDe, paraEnvio, paraEstado, type Caminho, type Valor } from "./estado";
+import { definir, descreverCaminho, folhas, idDe, paraEnvio, paraEstado, type Caminho, type Valor } from "./estado";
 import { Aviso, Etiqueta } from "./ui";
 
 // Editor de UM bloco (spec UI, seções 6 e 7): estado só na tela, validação inline com as regras do servidor (zod),
 // publicar sozinho o bloco, e o digitado nunca se perde por erro, conflito ou falha do disparo.
 const TAMANHO_MAXIMO = 4_500_000; // igual ao servidor (modules/conteudo-site/foto.ts); o servidor confere de novo
 const FORMATOS = ["image/jpeg", "image/png", "image/webp"];
+const FORMATOS_VIDEO = ["video/mp4", "video/webm"];
 
 type Confirmacao = { titulo: string; texto: string; ok: string; perigo?: boolean; cancelar?: string; aoConfirmar: () => void };
 
@@ -33,7 +34,8 @@ type Ctx = {
   pedirConfirmacao: (c: Confirmacao) => void;
   anunciar: (msg: string) => void;
   focar: (...ids: string[]) => void;
-  enviando: (delta: 1 | -1) => void;
+  enviando: (delta: 1 | -1, midia?: "foto" | "video") => void;
+  videos: string[];
 };
 const EditorCtx = createContext<Ctx | null>(null);
 const useEditor = () => {
@@ -61,7 +63,28 @@ function Campos({ campos, valor, caminho }: { campos: Campo[]; valor: Valor; cam
   // o primeiro texto do grupo nomeia a foto na miniatura ("Capa de Gold")
   const primeiro = campos.find((x) => x.tipo === "texto");
   const contexto = primeiro ? String(valor[primeiro.chave] ?? "") : "";
-  return <>{campos.map((c) => <CampoGenerico key={c.chave} campo={c} valor={valor[c.chave]} caminho={[...caminho, c.chave]} contexto={contexto} />)}</>;
+  return (
+    <>
+      {campos.map((c) => c.tipo === "grupo"
+        ? <Grupo key={c.chave} campo={c} valor={valor} caminho={caminho} />
+        : <CampoGenerico key={c.chave} campo={c} valor={valor[c.chave]} caminho={[...caminho, c.chave]} contexto={contexto} />)}
+    </>
+  );
+}
+
+/** Grupo de campos (6.9): fieldset com título; abre sozinho se algum campo de dentro tem erro. */
+function Grupo({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: "grupo" }>; valor: Valor; caminho: Caminho }) {
+  const ed = useEditor();
+  const [recolhido, setRecolhido] = useState(false);
+  const temErro = folhas(campo.campos).some((f) => Object.keys(ed.erros).some((k) => k === [...caminho, f.chave].join(".") || k.startsWith(`${[...caminho, f.chave].join(".")}.`)));
+  const aberto = !recolhido || temErro;
+  return (
+    <fieldset className="grupo" id={`grupo-${campo.chave}`}>
+      <legend tabIndex={-1}>{campo.rotulo} {temErro && <Etiqueta tom="erro">Tem erro</Etiqueta>}</legend>
+      <button type="button" className="botao botao-link" aria-expanded={aberto} disabled={temErro} onClick={() => setRecolhido((x) => !x)}>{aberto ? "Recolher" : "Expandir"}</button>
+      {aberto && <Campos campos={campo.campos} valor={valor} caminho={caminho} />}
+    </fieldset>
+  );
 }
 
 function CampoGenerico({ campo, valor, caminho, contexto }: { campo: Campo; valor: unknown; caminho: Caminho; contexto: string }) {
@@ -105,6 +128,10 @@ function CampoGenerico({ campo, valor, caminho, contexto }: { campo: Campo; valo
         </Rotulado>
       );
     }
+    case "video":
+      return <CampoVideo campo={campo} valor={String(valor ?? "")} caminho={caminho} />;
+    case "grupo":
+      return null; // tratado em `Campos`
     case "foto":
       return <CampoFoto campo={campo} valor={String(valor ?? "")} caminho={caminho} contexto={contexto} />;
     case "lista":
@@ -175,6 +202,84 @@ function CampoFoto({ campo, valor, caminho, contexto }: { campo: Extract<Campo, 
   );
 }
 
+function CampoVideo({ campo, valor, caminho }: { campo: Extract<Campo, { tipo: "video" }>; valor: string; caminho: Caminho }) {
+  const ed = useEditor();
+  const id = idDe(caminho);
+  const entrada = useRef<HTMLInputElement>(null);
+  const cancelar = useRef<AbortController | null>(null);
+  const [anterior, setAnterior] = useState<string | null>(null); // valor publicado, enquanto houver troca ainda não publicada
+  const [enviando, setEnviando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [erroLocal, setErroLocal] = useState<string | null>(null);
+  const erro = erroLocal ?? ed.erros[caminho.join(".")];
+  const origem = valor.startsWith("http") ? valor : valor ? `/${valor.replace(/^\//, "")}` : null;
+  const doSite = valor.startsWith("video/");
+  const nome = doSite ? valor.split("/").slice(1).join("/") : valor ? "Vídeo enviado pelo painel" : "Nenhum vídeo";
+
+  const escolher = (novo: string) => { setErroLocal(null); setAnterior((a) => a ?? valor); ed.alterar(caminho, novo); };
+
+  async function enviar(f: File) {
+    setErroLocal(null);
+    if (!FORMATOS_VIDEO.includes(f.type)) return setErroLocal("Formato não aceito. Envie MP4 ou WebM.");
+    if (f.size > TAMANHO_MAXIMO) return setErroLocal(`Arquivo grande demais (${(f.size / 1_000_000).toFixed(1).replace(".", ",")} MB). O máximo é 4,5 MB.`);
+    const abort = new AbortController();
+    cancelar.current = abort;
+    setEnviando(true);
+    ed.enviando(1, "video");
+    try {
+      const dados = new FormData();
+      dados.set("video", f);
+      const res = await fetch("/api/conteudo-site/foto", { method: "POST", body: dados, signal: abort.signal });
+      const j = (await res.json()) as { ok: boolean; url?: string; mensagem?: string };
+      if (j.ok && j.url) {
+        setAnterior((a) => a ?? valor);
+        ed.alterar(caminho, j.url);
+        setAviso(null);
+      } else setErroLocal(j.mensagem ?? "Não foi possível enviar o vídeo. Verifique a internet e tente de novo.");
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") setAviso("Envio cancelado.");
+      else setErroLocal("Não foi possível enviar o vídeo. Verifique a internet e tente de novo.");
+    } finally {
+      cancelar.current = null;
+      setEnviando(false);
+      ed.enviando(-1, "video");
+      entrada.current?.focus();
+    }
+  }
+
+  const naLista = ed.videos.includes(valor);
+  return (
+    <fieldset className={`campo campo-video${erro ? " campo-erro" : ""}`} aria-describedby={`${id}-desc`}>
+      <legend>{campo.rotulo}{campo.opcional && <> <Etiqueta>Opcional</Etiqueta></>}</legend>
+      {origem
+        ? <video key={origem} className="video-previa" src={origem} controls muted playsInline preload="metadata" aria-label={`Prévia do vídeo: ${nome}`}>Não foi possível mostrar a prévia neste navegador. O vídeo continua valendo.</video>
+        : <span className="foto-vazia" aria-hidden="true">sem vídeo</span>}
+      <p className="foto-nome">{nome}</p>
+      {anterior !== null && !enviando && <p><Etiqueta tom="aviso">{doSite ? "Alterado, ainda não publicado" : "Novo, ainda não publicado"}</Etiqueta></p>}
+      {anterior !== null && !enviando && <p role="status" className="ajuda">Você trocou o vídeo. Confira se a imagem de espera combina com ele.</p>}
+      <label htmlFor={id}>Vídeos que já estão no site</label>
+      <select id={id} disabled={enviando} value={valor} onChange={(e) => escolher(e.target.value)} onBlur={() => ed.aoSair(caminho)}>
+        {campo.opcional && <option value="">Nenhum (usar o do computador)</option>}
+        {!campo.opcional && !valor && <option value="">Escolha um vídeo</option>}
+        {valor && !naLista && <option value={valor}>Vídeo enviado pelo painel (atual)</option>}
+        {ed.videos.map((v) => <option key={v} value={v}>{v.replace(/^video\//, "")}</option>)}
+      </select>
+      <div className="linha-botoes">
+        <button type="button" className="botao botao-secundario" disabled={enviando} onClick={() => entrada.current?.click()}>Enviar um vídeo novo</button>
+        {enviando && <button type="button" className="botao botao-link" onClick={() => cancelar.current?.abort()}>Cancelar envio</button>}
+        {anterior !== null && !enviando && <button type="button" className="botao botao-link" onClick={() => { ed.alterar(caminho, anterior); setAnterior(null); setErroLocal(null); }}>Voltar ao vídeo anterior</button>}
+      </div>
+      {enviando && <p role="status"><progress aria-label="Enviando o vídeo" /> Enviando...</p>}
+      <input ref={entrada} type="file" hidden accept="video/mp4,video/webm" tabIndex={-1}
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void enviar(f); }} />
+      {aviso && !enviando && !erro && <p role="status" className="ajuda">{aviso}</p>}
+      {erro
+        ? <p id={`${id}-desc`} className="erro-texto" role="alert"><span aria-hidden="true">! </span>{erro}</p>
+        : <p id={`${id}-desc`} className="ajuda">{campo.ajuda ? `${campo.ajuda} ` : ""}MP4 ou WebM, até 4,5 MB. É vídeo de fundo, sem som; de preferência com até 15 segundos.</p>}
+    </fieldset>
+  );
+}
+
 function mover<T>(lista: T[], de: number, delta: -1 | 1): T[] {
   const copia = [...lista];
   const [x] = copia.splice(de, 1);
@@ -213,6 +318,7 @@ function ListaEditavel({ campo, valor, caminho }: { campo: Extract<Campo, { tipo
   };
   const remover = (i: number) => {
     const it = valor[i] as Valor;
+    if (campo.semConfirmar) { trocar(valor.filter((_, k) => k !== i)); ed.anunciar(`${campo.item} removid${campo.artigo}`); ed.focar(`${id}-adicionar`); return; }
     ed.pedirConfirmacao({
       titulo: `Remover ${campo.item.toLowerCase()}`,
       texto: `Remover ${campo.artigo} ${campo.item.toLowerCase()}${resumoDe(it) ? ` "${resumoDe(it)}"` : ""}? ${campo.artigo === "o" ? "Ele" : "Ela"} sai do site quando você publicar.`,
@@ -261,7 +367,8 @@ function ListaEditavel({ campo, valor, caminho }: { campo: Extract<Campo, { tipo
         })}
       </ol>
       {ed.erros[caminho.join(".")] && <p className="erro-texto" id={`${id}-desc`}><span aria-hidden="true">! </span>{ed.erros[caminho.join(".")]}</p>}
-      <button type="button" id={`${id}-adicionar`} className="botao botao-secundario" onClick={adicionar}>{campo.adicionar}</button>
+      <button type="button" id={`${id}-adicionar`} className="botao botao-secundario" disabled={campo.max !== undefined && n >= campo.max} onClick={adicionar}>{campo.adicionar}</button>
+      {campo.max !== undefined && n >= campo.max && <p className="ajuda">O máximo é {campo.max} itens.</p>}
     </fieldset>
   );
 }
@@ -337,12 +444,13 @@ function Dialogo({ confirmacao, aoFechar }: { confirmacao: Confirmacao | null; a
 
 // ---------- Editor ----------
 
-export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
+export function BlocoEditor({ slug, nome, campos, inicial, versaoBase, videos }: {
   slug: Bloco;
   nome: string;
   campos: Campo[];
   inicial: unknown;
   versaoBase: number;
+  videos: string[];
 }) {
   const router = useRouter();
   const schema = BLOCOS[slug].schema;
@@ -357,6 +465,7 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [falhas, setFalhas] = useState(0);
   const [fotosEnviando, setFotosEnviando] = useState(0);
+  const [videosEnviando, setVideosEnviando] = useState(0);
   const [confirmacao, setConfirmacao] = useState<Confirmacao | null>(null);
   const [anuncio, setAnuncio] = useState("");
   const avisoRef = useRef<HTMLDivElement>(null);
@@ -424,7 +533,8 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
     pedirConfirmacao: setConfirmacao,
     anunciar: setAnuncio,
     focar: (...ids) => { focoPedido.current = ids; },
-    enviando: (d) => setFotosEnviando((x) => x + d),
+    enviando: (d, midia) => (midia === "video" ? setVideosEnviando : setFotosEnviando)((x) => x + d),
+    videos,
   };
 
   function carregar(dados: unknown, novaBase: number) {
@@ -497,8 +607,9 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
   }
 
   const bloqueado = publicando;
-  const podePublicar = alterado && !publicando && fotosEnviando === 0;
+  const podePublicar = alterado && !publicando && fotosEnviando === 0 && videosEnviando === 0;
   const situacao = publicando ? "Publicando..."
+    : videosEnviando > 0 ? "Aguarde o envio do vídeo terminar."
     : fotosEnviando > 0 ? "Aguarde o envio da foto terminar."
     : alterado ? "Alterações não publicadas. Ao publicar, a mudança já aparece no site."
     : "Nenhuma alteração para publicar.";
@@ -536,7 +647,7 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
         {resultado?.tipo === "publicado" && (
           <Aviso tipo="sucesso" titulo="Publicado." refEl={avisoRef}>
             <p>A mudança já está no site.</p>
-            <p className="aviso-links"><Link href="/admin/conteudo">Voltar à lista de blocos</Link> · <button type="button" className="botao botao-link" onClick={() => setResultado(null)}>Continuar editando</button></p>
+            <p className="aviso-links"><a href={slug === "pagina-loja" ? "/loja" : "/"} target="_blank" rel="noopener">Ver no site<span className="so-leitor"> (abre em nova aba)</span></a> · <Link href="/admin/conteudo">Voltar à lista de blocos</Link> · <button type="button" className="botao botao-link" onClick={() => setResultado(null)}>Continuar editando</button></p>
           </Aviso>
         )}
         {resultado?.tipo === "falha" && (
@@ -590,6 +701,15 @@ export function BlocoEditor({ slug, nome, campos, inicial, versaoBase }: {
           </Aviso>
         )}
         {resultado?.tipo === "sem_conteudo" && <Aviso tipo="erro" titulo="O conteúdo inicial ainda não foi carregado." refEl={avisoRef}><p>Avise o responsável técnico.</p></Aviso>}
+
+        {campos.filter((c) => c.tipo === "grupo").length >= 3 && (
+          <nav aria-label="Neste bloco" className="ancoras-grupos">
+            <strong>Neste bloco:</strong>{" "}
+            {campos.filter((c) => c.tipo === "grupo").map((c, i) => (
+              <span key={c.chave}>{i > 0 && " · "}<a href={`#grupo-${c.chave}`} onClick={(e) => { e.preventDefault(); const el = document.getElementById(`grupo-${c.chave}`); el?.scrollIntoView(); el?.querySelector<HTMLElement>("legend")?.focus(); }}>{c.rotulo}</a></span>
+            ))}
+          </nav>
+        )}
 
         <form className="cartao" noValidate onSubmit={(e) => e.preventDefault() /* Enter num campo não publica: só o botão Publicar */}>
           <fieldset disabled={bloqueado} className="form-bloco">

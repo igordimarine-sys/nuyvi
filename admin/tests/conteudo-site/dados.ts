@@ -5,6 +5,7 @@ import { conteudoVersoes } from "@/db/schema";
 import { criarUsuario } from "../fabricas";
 import { sessao, sessaoDe } from "../contas/sessao-falsa";
 import { conteudoSchema, type Conteudo } from "@/modules/conteudo-site/schema";
+import { completar } from "../../scripts/conteudo-blocos-novos.mjs";
 
 // Conteúdo inicial do site (admin/scripts/conteudo-inicial/*.json) + `destino` nos cartões da Loja = o que a migração grava como versão 1.
 export const PASTA_SITE = new URL("../../src/site/", import.meta.url);
@@ -24,6 +25,9 @@ export function conteudoDoSite(): Conteudo {
 }
 
 /** Versão `numero` já aceita (como a migração deixa a 1). `falhou` nasce pendente e é marcada depois (o banco não deixa nascer falhada). */
+/** O conteúdo da versão `migracao` dos blocos novos: o inicial + os campos novos com o texto atual do template. */
+export const conteudoComBlocosNovos = (): Conteudo => conteudoSchema.parse(completar(conteudoDoSite()));
+
 export async function semearVersao(numero = 1, conteudo: Conteudo = conteudoDoSite(), extra: Partial<typeof conteudoVersoes.$inferInsert> = {}) {
   const { disparoEstado = "aceito", ...resto } = extra;
   const nasce = disparoEstado === "falhou" ? "pendente" : disparoEstado;

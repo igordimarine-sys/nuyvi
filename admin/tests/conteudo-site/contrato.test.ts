@@ -3,20 +3,24 @@ import { montar } from "@/modules/conteudo-site/pagina";
 import { obterPublicado } from "@/modules/conteudo-site/leitura";
 import { publicar } from "@/modules/conteudo-site/publicar";
 import { conteudoSchema, type Conteudo } from "@/modules/conteudo-site/schema";
-import { conteudoDoSite, entrarComo, HTML_SITE, semearVersao } from "./dados";
+import { conteudoComBlocosNovos, conteudoDoSite, entrarComo, HTML_SITE, semearVersao } from "./dados";
 
 // Contrato painel x página (ADR-0007): o conteúdo que o painel aceita PRECISA gerar HTML em `montar` (pagina.ts), e o que o
 // painel recusa o `montar` também recusa. Se as regras divergirem, `/` quebra DEPOIS de "publicado".
 const LOJA = "https://loja.exemplo.test";
 const HOST = "abc123.public.blob.vercel-storage.com"; // = NEXT_PUBLIC_BLOB_HOST do vitest.config
 const BLOB = `https://${HOST}/conteudo/foto-Xy12.webp`;
+const ANTIGOS = "textos\\.(?:hero\\.(?:frase|plataformas)|rede\\.(?:titulo[12]|texto)|(?:bonus|historia|baixar)\\.(?:rotulo|titulo[12]|texto|itens))|loja\\.(?:rotulo|titulo[12]|produtos)|explore\\.cartoes|novidades\\.noticias|planos\\.(?:economia|nota|dados)";
+const MARCADOR_NOVO = new RegExp(`<!--/?cms:(?!(?:${ANTIGOS})-->)[\\w.]+-->`, "g");
 const clonar = <T,>(x: T): T => structuredClone(x);
 
 describe("contrato painel x pagina.ts", () => {
   it("o index.html atual é reproduzido sem nenhuma diferença a partir do conteúdo do site", () => {
     const { html, trechos } = montar(HTML_SITE, conteudoDoSite());
     expect(trechos).toBeGreaterThan(20);
-    expect(html).toBe(HTML_SITE);
+    // os marcadores dos campos novos (A1) não vão para o HTML servido; os antigos continuam
+    expect(html).toBe(HTML_SITE.replace(MARCADOR_NOVO, ""));
+    expect(montar(HTML_SITE, conteudoComBlocosNovos()).html).toBe(html);
   });
 
   it("o conteúdo gravado no banco (passando pelo JSON) gera o mesmo HTML que o conteúdo direto", async () => {

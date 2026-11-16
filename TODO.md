@@ -1,9 +1,16 @@
 # TODO
 
 ## Em andamento
-- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); próximos: conteúdo visível no banco (A1), sessão no site (A2), /loja (A3), CSP, revisão e docs.
+- ADR-0007 (aceito): plano da seção 10 de `docs/tecnico/arquitetura.md`, um commit por passo. Feitos: 0 a 6 (/ servido pelo Next, publicar atualiza na hora, /login com volta seguro); migration 0003 e spec visual feitas; A1 feito (todo conteúdo visível no banco e no painel, upload de vídeo); próximos:, sessão no site (A2), /loja (A3), CSP, revisão e docs.
 
 ## Pendente
+- A1 (dev-devops, no corte): rodar `conteudo:blocos-novos` (script idempotente da versão `migracao` com os blocos novos) depois das migrations e antes do deploy; o script não revalida o cache de `/` (reiniciar ou republicar).
+- A1 (dev-performance-seo): `og:title`/`og:description` não existem no template; adicionar muda o HTML (decidir junto com o campo de título/descrição do bloco Geral).
+- A1 (dev-react, refino): limites C1/C2/C3 nos campos antigos, `optgroup` nos selects de link e contador n/limite (UI 6.2b); vídeos de `public/video` (14 MB) entram na função do painel via tracing: avaliar alternativa se pesar.
+- UI v1.1 (arquiteto-specs): endereços das lojas de app ficam em `geral` (ADR) × "Baixe o app" (spec 5.9); "por mês", "para sempre", "cobrados por ano" (hoje no script dos planos) viram campos?; link externo no menu/rodapé entra ou não (hoje desligado por CA-LOJ-65).
+- UI v1.1 (desenvolvedor): título da `/loja` centralizado no celular (registrado assim) ou à esquerda como o resto do site.
+- UI v1.1 (copywriter): textos provisórios da `/loja` ("a partir de", "Esgotado", "Em breve") e da newsletter (com PEND-09).
+- UI v1.1 (dev-react): CSS compartilhado entre `/` e `/loja` (o `public/css/estilos.css` é Tailwind das versões antigas e não serve); conferir larguras do cabeçalho com sessão e contrastes (estimados à mão).
 - ADR-0007 passo 5 (dev-uiux): validar os textos novos do painel ("Publicado." / "A mudança já está no site."; "Alterações não publicadas. Ao publicar, a mudança já aparece no site.") e reescrever as seções 7.2, 7.6, 7.7 e a tabela da 12 de `docs/tecnico/ui-painel-conteudo.md` (sem estados de disparo/pendente).
 - ADR-0007 passo 5: conferir à mão que publicar no painel muda `/` na requisição seguinte em `next start` (só coberto por teste da action + mesma tag no build; dev-qa no passo de aceite).
 - Spec v0.6 (desenvolvedor): PEND-10 contradição de fase (carrinho/checkout no MVP fase 1 da spec × "fase 1b" na decisão de 2026-11-15); confirmar PREM-15 (logos, selos das lojas de app, rótulos de leitor de tela, páginas legais e `versao-*.html` fora da edição) e PREM-16 ("Sair" mantém na página; equipe com `volta` dentro de `/admin` volta para lá; produto esgotado aparece como "Esgotado"; vitrine sem página de produto).
