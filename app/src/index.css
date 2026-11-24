@@ -1,0 +1,299 @@
+/*
+ * NUY – estilos da landing em React.
+ *
+ * O Tailwind entra SEM o preflight (o reset dele): a versão estática não tem reset, só as regras de base
+ * abaixo. Com o preflight os botões herdariam a fonte, as listas perderiam o recuo etc., e a página
+ * deixaria de ser igual ao pixel à versão de referência (site/index.html).
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Variante para o "computador com mouse", a mesma condição das trocas de cena e do Lenis */
+@custom-variant mesa (@media (min-width: 1024px) and (pointer: fine));
+/* "até" com a mesma consulta da versão estática (max-width: 767px). O padrão do Tailwind (width < 768px)
+   discorda dela em telas com largura fracionária, como 767,5px com a escala do Windows em 125%. */
+@custom-variant max-md (@media (max-width: 767px));
+@custom-variant max-xs (@media (max-width: 479px));
+/* hover sempre, como na versão estática (o Tailwind v4 só aplica em aparelhos com mouse) */
+@custom-variant hover (&:hover);
+
+/* Tokens: vêm do :root da versão estática. Os valores padrão do Tailwind (cores, fontes, pontos de quebra)
+   são zerados, para nenhum utilitário cair num valor que não é da marca. */
+@theme {
+  --color-*: initial;
+  --color-preto: #07090A;
+  --color-grafite: #111517;
+  --color-branco: #F4F7F5;
+  --color-nevoa: #A9B1AD;
+  --color-nevoa-clara: #D5DBD8;   /* texto claro sobre vídeo (rede, história, lista dos planos) */
+  --color-cinza: #7d8682;         /* rodapé: placeholder e linha final */
+  --color-rodape: #050607;
+  --color-laranja: #FF7A2E;
+  --color-laranja-escuro: #B4440F; /* "-20%" sobre o botão branco */
+  --color-alerta: #FF9454;        /* aviso de e-mail inválido */
+  --color-rosa: #E8476A;
+  --color-vinho: #3A1222;
+  --color-ciano: #2EC8E8;
+  --color-verde: #8BE04E;
+  --color-branco-puro: #fff;
+
+  --font-*: initial;
+  --font-display: Archivo, sans-serif;
+  --font-sans: Manrope, system-ui, sans-serif;
+
+  --breakpoint-*: initial;
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-nv: 900px;
+  --breakpoint-lg: 1024px;
+
+  --spacing-lado: clamp(1rem, 4vw, 3rem);
+
+  /* Tipografia fluida (os clamp() da versão estática) */
+  --text-t-grande: clamp(2.6rem, 9vw, 7.5rem);
+  --text-t-medio: clamp(2rem, 6vw, 4.25rem);
+  --text-t-medio-premium: clamp(2rem, 4vw, 3.4rem);
+  --text-troca: clamp(2.3rem, 6vw, 5.5rem);
+  --text-hero-data: clamp(1.1rem, 3.4vw, 1.75rem);
+  --text-rede: clamp(2.2rem, 8vw, 6rem);
+  --text-historia: clamp(2.3rem, 7.2vw, 6.5rem);
+  --text-historia-texto: clamp(1.05rem, 1.8vw, 1.3rem);
+  --text-preco: clamp(2rem, 5vw, 3.25rem);
+  --text-card: clamp(1.25rem, 3vw, 2.25rem);
+  --text-card-video: clamp(1.1rem, 2.2vw, 1.75rem);
+  --text-plano: clamp(1.6rem, 3vw, 2.1rem);
+  --text-plano-mesa: clamp(1.3rem, 1.7vw, 1.75rem);
+  --text-valor: clamp(1.9rem, 4vw, 2.6rem);
+  --text-valor-mesa: clamp(1.45rem, 2vw, 2rem);
+  --text-cartao: clamp(1.4rem, 2.6vw, 2rem);
+  --text-cartao-mesa: clamp(1.05rem, 1.7vw, 1.8rem);
+  --text-produto: clamp(1.4rem, 3vw, 2.2rem);
+
+  --ease-entra: cubic-bezier(.2, .8, .2, 1);
+  --ease-sai: cubic-bezier(.5, 0, .75, 0);
+
+  --radius-cartao: 1.25rem;
+  --radius-pilula: 999px;
+}
+
+/* ---------- Base (as mesmas regras globais da versão estática) ---------- */
+@layer base {
+  :root {
+    --preto: #07090A; --grafite: #111517; --branco: #F4F7F5; --nevoa: #A9B1AD;
+    --laranja: #FF7A2E; --rosa: #E8476A; --vinho: #3A1222; --ciano: #2EC8E8; --verde: #8BE04E;
+    --por-do-sol: linear-gradient(180deg, #FFB25E 0%, #FF7A2E 38%, #E8476A 72%, #7A1F45 100%);
+    --sol-texto: linear-gradient(180deg, #FFB25E 0%, #FF7A2E 50%, #EE5A73 100%);
+    --mov-entra: cubic-bezier(.2,.8,.2,1); --mov-micro: .2s; --mov-base: .4s;
+    --fundo: #07090A;
+    --lado: clamp(1rem, 4vw, 3rem);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.lenis, html.lenis body { height: auto; }
+  body { margin: 0; background: var(--fundo); color: var(--branco); font-family: Manrope, system-ui, sans-serif; font-size: 1rem; line-height: 1.6; }
+  html, body { overflow-x: clip; }
+  img, video { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; }
+  h1, h2, h3 { margin: 0; font-family: Archivo, sans-serif; font-stretch: 125%; font-variation-settings: "wdth" 125; font-weight: 900;
+               text-transform: uppercase; line-height: .92; letter-spacing: -.01em; }
+  p { margin: 0; }
+  :focus-visible { outline: 2px solid var(--ciano); outline-offset: 3px; border-radius: 4px; }
+}
+
+/* A cor de fundo é registrada como cor, para a troca entre seções ser gradual também nas sombras e degradês que a usam */
+@property --fundo { syntax: '<color>'; inherits: true; initial-value: #07090A; }
+@media (prefers-reduced-motion: no-preference) { body { transition: background-color .8s var(--mov-entra), --fundo .8s var(--mov-entra); } }
+
+/* ---------- Componentes ----------
+   Só o que não fica fiel com utilitários: pseudo-elementos (degradês sobrepostos), estados ligados por
+   classe no JS, seletores de filhos que o GSAP anima, keyframes, grids calculados e o texto vazado. */
+@layer components {
+  /* Fundo de fibras (GhostFibers): as classes internas são criadas pela biblioteca */
+  .fibras { position: fixed; inset: 0; z-index: -1; pointer-events: none; transition: opacity .5s var(--mov-entra); }
+  .fibras.apagada { opacity: 0; }
+  .ghost-fibers-container { overflow: hidden; }
+  .ghost-fibers-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+  /* Câmera lenta sobre os vídeos curtos: zoom e deslocamento suaves num ritmo diferente do loop */
+  @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) and (pointer: fine) {
+    video[data-deriva] { animation: deriva var(--deriva, 27s) ease-in-out infinite alternate; }
+  }
+  html.parado video[data-deriva] { animation-play-state: paused; }
+
+  /* Botão: base reaproveitada; cada contexto ajusta tamanho e margem com utilitários (que vencem esta camada) */
+  .bt { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; padding: 0 1.5rem; border-radius: 999px;
+        font-weight: 700; font-size: .95rem; text-decoration: none; letter-spacing: .02em; border: 0; cursor: pointer;
+        transition: transform var(--mov-micro) var(--mov-entra), background-color var(--mov-micro) var(--mov-entra), color var(--mov-micro) var(--mov-entra); }
+  .bt:hover { transform: translateY(-2px); }
+  .bt-claro { background: var(--branco); color: var(--preto); }
+  .bt-claro:hover { background: #fff; }
+  .bt-linha { background: rgba(7,9,10,.55); color: var(--branco); box-shadow: inset 0 0 0 1.5px rgba(244,247,245,.7); }
+  .bt-linha:hover { background: var(--branco); color: var(--preto); }
+  .bt svg { width: 1.1em; height: 1.1em; }
+
+  /* Cabeçalho: some ao rolar para baixo (classe posta pelo ScrollTrigger), mas nunca com o foco dentro.
+     A transição fica aqui (e não em utilitário) porque muda com 'reduzir movimento'. */
+  .topo { transition: transform .45s var(--mov-entra), opacity .45s var(--mov-entra); }
+  .topo.recolhido:not(:focus-within) { transform: translateY(-110%); opacity: 0; pointer-events: none; transition-timing-function: cubic-bezier(.5,0,.75,0), cubic-bezier(.5,0,.75,0); }
+  @media (prefers-reduced-motion: reduce) { .topo { transition: opacity .2s linear; } .topo.recolhido:not(:focus-within) { transform: none; } }
+
+  /* Abertura: véus em degradê sobre os vídeos */
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -1;
+                  background: radial-gradient(90% 60% at 50% 30%, rgba(255,122,46,.18), transparent 70%),
+                              linear-gradient(180deg, rgba(7,9,10,.2) 0%, rgba(7,9,10,0) 35%, rgba(7,9,10,.7) 72%, var(--fundo) 94%); }
+  .rede-fundo::after { content: ""; position: absolute; inset: 0;
+                       background: linear-gradient(180deg, rgba(7,9,10,.55) 0%, rgba(7,9,10,.2) 40%, rgba(58,18,34,.5) 75%, var(--fundo) 100%); }
+  .rolar i { width: 1.5px; height: 36px; background: linear-gradient(var(--branco), transparent); transform-origin: top; }
+  @media (prefers-reduced-motion: no-preference) { .rolar i { animation: rolar 2s var(--mov-entra) infinite; } }
+  html.parado .rolar i { animation: none; }
+
+  /* Seção padrão (o JS das trocas de cena e das fibras procura por .secao) */
+  .secao { position: relative; padding: clamp(4rem, 10vw, 8rem) var(--lado); }
+  .rotulo { display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--laranja); margin-bottom: 1rem; }
+  /* Títulos em linhas: cada linha sobe por trás de uma máscara (o GSAP anima o span de dentro) */
+  .t-linha { display: block; overflow: hidden; padding-bottom: .04em; }
+  .t-linha > span { display: block; }
+  .sol { background: var(--sol-texto); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .vazado { color: transparent; -webkit-text-stroke: 1.5px var(--branco); }
+  @supports not (-webkit-text-stroke: 1px #fff) { .vazado { color: var(--branco); } }
+  .texto { color: var(--nevoa); max-width: 34rem; font-size: 1.05rem; }
+  .moldura { position: relative; overflow: hidden; border-radius: 1.25rem; background: var(--grafite); }
+  .moldura img, .moldura video { width: 100%; height: 100%; object-fit: cover; }
+  [data-revela-img] { clip-path: inset(0 0 0 0 round 1.25rem); }
+  /* listas com losango laranja (bônus e planos) */
+  .losangos li::before { content: ""; flex: none; width: .55rem; height: .55rem; border-radius: 2px; background: var(--laranja); transform: rotate(45deg) translateY(-1px); }
+
+  /* No computador com mouse cada seção ocupa ao menos uma tela, para a troca em profundidade sempre começar
+     com a seção inteira à vista (por isso a altura mínima da faixa também fica nesta camada) */
+  @media (min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    html.js main .secao, html.js main .faixa { min-height: 100vh; }
+  }
+
+  /* Faixa "Baixe agora" */
+  .faixa { position: relative; min-height: 88svh; display: grid; align-items: end; overflow: hidden; isolation: isolate; padding: 0 var(--lado) clamp(3rem, 8vw, 6rem); }
+  .faixa::before { content: ""; position: absolute; inset: 0; z-index: -1;
+                   background: linear-gradient(180deg, var(--fundo) 0%, rgba(7,9,10,.6) 14%, rgba(7,9,10,0) 34%, rgba(7,9,10,0) 58%, rgba(7,9,10,.85) 84%, var(--fundo) 100%),
+                               linear-gradient(90deg, rgba(7,9,10,.85) 0%, rgba(7,9,10,.3) 55%, rgba(7,9,10,0)); }
+
+  /* Cartão de vídeo */
+  .video-card { position: relative; display: block; width: 100%; padding: 0; border: 0; color: var(--branco); text-align: left;
+                border-radius: 1.25rem; overflow: hidden; background: var(--grafite); aspect-ratio: 16 / 10;
+                isolation: isolate; transform: translateZ(0); }
+  .video-card img, .video-card video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--mov-entra); }
+  .video-card:hover img, .video-card:hover video { transform: scale(1.05); }
+  .video-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(7,9,10,.85), rgba(7,9,10,0) 55%); }
+  /* Carrossel de vídeos: celular, um por vez com o próximo aparecendo; tablet, o largo + um em pé;
+     computador, os três preenchem a largura (2 + 1 + 1), todos com a mesma altura.
+     (com dois valores em grid-auto-columns o padrão se repetiria, por isso as colunas são explícitas) */
+  .videos-trilho { grid-auto-columns: 84%; }
+  .videos-trilho .video-card { aspect-ratio: 3 / 4; }
+  .videos-trilho .vertical video { object-position: 50% 25%; }
+  @media (min-width: 640px) {
+    .videos-trilho { grid-template-columns: calc((100% - 1rem) * .66) calc((100% - 1rem) * .34) calc((100% - 1rem) * .34); }
+    .videos-trilho .deitado { aspect-ratio: 3 / 2; }
+  }
+  @media (min-width: 1024px) { .videos-trilho { grid-template-columns: 2fr 1fr 1fr; } }
+
+  /* "Aqui você encontra" na largura toda (fonte ajustada no JS) e a pílula de palavras centralizada abaixo */
+  .troca { margin: 0; font-size: clamp(2.3rem, 6vw, 5.5rem); line-height: 1; letter-spacing: -.01em; }
+  .troca-fixo { display: block; width: max-content; white-space: nowrap; line-height: .9; }
+  .troca-pilula { position: relative; display: block; width: max-content; height: 1.3em; margin-inline: auto; margin-top: .3em; border-radius: .2em; overflow: hidden;
+                  background: var(--laranja); color: var(--preto); box-shadow: 0 0 0 1px rgba(255,178,94,.4), 0 18px 60px -12px rgba(255,122,46,.75);
+                  transition: width .5s var(--mov-entra); }
+  .troca-palavra { position: absolute; left: .32em; top: 0; line-height: 1.3em; white-space: nowrap; opacity: 0; transform: translateY(105%);
+                   transition: transform .55s var(--mov-entra), opacity .4s var(--mov-entra); }
+  .troca-palavra.atual { opacity: 1; transform: none; }
+  .troca-palavra.saindo { opacity: 0; transform: translateY(-105%); transition-timing-function: cubic-bezier(.55,0,.75,.2); }
+  .troca-pontos { display: flex; justify-content: center; gap: 6px; margin-top: 1.4rem; }
+  .troca-pontos i { width: 6px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.25); transition: width var(--mov-base) var(--mov-entra), background-color var(--mov-base); }
+  .troca-pontos i.atual { width: 22px; background: var(--laranja); }
+  @media (prefers-reduced-motion: reduce) { .troca-palavra, .troca-palavra.saindo { transform: none; } }
+
+  /* Mensal / Anual */
+  .periodo button { min-height: 44px; padding: 0 1.1rem; border: 0; border-radius: 999px; background: transparent; color: var(--nevoa); font: inherit; font-weight: 700; cursor: pointer;
+                    transition: background-color var(--mov-micro) var(--mov-entra), color var(--mov-micro) var(--mov-entra); }
+  .periodo button[aria-pressed="true"] { background: var(--branco); color: var(--preto); }
+  .periodo .economia { font-size: .75rem; color: var(--laranja); margin-left: .2rem; }
+  .periodo button[aria-pressed="true"] .economia { color: #B4440F; }
+
+  /* Carrossel reutilizável (vídeos, planos, explore, novidades) */
+  .setas { display: flex; gap: .5rem; }
+  .seta { width: 48px; height: 48px; border-radius: 999px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.25); background: transparent; color: var(--branco); cursor: pointer;
+          transition: background-color var(--mov-micro) var(--mov-entra), color var(--mov-micro) var(--mov-entra), opacity var(--mov-micro); }
+  .seta:hover:not(:disabled) { background: var(--branco); color: var(--preto); }
+  .seta:disabled { opacity: .35; cursor: default; }
+  .seta svg { width: 18px; height: 18px; }
+  .car, .planos-car { margin: 2.5rem calc(var(--lado) * -1) 0; }
+  .car-trilho, .planos-trilho { list-style: none; margin: 0; padding: .5rem var(--lado) 1rem; display: grid; grid-auto-flow: column; gap: 1rem;
+                overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--lado); overscroll-behavior-x: contain; scrollbar-width: none; }
+  .car-trilho::-webkit-scrollbar, .planos-trilho::-webkit-scrollbar { display: none; }
+  .car-trilho > li { scroll-snap-align: start; display: flex; }
+  .car-trilho > li > * { flex: 1; }
+  .car-trilho:focus-visible { outline: 2px solid var(--laranja); outline-offset: -2px; }
+  @media (prefers-reduced-motion: no-preference) { .car-trilho, .planos-trilho { scroll-behavior: smooth; } }
+  /* (na versão estática existe .car-videos { margin-top: 1.25rem }, mas a regra .car, que vem depois, a anula:
+     o espaço real acima do carrossel de vídeos é 2.5rem, e é o que fica aqui) */
+  .planos-trilho { grid-auto-columns: min(84%, 360px); }
+  @media (min-width: 768px) and (max-width: 1023px) { .planos-trilho { grid-auto-columns: calc((100% - 2 * var(--lado) - 2rem) / 2.3); } }
+  @media (min-width: 1024px) { .planos-trilho { grid-auto-columns: calc((100% - 3rem) / 4); padding-block: .25rem .5rem; } }
+  .cartoes { grid-auto-columns: min(78%, 320px); }
+  @media (min-width: 768px) { .cartoes { grid-auto-columns: calc((100% - 2 * var(--lado) - 2rem) / 2.4); } }
+  @media (min-width: 1024px) { .cartoes { grid-auto-columns: calc((100% - 3rem) / 4); } }
+  .noticias { grid-auto-columns: min(84%, 380px); }
+  @media (min-width: 768px) { .noticias { grid-auto-columns: calc((100% - 2 * var(--lado) - 2rem) / 2.3); } }
+  @media (min-width: 1024px) { .noticias { grid-auto-columns: calc((100% - 2rem) / 3); } }
+  .pontos { display: flex; justify-content: center; gap: 6px; margin-top: .5rem; }
+  .pontos span { width: 6px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.25); transition: width var(--mov-micro) var(--mov-entra), background-color var(--mov-micro); }
+  .pontos span.atual { width: 18px; background: var(--laranja); }
+  /* quando todos os itens cabem, setas e pontos saem */
+  .car-cabe .setas, .car-cabe .pontos { display: none; }
+
+  /* Plano: véu da capa */
+  .plano .capa::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17,21,23,0) 40%, #1b1216 100%); }
+  .plano li::before { content: ""; flex: none; width: .5rem; height: .5rem; border-radius: 2px; background: var(--laranja); transform: rotate(45deg) translateY(-1px); }
+  @media (min-width: 1024px) { .plano li::before { width: .42rem; height: .42rem; } }
+
+  /* História presa na tela (alturas aqui porque mudam com 'reduzir movimento').
+     Fiel à versão estática: lá a regra de 180vh no celular vem antes desta e nunca vale, então fica 220vh sempre. */
+  .historia { position: relative; height: 220vh; }
+  .historia .palco { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid; align-items: center; isolation: isolate; }
+  .historia .palco::before { content: ""; position: absolute; inset: 0; z-index: -1;
+                             background: linear-gradient(180deg, var(--fundo) 0%, rgba(58,18,34,.55) 35%, rgba(7,9,10,.6) 70%, var(--fundo) 100%); }
+
+  /* Cartões do Explore */
+  .cartao img { transition: transform .8s var(--mov-entra); }
+  .cartao:hover img { transform: scale(1.06); }
+  .cartao::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7,9,10,.92) 8%, rgba(7,9,10,0) 60%); }
+  .cartao .ir svg { width: 1em; height: 1em; transition: transform var(--mov-micro) var(--mov-entra); }
+  .cartao:hover .ir svg { transform: translateX(4px); }
+
+  /* Loja */
+  .produto .foto img { transition: transform .8s var(--mov-entra); }
+  .produto:hover .foto img { transform: scale(1.05); }
+
+  /* Voltar ao topo: aparece na última seção */
+  .voltar-topo { opacity: 0; visibility: hidden; transform: translateY(12px); transition: opacity .3s var(--mov-entra), transform .3s var(--mov-entra), visibility 0s .3s; }
+  .voltar-topo.visivel { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .voltar-topo:focus-visible { outline: 2px solid var(--laranja); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .voltar-topo { transform: none; } }
+
+  /* Palco entre seções. Só no celular e tablet: a emenda entre seções é uma faixa de névoa na cor do fundo
+     atual (acompanha a troca de cor). No computador, corte reto. */
+  .cena, .cena-in { position: relative; }
+  @media (max-width: 1023px) {
+    .cena-in:not(.primeira)::before { content: ""; position: absolute; z-index: 3; left: 0; right: 0; top: -3rem; height: 6rem; pointer-events: none;
+      background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--fundo) 55%, transparent) 28%, var(--fundo) 46%, var(--fundo) 54%, color-mix(in srgb, var(--fundo) 55%, transparent) 72%, transparent 100%); }
+  }
+
+  /* Com 'reduzir movimento', tudo aparece no lugar */
+  @media (prefers-reduced-motion: reduce) {
+    .historia { height: auto; }
+    .historia .palco { position: relative; min-height: 100svh; height: auto; overflow: visible; padding-block: 5rem; }
+    .video-card img, .video-card video, .cartao img, .produto .foto img { transition: none; }
+  }
+}
+
+@keyframes deriva { from { scale: 1.07; translate: -1.4% -.8%; } to { scale: 1.14; translate: 1.4% .9%; } }
+@keyframes rolar { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
